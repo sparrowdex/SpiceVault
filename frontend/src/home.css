@@ -1,0 +1,108 @@
+.home-page {
+  font-family: Arial, sans-serif;
+  background-color: #fff9e6;
+  padding: 20px;
+}
+
+.recipe-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* Keep the spacing between cards */
+  justify-content: center; /* Ensure center alignment of cards */
+}
+
+.recipe-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  width: 220px; /* Adjust for card size */
+  min-height: 180px; /* Enough space for image + title + spacing */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.recipe-card img {
+  width: 202px;
+  height: 113px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.recipe-card h3 {
+  margin-top: 10px;
+}
+
+.recipe-card a {
+  color: #ff6600;
+  text-decoration: none;
+  text-align: center;
+  width: 100%; /* Ensures the text wraps nicely */
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.recipe-card:hover {
+  background-color: #e6c4ac; /* Light red background on hover */
+  transform: scale(1.02); /* Slightly enlarges the card */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+}
+
+.recipe-card a:hover {
+  text-decoration: underline;
+  background-color: #ffe5e5; /* Light red background on hover */
+  transform: scale(1.02); /* Slightly enlarges the card */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filters input {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.difficulty-buttons button {
+  padding: 6px 12px;
+  border: none;
+  background-color: #fcbf49;
+  color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.difficulty-buttons button.active {
+  background-color: #d62828;
+  color: white;
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  cursor: pointer;
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}

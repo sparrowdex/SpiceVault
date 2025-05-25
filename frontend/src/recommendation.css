@@ -1,0 +1,44 @@
+.recommendations-page {
+    padding: 30px;
+  }
+  
+  .recommendations-page h2 {
+    color: #ff6600;
+    margin-bottom: 20px;
+  }
+  
+  .recommendation-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .recommendation-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 30%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+  
+  .recommendation-card h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .recommendation-card p {
+    font-size: 14px;
+    color: #555;
+    margin: 10px 0;
+  }
+  
+  .recommendation-card a {
+    color: #ff6600;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .recommendation-card a:hover {
+    text-decoration: underline;
+  }
+  

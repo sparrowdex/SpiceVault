@@ -1,0 +1,160 @@
+.view-recipe-page {
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff9e6;
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align the card at the top */
+}
+
+.view-recipe-card {
+  width: 90%; /* Make the card wider */
+  max-width: 800px; /* Adjust the maximum width */
+  margin: 20px 0;
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  text-align: center; /* Center-align everything inside the card */
+}
+
+.view-recipe-card img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .view-recipe-card {
+    width: 95%; /* Make the card slightly smaller on mobile */
+  }
+}
+
+.view-recipe-card h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+  color: #bc8f8e;
+  text-align: center;
+}
+
+.section {
+  margin-top: 20px;
+  text-align: center; /* Center-align the content within the section */
+}
+
+.section h3 {
+  font-size: 22px;
+  color: #bc8f8e; 
+  margin-bottom: 10px;
+  text-align: center; /* Center-align the headings */
+}
+
+.section ul {
+  padding-left: 20px;
+  list-style-position: inside; /* Makes the list appear inside the box */
+  text-align: center; /* Center-align the list items */
+}
+
+.section ul li {
+  margin-bottom: 8px;
+}
+
+.section p {
+  text-align: center; /* Center-align the paragraph text */
+  line-height: 1.6;
+}
+
+.difficulty-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #ffd699;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #000;
+  text-transform: capitalize;
+}
+
+.recipe-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 10px;
+  justify-content: center; /* Center-align the info rows */
+}
+
+.recipe-info-box {
+  flex: 1 1 30%;
+  background-color: #f9f9f9;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: none;
+}
+.delete-button {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.delete-button:hover {
+  background-color: #c9302c;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background-color: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.confirm-btn {
+  background-color: #d9534f;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #ccc;
+  color: #333;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+

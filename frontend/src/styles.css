@@ -1,0 +1,45 @@
+/* styles.css */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff8e1; /* Pale yellow */
+    color: #1a1a1a; /* Dark neutral for readability */
+  }
+  
+  a {
+    color: #1a0dab; /* Link color */
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Reusable button */
+  button {
+    background-color: #ff7043; /* Light orange */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  button:hover {
+    background-color: #e64a19; /* Darker red-orange */
+  }
+  
+  /* Input styling */
+  input, textarea {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+  }
+  
