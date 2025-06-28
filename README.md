@@ -42,7 +42,7 @@ The frontend is a responsive, user-friendly interface built to offer an engaging
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js and npm installed
