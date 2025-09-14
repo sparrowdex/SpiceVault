@@ -15,7 +15,31 @@ const Recommendations = ({ user }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRecommendations();
+    const fetchData = async () => {
+      await fetchRecommendations();
+      // Fetch user's existing ratings
+      try {
+        const token = localStorage.getItem('token');
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`http://localhost:5000/api/ml/ratings/${userId}`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.ratings.length > 0) {
+            const initialRatedRecipes = {};
+            data.ratings.forEach(r => {
+              initialRatedRecipes[r.recipe_id] = r.rating;
+            });
+            setRatedRecipes(initialRatedRecipes);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching existing ratings:', err);
+      }
+    };
+    fetchData();
   }, [recommendationType, userId]);
 
   const fetchRecommendations = async () => {

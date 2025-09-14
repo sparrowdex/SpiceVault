@@ -15,15 +15,18 @@ class MLRecommendationService {
 
   // Collaborative Filtering using User-Based approach
   async generateUserBasedRecommendations(userId, limit = 10) {
+    console.log(`Generating user-based recommendations for user ${userId}`);
     try {
       await this.updateMatrices();
       
       if (!this.userItemMatrix || !this.userSimilarities) {
+        console.log('User-item matrix or similarities not available, falling back.');
         return await this.getFallbackRecommendations(userId, limit);
       }
 
       const userIndex = await this.getUserIndex(userId);
       if (userIndex === -1) {
+        console.log(`User ${userId} not found in matrix, falling back.`);
         return await this.getFallbackRecommendations(userId, limit);
       }
 
@@ -67,6 +70,7 @@ class MLRecommendationService {
         .sort((a, b) => b.predictedRating - a.predictedRating)
         .slice(0, limit);
 
+      console.log(`Generated ${recommendations.length} user-based recommendations.`);
       return await this.formatRecommendations(recommendations);
     } catch (error) {
       console.error('Error in user-based recommendations:', error);
@@ -76,6 +80,7 @@ class MLRecommendationService {
 
   // Content-Based Filtering using recipe tags and descriptions
   async generateContentBasedRecommendations(userId, limit = 10) {
+    console.log(`Generating content-based recommendations for user ${userId}`);
     try {
       const db = require('../models');
       const { Recipe, RecipeTag, UserInteraction } = db;
@@ -85,6 +90,7 @@ class MLRecommendationService {
         where: { user_id: userId },
         include: [{
           model: Recipe,
+          as: 'recipe', // Add the alias here
           include: [{
             model: RecipeTag,
             as: 'tags'
@@ -93,6 +99,7 @@ class MLRecommendationService {
       });
 
       if (userInteractions.length === 0) {
+        console.log(`No user interactions found for user ${userId}, falling back.`);
         return await this.getFallbackRecommendations(userId, limit);
       }
 
@@ -117,6 +124,7 @@ class MLRecommendationService {
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
 
+      console.log(`Generated ${recommendations.length} content-based recommendations.`);
       return recommendations.map(rec => ({
         recipe_id: rec.recipe.recipe_id,
         title: rec.recipe.title,
@@ -133,6 +141,7 @@ class MLRecommendationService {
 
   // Hybrid approach combining collaborative and content-based filtering
   async generateHybridRecommendations(userId, limit = 10) {
+    console.log(`Generating hybrid recommendations for user ${userId}`);
     try {
       const [userBased, contentBased] = await Promise.all([
         this.generateUserBasedRecommendations(userId, limit * 2),
@@ -166,6 +175,7 @@ class MLRecommendationService {
         }
       });
 
+      console.log(`Generated ${Array.from(combined.values()).length} hybrid recommendations.`);
       return Array.from(combined.values())
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
@@ -182,6 +192,7 @@ class MLRecommendationService {
       return; // Skip update if recent enough
     }
 
+    console.log('Updating ML matrices...');
     try {
       const db = require('../models');
       const { Rating, User, Recipe } = db;
@@ -196,6 +207,7 @@ class MLRecommendationService {
 
       if (ratings.length === 0) {
         this.lastUpdated = now;
+        console.log('No ratings found, skipping matrix update.');
         return;
       }
 
@@ -259,7 +271,8 @@ class MLRecommendationService {
       for (let j = 0; j < recipeMatrix.rows; j++) {
         if (i === j) {
           recipeSimilarities.push(1);
-        } else {
+        }
+        else {
           const similarity = this.cosineSimilarity(
             recipeMatrix.getRow(i),
             recipeMatrix.getRow(j)

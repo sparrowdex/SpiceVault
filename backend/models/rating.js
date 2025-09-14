@@ -4,8 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   const Rating = sequelize.define('Rating', {
     review_id: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+      primaryKey: true
     },
     recipe_id: {
       type: DataTypes.INTEGER,

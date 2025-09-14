@@ -83,8 +83,8 @@ function App() {
         <Route path="/addrecipe" element={<AddRecipe />} />
         <Route path="/recommendation" element={<Recommendations user={user} />} />
         <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Home />} />
-        <Route path="/viewrecipe" element={<ViewRecipe />} />
-        <Route path="/recipes/:id" element={<ViewRecipe />} />
+        <Route path="/viewrecipe" element={<ViewRecipe user={user} />} />
+        <Route path="/recipes/:id" element={<ViewRecipe user={user} />} />
       </Routes>
 
       {/* Authentication Modal */}

@@ -74,6 +74,7 @@ exports.addRating = async (req, res) => {
     } else {
       // Create new rating
       const newRating = await Rating.create({
+        review_id: Math.floor(Math.random() * 2147483647),
         user_id,
         recipe_id,
         rating,
@@ -143,12 +144,18 @@ exports.recordInteraction = async (req, res) => {
 exports.getUserRatings = async (req, res) => {
   try {
     const userId = req.params.userId;
+    const recipeId = req.query.recipe_id; // New: Get recipe_id from query
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
+    const whereClause = { user_id: userId };
+    if (recipeId) { // New: Add recipe_id to where clause if present
+      whereClause.recipe_id = recipeId;
+    }
+
     const { count, rows } = await Rating.findAndCountAll({
-      where: { user_id: userId },
+      where: whereClause, // Use the dynamic whereClause
       include: [{
         model: db.Recipe,
         as: 'recipe'
@@ -339,6 +346,30 @@ exports.getSimilarRecipes = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get similar recipes',
+      message: error.message
+    });
+  }
+};
+
+// Delete a rating
+exports.deleteRating = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    const deleted = await Rating.destroy({
+      where: { review_id: reviewId }
+    });
+
+    if (deleted) {
+      res.json({ success: true, message: 'Rating deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Rating not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting rating:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete rating',
       message: error.message
     });
   }

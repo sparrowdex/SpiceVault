@@ -11,6 +11,7 @@ router.get('/similar/:recipeId', mlRecommendationController.getSimilarRecipes);
 // Rating routes
 router.post('/ratings', mlRecommendationController.addRating);
 router.get('/ratings/:userId', mlRecommendationController.getUserRatings);
+router.delete('/ratings/:reviewId', mlRecommendationController.deleteRating);
 
 // Interaction routes
 router.post('/interactions', mlRecommendationController.recordInteraction);

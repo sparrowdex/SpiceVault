@@ -75,16 +75,43 @@ const UserProfile = ({ user, onLogout }) => {
     }
   };
 
-  const handleRemoveInteraction = async (recipeId, type) => {
+  const handleRemoveInteraction = async (idToRemove, type) => {
     try {
       const token = localStorage.getItem('token');
-      // Note: You might need to implement a DELETE endpoint for interactions
-      // For now, we'll just refresh the data
-      fetchUserData();
-      showNotification(`${type} removed!`, 'success');
+      let url = '';
+      let method = 'DELETE';
+
+      if (type === 'rated') {
+        url = `http://localhost:5000/api/ml/ratings/${idToRemove}`;
+      } else {
+        // For other types (saved, liked), we don't have a DELETE endpoint yet
+        // So we'll just refresh the data for now
+        fetchUserData();
+        showNotification(`${type} removed!`, 'success');
+        return; // Exit early as no API call is made for other types
+      }
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        showNotification(`${type} removed!`, 'success');
+        // Optimistically update the UI
+        if (type === 'rated') {
+          setRatedRecipes(prevRecipes => prevRecipes.filter(r => r.review_id !== idToRemove));
+        }
+        // No need to call fetchUserData() if we update state optimistically
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to remove ${type}`);
+      }
     } catch (error) {
       console.error('Error removing interaction:', error);
-      showNotification('Failed to remove item', 'error');
+      showNotification(`Failed to remove ${type}: ${error.message}`, 'error');
     }
   };
 
@@ -125,7 +152,9 @@ const UserProfile = ({ user, onLogout }) => {
     }, 3000);
   };
 
-  const renderRecipeCard = (recipe, type) => (
+  const renderRecipeCard = (recipe, type) => {
+    console.log('recipe object in renderRecipeCard:', recipe);
+    return (
     <div key={recipe.recipe_id || recipe.interaction_id} className="recipe-card">
       {recipe.recipe && recipe.recipe.image_url && (
         <img 
@@ -148,7 +177,7 @@ const UserProfile = ({ user, onLogout }) => {
                   key={star} 
                   className={`star ${star <= recipe.rating ? 'filled' : ''}`}
                 >
-                  ⭐
+                  ★
                 </span>
               ))}
             </div>
@@ -164,14 +193,14 @@ const UserProfile = ({ user, onLogout }) => {
           </button>
           <button 
             className="remove-button"
-            onClick={() => handleRemoveInteraction(recipe.recipe_id, type)}
+            onClick={() => handleRemoveInteraction(type === 'rated' ? recipe.review_id : recipe.recipe_id, type)}
           >
             Remove
           </button>
         </div>
       </div>
     </div>
-  );
+  )};
 
   const renderAddedRecipeCard = (recipe) => (
     <div key={recipe.recipe_id} className="recipe-card added-recipe-card">
