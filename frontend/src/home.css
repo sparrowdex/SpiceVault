@@ -236,27 +236,31 @@
   justify-content: center;
 }
 
-.difficulty-tag {
+.recipe-meta span {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-  text-transform: capitalize;
+  padding: 5px 10px;
+  border-radius: 15px;
   font-size: 11px;
-  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: #f0f0f0;
+  color: #555;
 }
 
-.difficulty-tag.easy {
-  background-color: #28a745;
+.recipe-meta .difficulty-tag.easy {
+  background-color: #e4f8e9;
+  color: #28a745;
 }
 
-.difficulty-tag.medium {
-  background-color: #ffc107;
-  color: #000;
+.recipe-meta .difficulty-tag.medium {
+  background-color: #fff8e1;
+  color: #f57c00;
 }
 
-.difficulty-tag.hard {
-  background-color: #dc3545;
+.recipe-meta .difficulty-tag.hard {
+  background-color: #fde2e4;
+  color: #d90429;
 }
 
 .home-page h2 {
