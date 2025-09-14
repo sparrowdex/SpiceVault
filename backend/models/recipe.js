@@ -31,6 +31,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(50),
         allowNull: true
       },
+      food_category: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        defaultValue: 'main_course'
+      },
+      diet_type: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        defaultValue: 'vegetarian'
+      },
       image_url: {
         type: DataTypes.STRING(255),
         allowNull: true
@@ -48,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
       }
     }, {
-      tableName: 'Recipe',
+      tableName: 'recipe',
       timestamps: false
     });
   

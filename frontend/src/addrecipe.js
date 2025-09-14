@@ -7,6 +7,8 @@ const AddRecipe = () => {
     description: '',
     instructions: '',
     difficulty: '',
+    food_category: 'main_course',
+    diet_type: 'vegetarian',
     image_url: '',
     preparation_time: '',
     cooking_time: '',
@@ -23,7 +25,7 @@ const AddRecipe = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/recipes`, {
+      const res = await fetch(`http://localhost:5000/api/recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -58,7 +60,39 @@ const AddRecipe = () => {
           <textarea name="instructions" value={formData.instructions} onChange={handleChange}></textarea>
 
           <label>Difficulty</label>
-          <input type="text" name="difficulty" value={formData.difficulty} onChange={handleChange} />
+          <select name="difficulty" value={formData.difficulty} onChange={handleChange}>
+            <option value="">Select Difficulty</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+
+          <label>Food Category</label>
+          <select name="food_category" value={formData.food_category} onChange={handleChange}>
+            <option value="main_course">Main Course</option>
+            <option value="appetizer">Appetizer</option>
+            <option value="dessert">Dessert</option>
+            <option value="breakfast">Breakfast</option>
+            <option value="italian">Italian</option>
+            <option value="asian">Asian</option>
+            <option value="mexican">Mexican</option>
+            <option value="healthy">Healthy</option>
+            <option value="comfort_food">Comfort Food</option>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+            <option value="snack">Snack</option>
+            <option value="beverage">Beverage</option>
+            <option value="soup">Soup</option>
+            <option value="salad">Salad</option>
+            <option value="side_dish">Side Dish</option>
+          </select>
+
+          <label>Diet Type</label>
+          <select name="diet_type" value={formData.diet_type} onChange={handleChange}>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="non_vegetarian">Non-Vegetarian</option>
+            <option value="mixed">Mixed (Both Options)</option>
+          </select>
 
           <label>Preparation Time</label>
           <input type="text" name="preparation_time" value={formData.preparation_time} onChange={handleChange} />

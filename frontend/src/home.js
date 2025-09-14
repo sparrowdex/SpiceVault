@@ -27,7 +27,7 @@
 //         {recipes.map((recipe) => (
 //           <div key={recipe.recipe_id} className="recipe-card">
 //             <img
-//               src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+//               src={`http://localhost:5000/images/${recipe.image_url}`}
 //               alt={recipe.title}
 //               style={{ width: '202px', height: '113px', objectFit: 'cover' }}
 //             />
@@ -94,7 +94,7 @@
 //         {recipes.map((recipe) => (
 //           <div key={recipe.recipe_id} className="recipe-card">
 //             <img
-//               src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+//               src={`http://localhost:5000/images/${recipe.image_url}`}
 //               alt={recipe.title}
 //               style={{ width: '202px', height: '113px', objectFit: 'cover' }}
 //             />
@@ -127,9 +127,92 @@ import './home.css';
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
   const [difficulty, setDifficulty] = useState('');
+  const [foodCategory, setFoodCategory] = useState('');
+  const [dietType, setDietType] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [currentFilterSection, setCurrentFilterSection] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Filter sections data
+  const filterSections = [
+    {
+      id: 'difficulty',
+      title: 'Difficulty',
+      options: [
+        { value: '', label: 'All' },
+        { value: 'Easy', label: 'Easy' },
+        { value: 'Medium', label: 'Medium' },
+        { value: 'Hard', label: 'Hard' }
+      ],
+      currentValue: difficulty,
+      setValue: setDifficulty
+    },
+    {
+      id: 'category',
+      title: 'Category',
+      options: [
+        { value: '', label: 'All' },
+        { value: 'main_course', label: 'Main Course' },
+        { value: 'dessert', label: 'Dessert' },
+        { value: 'appetizer', label: 'Appetizer' },
+        { value: 'breakfast', label: 'Breakfast' },
+        { value: 'italian', label: 'Italian' },
+        { value: 'asian', label: 'Asian' },
+        { value: 'mexican', label: 'Mexican' },
+        { value: 'healthy', label: 'Healthy' },
+        { value: 'comfort_food', label: 'Comfort Food' }
+      ],
+      currentValue: foodCategory,
+      setValue: setFoodCategory
+    },
+    {
+      id: 'diet',
+      title: 'Diet',
+      options: [
+        { value: '', label: 'All' },
+        { value: 'vegetarian', label: 'Vegetarian' },
+        { value: 'non_vegetarian', label: 'Non-Vegetarian' },
+        { value: 'mixed', label: 'Mixed' }
+      ],
+      currentValue: dietType,
+      setValue: setDietType
+    }
+  ];
+
+  const nextFilterSection = () => {
+    setCurrentFilterSection((prev) => (prev + 1) % filterSections.length);
+  };
+
+  const prevFilterSection = () => {
+    setCurrentFilterSection((prev) => (prev - 1 + filterSections.length) % filterSections.length);
+  };
+
+  // Touch/swipe handlers for mobile
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextFilterSection();
+    } else if (isRightSwipe) {
+      prevFilterSection();
+    }
+  };
 
   const fetchRecipes = useCallback(async () => {
     try {
@@ -137,17 +220,19 @@ const Home = () => {
         page,
         limit: 9,
         difficulty,
+        food_category: foodCategory,
+        diet_type: dietType,
         search
       });
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/recipes?${query}`);
+      const res = await fetch(`http://localhost:5000/api/recipes?${query}`);
       const data = await res.json();
       setRecipes(data.recipes);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error('Failed to fetch recipes:', error);
     }
-  }, [page, difficulty, search]);
+  }, [page, difficulty, foodCategory, dietType, search]);
 
   useEffect(() => {
     fetchRecipes();
@@ -168,18 +253,46 @@ const Home = () => {
           }}
         />
 
-        <div className="difficulty-buttons">
-          {['', 'Easy', 'Medium', 'Hard'].map((level) => (
+        <div 
+          className="filter-carousel"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <button className="carousel-arrow carousel-arrow-left" onClick={prevFilterSection}>
+            ‹
+          </button>
+          
+          <div className="filter-section">
+            <h3 className="filter-section-title">{filterSections[currentFilterSection].title}</h3>
+            <div className="filter-options">
+              {filterSections[currentFilterSection].options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    filterSections[currentFilterSection].setValue(option.value);
+                    setPage(1);
+                  }}
+                  className={`filter-option ${filterSections[currentFilterSection].currentValue === option.value ? 'active' : ''}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <button className="carousel-arrow carousel-arrow-right" onClick={nextFilterSection}>
+            ›
+          </button>
+        </div>
+        
+        <div className="filter-indicators">
+          {filterSections.map((_, index) => (
             <button
-              key={level}
-              onClick={() => {
-                setDifficulty(level);
-                setPage(1);
-              }}
-              className={difficulty === level ? 'active' : ''}
-            >
-              {level || 'All'}
-            </button>
+              key={index}
+              className={`filter-indicator ${index === currentFilterSection ? 'active' : ''}`}
+              onClick={() => setCurrentFilterSection(index)}
+            />
           ))}
         </div>
       </div>
@@ -188,12 +301,23 @@ const Home = () => {
         {recipes.map((recipe) => (
           <div key={recipe.recipe_id} className="recipe-card">
             <img
-              src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+              src={`http://localhost:5000/images/${recipe.image_url}`}
               alt={recipe.title}
               style={{ width: '202px', height: '113px', objectFit: 'cover' }}
             />
             <h3>{recipe.title}</h3>
             <p>{recipe.description}</p>
+            <div className="recipe-meta">
+              <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
+                {recipe.difficulty}
+              </span>
+              <span className="category-tag">
+                {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
+              </span>
+              <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
+                {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
+              </span>
+            </div>
             <a href={`/recipes/${recipe.recipe_id}`}>View Recipe</a>
           </div>
         ))}

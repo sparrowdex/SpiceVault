@@ -84,6 +84,8 @@
   color: #000;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .difficulty-buttons button.active {
@@ -105,4 +107,251 @@
   color: white;
   border: none;
   border-radius: 5px;
+}
+
+/* Filter Carousel Styles */
+.filter-carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.carousel-arrow {
+  background: linear-gradient(135deg, #ff6600, #ff8533);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+  z-index: 2;
+}
+
+.carousel-arrow:hover {
+  background: linear-gradient(135deg, #e55a00, #ff6600);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+}
+
+.carousel-arrow:active {
+  transform: scale(0.95);
+}
+
+.filter-section {
+  flex: 1;
+  text-align: center;
+  padding: 0 20px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.filter-section-title {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.filter-options {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.filter-option {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  color: #666;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.filter-option:hover {
+  border-color: #ff6600;
+  color: #ff6600;
+  background: #fff5f0;
+  transform: translateY(-2px);
+}
+
+.filter-option.active {
+  background: linear-gradient(135deg, #ff6600, #ff8533);
+  color: white;
+  border-color: #ff6600;
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+}
+
+.filter-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.filter-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-indicator:hover {
+  background: #ff6600;
+  transform: scale(1.2);
+}
+
+.filter-indicator.active {
+  background: #ff6600;
+  transform: scale(1.3);
+}
+
+.recipe-meta {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.difficulty-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #ffd699;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #000;
+  text-transform: capitalize;
+  font-size: 11px;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  background-color: #e6f3ff;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #0066cc;
+  text-transform: capitalize;
+  font-size: 11px;
+}
+
+.diet-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: capitalize;
+  font-size: 11px;
+}
+
+.diet-tag.vegetarian {
+  background-color: #e8f5e8;
+  color: #2d5a2d;
+}
+
+.diet-tag.non_vegetarian {
+  background-color: #ffe8e8;
+  color: #8b0000;
+}
+
+.diet-tag.mixed {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Responsive Design for Filter Carousel */
+@media (max-width: 768px) {
+  .filter-carousel {
+    margin: 15px 0;
+    max-width: 100%;
+  }
+  
+  .carousel-arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 18px;
+  }
+  
+  .filter-section {
+    padding: 0 15px;
+    min-height: 100px;
+  }
+  
+  .filter-section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .filter-options {
+    gap: 6px;
+  }
+  
+  .filter-option {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .filter-indicators {
+    margin-top: 12px;
+    gap: 6px;
+  }
+  
+  .filter-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-carousel {
+    margin: 10px 0;
+  }
+  
+  .carousel-arrow {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+  
+  .filter-section {
+    padding: 0 10px;
+    min-height: 80px;
+  }
+  
+  .filter-section-title {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .filter-options {
+    gap: 4px;
+  }
+  
+  .filter-option {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
 }

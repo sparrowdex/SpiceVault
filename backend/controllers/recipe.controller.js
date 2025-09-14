@@ -21,12 +21,19 @@ exports.getAllRecipes = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
     const difficulty = req.query.difficulty;
+    const foodCategory = req.query.food_category;
+    const dietType = req.query.diet_type;
     const search = req.query.search || "";
 
     const whereClause = {};
     if (difficulty) whereClause.difficulty = difficulty;
+    if (foodCategory) whereClause.food_category = foodCategory;
+    if (dietType) whereClause.diet_type = dietType;
     if (search) {
       whereClause.title = { [db.Sequelize.Op.like]: `%${search}%` };
+    }
+    if (req.query.user_id) {
+      whereClause.user_id = req.query.user_id;
     }
 
     const { count, rows } = await Recipe.findAndCountAll({

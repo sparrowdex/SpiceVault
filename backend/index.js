@@ -34,6 +34,10 @@ const userRoutes = require('./routes/user.routes');
 app.use('/api/users', userRoutes);
 const recipeRoutes = require('./routes/recipe.routes');
 app.use('/api/recipes', recipeRoutes);
+const mlRoutes = require('./routes/mlRecommendation.routes');
+app.use('/api/ml', mlRoutes);
+const authRoutes = require('./routes/auth.routes');
+app.use('/api/auth', authRoutes);
 
 
 

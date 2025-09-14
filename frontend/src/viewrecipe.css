@@ -76,6 +76,39 @@
   text-transform: capitalize;
 }
 
+.category-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #e6f3ff;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #0066cc;
+  text-transform: capitalize;
+}
+
+.diet-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.diet-tag.vegetarian {
+  background-color: #e8f5e8;
+  color: #2d5a2d;
+}
+
+.diet-tag.non_vegetarian {
+  background-color: #ffe8e8;
+  color: #8b0000;
+}
+
+.diet-tag.mixed {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
 .recipe-info-row {
   display: flex;
   flex-wrap: wrap;

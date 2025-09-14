@@ -9,7 +9,7 @@
 //   useEffect(() => {
 //     const fetchRecipe = async () => {
 //       try {
-//         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
+//         const res = await fetch(`http://localhost:5000/api/recipes/${id}`);
 //         const data = await res.json();
 //         setRecipe(data);
 //       } catch (error) {
@@ -36,7 +36,7 @@
 //       <div className="view-recipe-card">
 //         <h2>{recipe.title}</h2>
 //         <img
-//           src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+//           src={`http://localhost:5000/images/${recipe.image_url}`}
 //           alt={recipe.title}
 //         />
 
@@ -88,7 +88,7 @@
 //   useEffect(() => {
 //     const fetchRecipe = async () => {
 //       try {
-//         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
+//         const res = await fetch(`http://localhost:5000/api/recipes/${id}`);
 //         const data = await res.json();
 //         setRecipe(data);
 //       } catch (error) {
@@ -106,7 +106,7 @@
 //       <div className="view-recipe-card">
 //         <h2>{recipe.title}</h2>
 //         <img
-//           src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+//           src={`http://localhost:5000/images/${recipe.image_url}`}
 //           alt={recipe.title}
 //         />
 
@@ -161,7 +161,7 @@ function ViewRecipe() {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
+        const res = await fetch(`http://localhost:5000/api/recipes/${id}`);
         const data = await res.json();
         setRecipe(data);
       } catch (error) {
@@ -174,7 +174,7 @@ function ViewRecipe() {
 
   const handleDelete = async () => {
     try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`, {
+      await fetch(`http://localhost:5000/api/recipes/${id}`, {
         method: 'DELETE',
       });
       navigate('/'); // Redirect to homepage after delete
@@ -188,9 +188,26 @@ function ViewRecipe() {
   return (
     <div className="view-recipe-page">
       <div className="view-recipe-card">
+        <button 
+          className="back-button" 
+          onClick={() => navigate(-1)}
+          style={{
+            background: 'linear-gradient(135deg, #ff6600, #ff8533)',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            marginBottom: '20px',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}
+        >
+          ← Back
+        </button>
         <h2>{recipe.title}</h2>
         <img
-          src={`${process.env.REACT_APP_API_URL}/images/${recipe.image_url}`}
+          src={`http://localhost:5000/images/${recipe.image_url}`}
           alt={recipe.title}
         />
 
@@ -220,10 +237,27 @@ function ViewRecipe() {
         </div>
 
         <div className="section">
-          <h3>Difficulty</h3>
-          <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
-            {recipe.difficulty}
-          </span>
+          <h3>Recipe Details</h3>
+          <div className="recipe-info-row">
+            <div className="recipe-info-box">
+              <strong>Difficulty:</strong><br />
+              <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
+                {recipe.difficulty}
+              </span>
+            </div>
+            <div className="recipe-info-box">
+              <strong>Category:</strong><br />
+              <span className="category-tag">
+                {recipe.food_category?.replace('_', ' ').toUpperCase() || 'Main Course'}
+              </span>
+            </div>
+            <div className="recipe-info-box">
+              <strong>Diet Type:</strong><br />
+              <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
+                {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'Vegetarian'}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="section">
