@@ -239,12 +239,52 @@
 .difficulty-tag {
   display: inline-block;
   padding: 4px 8px;
-  background-color: #ffd699;
   border-radius: 4px;
   font-weight: bold;
-  color: #000;
   text-transform: capitalize;
   font-size: 11px;
+  color: #fff;
+}
+
+.difficulty-tag.easy {
+  background-color: #28a745;
+}
+
+.difficulty-tag.medium {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.difficulty-tag.hard {
+  background-color: #dc3545;
+}
+
+.home-page h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.filters input {
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 30px;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f9f9f9;
+}
+
+.filters input:focus {
+  border-color: #ff6600;
+  box-shadow: 0 0 15px rgba(255, 102, 0, 0.2);
 }
 
 .category-tag {
