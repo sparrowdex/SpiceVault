@@ -10,11 +10,15 @@ const Recommendations = ({ user }) => {
   const [ratedRecipes, setRatedRecipes] = useState({}); // Track which recipes have been rated
   const [hoveredStar, setHoveredStar] = useState({}); // Track hover state for stars
 
-  // Use authenticated user ID or fallback to 1 for testing
-  const userId = user ? user.user_id : 1;
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!user) {
+      setRecommendations([]);
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       await fetchRecommendations();
       // Fetch user's existing ratings
@@ -24,7 +28,7 @@ const Recommendations = ({ user }) => {
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        const response = await fetch(`http://localhost:5000/api/ml/ratings/${userId}`, { headers });
+        const response = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}`, { headers });
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.ratings.length > 0) {
@@ -40,9 +44,10 @@ const Recommendations = ({ user }) => {
       }
     };
     fetchData();
-  }, [recommendationType, userId]);
+  }, [recommendationType, user]);
 
   const fetchRecommendations = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       setError(null);
@@ -57,7 +62,7 @@ const Recommendations = ({ user }) => {
       }
       
       const response = await fetch(
-        `http://localhost:5000/api/ml/recommendations/${userId}?type=${recommendationType}&limit=10`,
+        `http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${recommendationType}&limit=10`,
         { headers }
       );
       
@@ -99,7 +104,7 @@ const Recommendations = ({ user }) => {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          user_id: userId,
+          user_id: user?.user_id,
           recipe_id: recipeId,
           rating: rating,
           review_text: `Rated ${rating} star${rating > 1 ? 's' : ''}`,
@@ -198,7 +203,7 @@ const Recommendations = ({ user }) => {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          user_id: userId,
+          user_id: user?.user_id,
           recipe_id: recipeId,
           interaction_type: interactionType,
           duration: interactionType === 'view' ? 30 : null

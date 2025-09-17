@@ -53,11 +53,13 @@ function App() {
   return (
     <Router>
       <div className="navbar">
-        <h1>Spice Vault</h1>
-        <nav>
+        <nav className="nav-left">
           <Link to="/">Home</Link>
-          <Link to="/addrecipe">Add Recipe</Link>
-          <Link to="/recommendation">Recommendations</Link>
+          {user && <Link to="/addrecipe">Add Recipe</Link>}
+          {user && <Link to="/recommendations">Recommendations</Link>}
+        </nav>
+        <h1 className="nav-center">Spice Vault</h1>
+        <nav className="nav-right">
           {user ? (
             <>
               <Link to="/profile">Profile</Link>
@@ -81,7 +83,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/addrecipe" element={<AddRecipe />} />
-        <Route path="/recommendation" element={<Recommendations user={user} />} />
+        {user ? (
+          <Route path="/recommendations" element={<Recommendations user={user} />} />
+        ) : (
+          <Route path="/recommendations" element={<Home />} />
+        )}
         <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Home />} />
         <Route path="/viewrecipe" element={<ViewRecipe user={user} />} />
         <Route path="/recipes/:id" element={<ViewRecipe user={user} />} />

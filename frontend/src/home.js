@@ -126,6 +126,7 @@ import './home.css';
 
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [difficulty, setDifficulty] = useState('');
   const [foodCategory, setFoodCategory] = useState('');
   const [dietType, setDietType] = useState('');
@@ -234,12 +235,53 @@ const Home = () => {
     }
   }, [page, difficulty, foodCategory, dietType, search]);
 
+  // Fetch recommendations for a test user (userId=1)
+  const fetchRecommendations = useCallback(async () => {
+    setRecommendations([]);
+    return;
+  }, []);
+
   useEffect(() => {
     fetchRecipes();
   }, [fetchRecipes]);
 
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
+
   return (
     <div className="home-page">
+      <h2>Recommended for You</h2>
+      <div className="recipe-list">
+        {recommendations.length > 0 ? (
+          recommendations.map((recipe) => (
+            <div key={recipe.recipe_id} className="recipe-card">
+              <img
+                src={`http://localhost:5000/images/${recipe.image_url}`}
+                alt={recipe.title}
+                style={{ width: '202px', height: '113px', objectFit: 'cover' }}
+              />
+              <h3>{recipe.title}</h3>
+              <p>{recipe.description}</p>
+              <div className="recipe-meta">
+                <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
+                  {recipe.difficulty}
+                </span>
+                <span className="category-tag">
+                  {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
+                </span>
+                <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
+                  {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
+                </span>
+              </div>
+              <a href={`/recipes/${recipe.recipe_id}`} className="view-recipe-button">View Recipe</a>
+            </div>
+          ))
+        ) : (
+          <p>No recommendations available at the moment.</p>
+        )}
+      </div>
+
       <h2>All Recipes</h2>
 
       <div className="filters">
@@ -318,7 +360,7 @@ const Home = () => {
                 {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
               </span>
             </div>
-            <a href={`/recipes/${recipe.recipe_id}`}>View Recipe</a>
+            <a href={`/recipes/${recipe.recipe_id}`} className="view-recipe-button">View Recipe</a>
           </div>
         ))}
       </div>

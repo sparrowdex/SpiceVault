@@ -11,6 +11,8 @@ class MLRecommendationService {
     this.recipeSimilarities = null;
     this.lastUpdated = null;
     this.updateInterval = 24 * 60 * 60 * 1000; // 24 hours
+    this.users = null;
+    this.recipes = null;
   }
 
   // Collaborative Filtering using User-Based approach
@@ -20,13 +22,13 @@ class MLRecommendationService {
       await this.updateMatrices();
       
       if (!this.userItemMatrix || !this.userSimilarities) {
-        console.log('User-item matrix or similarities not available, falling back.');
+        console.log('ML Service: User-item matrix or similarities not available, falling back.');
         return await this.getFallbackRecommendations(userId, limit);
       }
 
       const userIndex = await this.getUserIndex(userId);
       if (userIndex === -1) {
-        console.log(`User ${userId} not found in matrix, falling back.`);
+        console.log(`ML Service: User ${userId} not found in matrix, falling back.`);
         return await this.getFallbackRecommendations(userId, limit);
       }
 
@@ -71,6 +73,9 @@ class MLRecommendationService {
         .slice(0, limit);
 
       console.log(`Generated ${recommendations.length} user-based recommendations.`);
+      if (recommendations.length === 0) {
+        return await this.getFallbackRecommendations(userId, limit);
+      }
       return await this.formatRecommendations(recommendations);
     } catch (error) {
       console.error('Error in user-based recommendations:', error);
@@ -99,7 +104,7 @@ class MLRecommendationService {
       });
 
       if (userInteractions.length === 0) {
-        console.log(`No user interactions found for user ${userId}, falling back.`);
+        console.log(`ML Service: No user interactions found for user ${userId}, falling back.`);
         return await this.getFallbackRecommendations(userId, limit);
       }
 
@@ -125,6 +130,9 @@ class MLRecommendationService {
         .slice(0, limit);
 
       console.log(`Generated ${recommendations.length} content-based recommendations.`);
+      if (recommendations.length === 0) {
+        return await this.getFallbackRecommendations(userId, limit);
+      }
       return recommendations.map(rec => ({
         recipe_id: rec.recipe.recipe_id,
         title: rec.recipe.title,
@@ -175,10 +183,15 @@ class MLRecommendationService {
         }
       });
 
-      console.log(`Generated ${Array.from(combined.values()).length} hybrid recommendations.`);
-      return Array.from(combined.values())
+      const hybridRecommendations = Array.from(combined.values())
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
+
+      console.log(`Generated ${hybridRecommendations.length} hybrid recommendations.`);
+      if (hybridRecommendations.length === 0) {
+        return await this.getFallbackRecommendations(userId, limit);
+      }
+      return hybridRecommendations;
     } catch (error) {
       console.error('Error in hybrid recommendations:', error);
       return await this.getFallbackRecommendations(userId, limit);
@@ -207,7 +220,7 @@ class MLRecommendationService {
 
       if (ratings.length === 0) {
         this.lastUpdated = now;
-        console.log('No ratings found, skipping matrix update.');
+        console.log('ML Service: No ratings found, skipping matrix update. Fallback will be used.');
         return;
       }
 
@@ -215,10 +228,14 @@ class MLRecommendationService {
       const users = await User.findAll({ order: [['user_id', 'ASC']] });
       const recipes = await Recipe.findAll({ order: [['recipe_id', 'ASC']] });
 
+      // Store users and recipes for mapping
+      this.users = users;
+      this.recipes = recipes;
+
       // Create user-item matrix
-      const userItemMatrix = users.map(user => 
+      const userItemMatrix = users.map(user =>
         recipes.map(recipe => {
-          const rating = ratings.find(r => 
+          const rating = ratings.find(r =>
             r.user_id === user.user_id && r.recipe_id === recipe.recipe_id
           );
           return rating ? rating.rating : 0;
@@ -312,7 +329,7 @@ class MLRecommendationService {
     };
 
     interactions.forEach(interaction => {
-      const recipe = interaction.Recipe;
+      const recipe = interaction.recipe;
       if (recipe.tags) {
         recipe.tags.forEach(tag => {
           const category = tag.tag_category;
@@ -366,12 +383,12 @@ class MLRecommendationService {
   async getFallbackRecommendations(userId, limit) {
     try {
       const db = require('../models');
-      const { Recipe } = db;
+      const { Recipe, Sequelize } = db;
 
       // Get popular recipes (most rated)
       const recipes = await Recipe.findAll({
         limit,
-        order: [['recipe_id', 'DESC']] // Simple fallback
+        order: Sequelize.literal('RAND()')
       });
 
       return recipes.map(recipe => ({
@@ -397,26 +414,28 @@ class MLRecommendationService {
   }
 
   async formatRecommendations(recommendations) {
-    const db = require('../models');
-    const { Recipe } = db;
-    
-    const recipeIds = recommendations.map(rec => rec.itemIndex + 1); // Assuming recipe_id starts from 1
-    const recipes = await Recipe.findAll({
-      where: { recipe_id: recipeIds }
-    });
+    if (!this.recipes) {
+      console.error('ML Service: Recipes array not available for formatting recommendations');
+      return [];
+    }
 
     return recommendations.map(rec => {
-      const recipe = recipes.find(r => r.recipe_id === rec.itemIndex + 1);
+      const recipe = this.recipes[rec.itemIndex];
+      if (!recipe) {
+        console.warn(`ML Service: Recipe not found for itemIndex ${rec.itemIndex}`);
+        return null;
+      }
+
       return {
-        recipe_id: recipe?.recipe_id,
-        title: recipe?.title,
-        description: recipe?.description,
-        image_url: recipe?.image_url,
+        recipe_id: recipe.recipe_id,
+        title: recipe.title,
+        description: recipe.description,
+        image_url: recipe.image_url,
         score: rec.predictedRating,
         confidence: rec.confidence,
         reason: 'Based on similar users'
       };
-    }).filter(rec => rec.recipe_id);
+    }).filter(rec => rec !== null);
   }
 }
 

@@ -74,7 +74,6 @@ exports.addRating = async (req, res) => {
     } else {
       // Create new rating
       const newRating = await Rating.create({
-        review_id: Math.floor(Math.random() * 2147483647),
         user_id,
         recipe_id,
         rating,
@@ -116,6 +115,25 @@ exports.recordInteraction = async (req, res) => {
         success: false,
         error: 'Invalid interaction type'
       });
+    }
+
+    // Prevent duplicate 'like' interactions
+    if (interaction_type === 'like') {
+      const existingLike = await UserInteraction.findOne({
+        where: {
+          user_id,
+          recipe_id,
+          interaction_type: 'like'
+        }
+      });
+
+      if (existingLike) {
+        return res.status(200).json({
+          success: true,
+          message: 'Recipe already liked by this user',
+          interaction: existingLike
+        });
+      }
     }
 
     const interaction = await UserInteraction.create({
