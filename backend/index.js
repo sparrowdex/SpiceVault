@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const db = require('./models'); // Sequelize Models
 require('dotenv').config();
 
@@ -9,14 +10,26 @@ const app = express();
 // const PORT = process.env.PORT || 3306;
 const PORT = process.env.PORT || 5000;
 
-// app.use(cors());
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    error: 'Too many requests from this IP, please try again later.'
+  }
+});
+app.use(limiter);
+
+// CORS configuration
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true
 }));
+
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use(bodyParser.json());
-app.use(express.json()); // ✅ Enables JSON parsing for incoming requests
+app.use(bodyParser.json({ limit: '10mb' })); // Limit payload size
+app.use(express.json({ limit: '10mb' })); // ✅ Enables JSON parsing for incoming requests
 
 
 

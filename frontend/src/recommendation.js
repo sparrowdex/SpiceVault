@@ -354,19 +354,19 @@ const Recommendations = ({ user }) => {
                     className="view-button"
                     onClick={() => handleViewRecipe(recipe.recipe_id)}
                   >
-                    👁️ View Recipe
+                    View Recipe
                   </button>
                   <button 
                     className="like-button"
                     onClick={() => handleRecordInteraction(recipe.recipe_id, 'like')}
                   >
-                    ❤️ Like
+                    🤍 Like
                   </button>
                   <button 
                     className="save-button"
                     onClick={() => handleRecordInteraction(recipe.recipe_id, 'save')}
                   >
-                    💾 Save
+                    📁 Save
                   </button>
           </div>
       </div>

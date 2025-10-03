@@ -53,12 +53,12 @@ function App() {
   return (
     <Router>
       <div className="navbar">
+        <h1 className="nav-center">Spice Vault</h1>
         <nav className="nav-left">
           <Link to="/">Home</Link>
           {user && <Link to="/addrecipe">Add Recipe</Link>}
           {user && <Link to="/recommendations">Recommendations</Link>}
         </nav>
-        <h1 className="nav-center">Spice Vault</h1>
         <nav className="nav-right">
           {user ? (
             <>
@@ -69,12 +69,8 @@ function App() {
             </>
           ) : (
             <>
-              <button onClick={() => handleShowAuth('login')} className="auth-btn">
-                Login
-              </button>
-              <button onClick={() => handleShowAuth('signup')} className="auth-btn signup-btn">
-                Sign Up
-              </button>
+              <Link to="/login" className="auth-btn">Login</Link>
+              <Link to="/signup" className="auth-btn signup-btn">Sign Up</Link>
             </>
           )}
         </nav>
@@ -91,30 +87,11 @@ function App() {
         <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Home />} />
         <Route path="/viewrecipe" element={<ViewRecipe user={user} />} />
         <Route path="/recipes/:id" element={<ViewRecipe user={user} />} />
+        <Route path="/signup" element={<Signup onLogin={handleLogin} onSwitchToLogin={() => setAuthMode('login')} />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} onSwitchToSignup={() => setAuthMode('signup')} />} />
       </Routes>
-
-      {/* Authentication Modal */}
-      {showAuth && (
-        <div className="auth-modal">
-          <div className="auth-modal-content">
-            <button className="close-auth" onClick={handleCloseAuth}>×</button>
-            {authMode === 'login' ? (
-              <Login 
-                onLogin={handleLogin} 
-                onSwitchToSignup={() => setAuthMode('signup')} 
-              />
-            ) : (
-              <Signup 
-                onLogin={handleLogin} 
-                onSwitchToLogin={() => setAuthMode('login')} 
-              />
-            )}
-          </div>
-        </div>
-      )}
     </Router>
   );
 }
 
 export default App;
-

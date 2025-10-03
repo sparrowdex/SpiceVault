@@ -369,6 +369,58 @@ exports.getSimilarRecipes = async (req, res) => {
   }
 };
 
+// Get popular recipes based on ratings and interactions
+exports.getPopularRecipes = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+
+    // Get recipes ordered by average rating and number of ratings using raw query
+    const popularRecipes = await db.sequelize.query(`
+      SELECT
+        r.recipe_id,
+        r.title,
+        r.description,
+        r.image_url,
+        r.difficulty,
+        r.food_category,
+        r.diet_type,
+        AVG(rg.rating) as avg_rating,
+        COUNT(rg.rating) as rating_count
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      GROUP BY r.recipe_id
+      HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
+      LIMIT ?
+    `, {
+      replacements: [limit],
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      popularRecipes: popularRecipes.map(recipe => ({
+        recipe_id: recipe.recipe_id,
+        title: recipe.title,
+        description: recipe.description,
+        image_url: recipe.image_url,
+        difficulty: recipe.difficulty,
+        food_category: recipe.food_category,
+        diet_type: recipe.diet_type,
+        avg_rating: parseFloat(recipe.avg_rating).toFixed(1),
+        rating_count: recipe.rating_count
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting popular recipes:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get popular recipes',
+      message: error.message
+    });
+  }
+};
+
 // Delete a rating
 exports.deleteRating = async (req, res) => {
   try {
