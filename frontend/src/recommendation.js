@@ -6,11 +6,88 @@ const Recommendations = ({ user }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [recommendationType, setRecommendationType] = useState('hybrid');
+  const [recommendationType, setRecommendationType] = useState('random');
   const [ratedRecipes, setRatedRecipes] = useState({}); // Track which recipes have been rated
   const [hoveredStar, setHoveredStar] = useState({}); // Track hover state for stars
+  const [selectedRecipe, setSelectedRecipe] = useState(null); // For modal display
+  const [showRecipeModal, setShowRecipeModal] = useState(false);
+  const [popularUserRecipes, setPopularUserRecipes] = useState([]); // Popular recipes from user database
 
   const navigate = useNavigate();
+
+  const fetchRecommendations = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${recommendationType}&limit=10`, { headers });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        setRecommendations(data.recommendations);
+      } else {
+        throw new Error('Failed to get recommendations');
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRateRecipe = async (recipeId, rating) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/ml/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          recipe_id: recipeId,
+          rating,
+        }),
+      });
+      if (response.ok) {
+        setRatedRecipes(prev => ({
+          ...prev,
+          [recipeId]: rating
+        }));
+      } else {
+        console.error('Failed to rate recipe');
+      }
+    } catch (err) {
+      console.error('Error rating recipe:', err);
+    }
+  };
+
+  const handleRecordInteraction = async (recipeId, interactionType) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:5000/api/ml/interactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          recipe_id: recipeId,
+          interaction_type: interactionType,
+        }),
+      });
+    } catch (err) {
+      console.error('Error recording interaction:', err);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -21,6 +98,7 @@ const Recommendations = ({ user }) => {
 
     const fetchData = async () => {
       await fetchRecommendations();
+      await fetchPopularUserRecipes();
       // Fetch user's existing ratings
       try {
         const token = localStorage.getItem('token');
@@ -46,233 +124,29 @@ const Recommendations = ({ user }) => {
     fetchData();
   }, [recommendationType, user]);
 
-  const fetchRecommendations = async () => {
-    if (!user) return;
+  const fetchPopularUserRecipes = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(
-        `http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${recommendationType}&limit=10`,
-        { headers }
-      );
-      
+      const response = await fetch('http://localhost:5000/api/ml/popular');
       if (!response.ok) {
-        throw new Error('Failed to fetch recommendations');
+        throw new Error(`Failed to fetch popular user recipes: ${response.status}`);
       }
-      
       const data = await response.json();
-      
       if (data.success) {
-        setRecommendations(data.recommendations);
+        setPopularUserRecipes(data.popularRecipes);
       } else {
-        throw new Error(data.error || 'Failed to get recommendations');
+        throw new Error('Failed to get popular user recipes');
       }
     } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching popular user recipes:', err);
     }
   };
-
-  const handleRecommendationTypeChange = (type) => {
-    setRecommendationType(type);
-  };
-
-  const handleRateRecipe = async (recipeId, rating) => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch('http://localhost:5000/api/ml/ratings', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          user_id: user?.user_id,
-          recipe_id: recipeId,
-          rating: rating,
-          review_text: `Rated ${rating} star${rating > 1 ? 's' : ''}`,
-          datestamp: new Date().toISOString().split('T')[0]
-        }),
-      });
-
-      const data = await response.json();
-      
-      console.log('Rating response:', { status: response.status, data });
-
-      if (response.ok && data.success) {
-        // Update local state to show the rating
-        setRatedRecipes(prev => ({
-          ...prev,
-          [recipeId]: rating
-        }));
-        
-        // Show success message in a better way
-        showNotification(`Rated ${rating} star${rating > 1 ? 's' : ''}! ⭐`, 'success');
-        // Refresh recommendations after rating
-        setTimeout(() => {
-          fetchRecommendations();
-        }, 1000);
-      } else {
-        console.error('Rating failed:', data);
-        throw new Error(data.error || data.message || 'Failed to submit rating');
-      }
-    } catch (err) {
-      console.error('Error submitting rating:', err);
-      showNotification(`Failed to submit rating: ${err.message}`, 'error');
-    }
-  };
-
-  const showNotification = (message, type = 'info') => {
-    // Create a custom notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    
-    // Style the notification
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 500;
-      z-index: 1000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    
-    // Set background color based on type
-    if (type === 'success') {
-      notification.style.backgroundColor = '#4caf50';
-    } else if (type === 'error') {
-      notification.style.backgroundColor = '#f44336';
-    } else {
-      notification.style.backgroundColor = '#2196f3';
-    }
-    
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-      notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      notification.style.transform = 'translateX(100%)';
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      }, 300);
-    }, 3000);
-  };
-
-  const handleRecordInteraction = async (recipeId, interactionType) => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch('http://localhost:5000/api/ml/interactions', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          user_id: user?.user_id,
-          recipe_id: recipeId,
-          interaction_type: interactionType,
-          duration: interactionType === 'view' ? 30 : null
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        console.log('Interaction recorded successfully');
-        // Show feedback for certain interactions
-        if (interactionType === 'like') {
-          showNotification('Recipe liked! ❤️', 'success');
-        } else if (interactionType === 'save') {
-          showNotification('Recipe saved! 💾', 'success');
-        }
-      } else {
-        throw new Error(data.error || 'Failed to record interaction');
-      }
-    } catch (err) {
-      console.error('Error recording interaction:', err);
-      showNotification(`Failed to ${interactionType} recipe`, 'error');
-    }
-  };
-
-  const handleViewRecipe = (recipeId) => {
-    // Record view interaction
-    handleRecordInteraction(recipeId, 'view');
-    // Navigate to recipe detail page
-    navigate(`/recipes/${recipeId}`);
-  };
-
-  if (loading) {
-    return (
-      <div className="recommendations-page">
-        <h2>Recommended Recipes for You</h2>
-        <div className="loading">Loading recommendations...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="recommendations-page">
-        <h2>Recommended Recipes for You</h2>
-        <div className="error">Error: {error}</div>
-        <button onClick={fetchRecommendations} className="retry-button">
-          Try Again
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="recommendations-page">
-      <h2>Recommended Recipes for You</h2>
-      
-      {/* Recommendation Type Selector */}
-      <div className="recommendation-type-selector">
-        <label>Recommendation Type:</label>
-        <select 
-          value={recommendationType} 
-          onChange={(e) => handleRecommendationTypeChange(e.target.value)}
-        >
-          <option value="hybrid">Hybrid (Best of Both)</option>
-          <option value="collaborative">Collaborative Filtering</option>
-          <option value="content">Content-Based</option>
-        </select>
-      </div>
+      <h2 className="recommendation-title">Recommended Recipes for You</h2>
+      <p className="recommendation-description">
+        This page shows personalized recipe recommendations generated using a hybrid machine learning approach combining collaborative filtering and content-based filtering. You can rate recipes to improve your recommendations, like or save recipes, and view popular recipes by other chefs.
+      </p>
 
       {/* Recommendations List */}
       <div className="recommendation-list">
@@ -283,24 +157,29 @@ const Recommendations = ({ user }) => {
           </div>
         ) : (
           recommendations.map(recipe => (
-            <div key={recipe.recipe_id} className="recommendation-card">
+            <div
+              key={recipe.recipe_id}
+              className="recommendation-card"
+              onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
+              style={{ cursor: 'pointer' }}
+            >
               {recipe.image_url && (
-                <img 
-                  src={`http://localhost:5000/images/${recipe.image_url}`} 
+                <img
+                  src={`http://localhost:5000/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="recipe-image"
                   onLoad={() => handleRecordInteraction(recipe.recipe_id, 'view')}
                 />
               )}
-              
+
               <div className="recipe-content">
-            <h3>{recipe.title}</h3>
-            <p>{recipe.description}</p>
-                
+                <h3>{recipe.title}</h3>
+                <p>{recipe.description}</p>
+
                 {/* ML Score and Reason */}
                 <div className="ml-info">
-                  <span className="ml-score">Score: {recipe.score?.toFixed(2) || 'N/A'}</span>
-                  <span className="ml-reason">{recipe.reason || 'Recommended for you'}</span>
+                  <span className="ml-score">Avg Rating: {recipe.avg_rating?.toFixed(1) || 'N/A'}</span>
+                  <span className="ml-reason">Based on user ratings</span>
                 </div>
 
                 {/* Rating System */}
@@ -310,28 +189,37 @@ const Recommendations = ({ user }) => {
                     {[1, 2, 3, 4, 5].map(star => {
                       const isRated = ratedRecipes[recipe.recipe_id] >= star;
                       const isHovered = hoveredStar[recipe.recipe_id] >= star;
-                      const shouldFill = isRated || isHovered;
-                      
+                      const shouldFill = isHovered || isRated;
+
                       return (
                         <button
                           key={star}
                           className={`star-button ${isRated ? 'rated' : ''}`}
-                          onClick={() => handleRateRecipe(recipe.recipe_id, star)}
-                          onMouseEnter={() => setHoveredStar(prev => ({
-                            ...prev,
-                            [recipe.recipe_id]: star
-                          }))}
-                          onMouseLeave={() => setHoveredStar(prev => ({
-                            ...prev,
-                            [recipe.recipe_id]: 0
-                          }))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRateRecipe(recipe.recipe_id, star);
+                          }}
+                          onMouseEnter={(e) => {
+                            e.stopPropagation();
+                            setHoveredStar(prev => ({
+                              ...prev,
+                              [recipe.recipe_id]: star
+                            }));
+                          }}
+                          onMouseLeave={(e) => {
+                            e.stopPropagation();
+                            setHoveredStar(prev => ({
+                              ...prev,
+                              [recipe.recipe_id]: 0
+                            }));
+                          }}
                           title={`Rate ${star} star${star > 1 ? 's' : ''}`}
                         >
-                          <svg 
-                            className="star-icon" 
-                            viewBox="0 0 24 24" 
+                          <svg
+                            className="star-icon"
+                            viewBox="0 0 24 24"
                             fill={shouldFill ? "currentColor" : "none"}
-                            stroke="currentColor" 
+                            stroke="currentColor"
                             strokeWidth="2"
                           >
                             <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
@@ -340,45 +228,34 @@ const Recommendations = ({ user }) => {
                       );
                     })}
                   </div>
-                  <div className="rating-feedback">
-                    {ratedRecipes[recipe.recipe_id] 
-                      ? `You rated this recipe ${ratedRecipes[recipe.recipe_id]} star${ratedRecipes[recipe.recipe_id] > 1 ? 's' : ''}!`
-                      : 'Click a star to rate this recipe'
-                    }
-                  </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="action-buttons">
-                  <button 
-                    className="view-button"
-                    onClick={() => handleViewRecipe(recipe.recipe_id)}
-                  >
-                    View Recipe
-                  </button>
-                  <button 
+                  <button
                     className="like-button"
-                    onClick={() => handleRecordInteraction(recipe.recipe_id, 'like')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecordInteraction(recipe.recipe_id, 'like');
+                    }}
                   >
-                    🤍 Like
+                    Like
                   </button>
-                  <button 
+                  <button
                     className="save-button"
-                    onClick={() => handleRecordInteraction(recipe.recipe_id, 'save')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRecordInteraction(recipe.recipe_id, 'save');
+                    }}
                   >
-                    📁 Save
+                    Save
                   </button>
-          </div>
-      </div>
+                </div>
+              </div>
             </div>
           ))
         )}
       </div>
-
-      {/* Refresh Button */}
-      <button onClick={fetchRecommendations} className="refresh-button">
-        🔄 Refresh Recommendations
-      </button>
     </div>
   );
 };

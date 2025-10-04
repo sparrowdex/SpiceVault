@@ -279,34 +279,35 @@ const Home = () => {
           >
             ‹
           </button>
-          <div className="popular-cards">
-            {popularRecipes.length > 0 ? (
-              popularRecipes.slice(popularCarouselIndex, popularCarouselIndex + 4).map((recipe) => (
-                <div key={recipe.recipe_id} className="recipe-card">
-                  <img
-                    src={`http://localhost:5000/images/${recipe.image_url}`}
-                    alt={recipe.title}
-                    style={{ width: '202px', height: '113px', objectFit: 'cover' }}
-                  />
-                  <h3>{recipe.title}</h3>
-                  <p>{recipe.description}</p>
-                  <div className="recipe-meta">
-                    <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
-                      {recipe.difficulty}
-                    </span>
-                    <span className="category-tag">
-                      {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
-                    </span>
-                    <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
-                      {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
-                    </span>
-                  </div>
+        <div className="popular-cards">
+          {popularRecipes.length > 0 ? (
+            popularRecipes.slice(popularCarouselIndex, popularCarouselIndex + 4).map((recipe, index) => (
+              <div key={recipe.recipe_id} className="popular-recipe-card">
+                <div className="recipe-rank">{popularCarouselIndex + index + 1}</div>
+                <img
+                  src={`http://localhost:5000/images/${recipe.image_url}`}
+                  alt={recipe.title}
+                  style={{ width: '202px', height: '113px', objectFit: 'cover' }}
+                />
+                <h3>{recipe.title}</h3>
+                <p>{recipe.description}</p>
+                <div className="recipe-meta">
+                  <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
+                    {recipe.difficulty}
+                  </span>
+                  <span className="category-tag">
+                    {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
+                  </span>
+                  <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
+                    {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <p>No popular recipes available at the moment.</p>
-            )}
-          </div>
+              </div>
+            ))
+          ) : (
+            <p>No popular recipes available at the moment.</p>
+          )}
+        </div>
           <button
             className="carousel-arrow carousel-arrow-right"
             onClick={() => setPopularCarouselIndex((prev) => (prev + 4) % popularRecipes.length)}
@@ -340,7 +341,9 @@ const Home = () => {
             </button>
             
             <div className="filter-section">
-              <h3 className="filter-section-title">{filterSections[currentFilterSection].title}</h3>
+              <h3 className={`filter-section-title ${filterSections[currentFilterSection].id === 'difficulty' ? 'difficulty-font' : ''}`}>
+                {filterSections[currentFilterSection].id === 'difficulty' ? 'Filter Your Choice' : filterSections[currentFilterSection].title}
+              </h3>
               <div className="filter-options">
                 {filterSections[currentFilterSection].options.map((option) => (
                   <button
@@ -375,7 +378,7 @@ const Home = () => {
 
         <div className="recipe-list">
           {recipes.map((recipe) => (
-            <div key={recipe.recipe_id} className="recipe-card">
+            <div key={recipe.recipe_id} className="popular-recipe-card" onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
               <img
                 src={`http://localhost:5000/images/${recipe.image_url}`}
                 alt={recipe.title}
@@ -394,7 +397,7 @@ const Home = () => {
                   {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
                 </span>
               </div>
-              <a href={`/recipes/${recipe.recipe_id}`} className="view-recipe-button">View Recipe</a>
+              <div className="view-recipe-overlay">View Recipe</div>
             </div>
           ))}
         </div>

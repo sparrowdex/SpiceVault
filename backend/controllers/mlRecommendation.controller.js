@@ -312,61 +312,13 @@ exports.getRecipeTags = async (req, res) => {
   }
 };
 
-// Get similar recipes based on content
+// Get similar recipes based on content - DISABLED: Now using Spoonacular API in frontend
 exports.getSimilarRecipes = async (req, res) => {
-  try {
-    const recipeId = req.params.recipeId;
-    const limit = parseInt(req.query.limit) || 5;
-
-    // This would use the content-based similarity from the ML service
-    // For now, return a simple implementation
-    const recipe = await db.Recipe.findByPk(recipeId);
-    if (!recipe) {
-      return res.status(404).json({
-        success: false,
-        error: 'Recipe not found'
-      });
-    }
-
-    // Get recipes with similar tags
-    const recipeTags = await RecipeTag.findAll({
-      where: { recipe_id: recipeId }
-    });
-
-    if (recipeTags.length === 0) {
-      return res.json({
-        success: true,
-        similarRecipes: []
-      });
-    }
-
-    const tagNames = recipeTags.map(tag => tag.tag_name);
-    const similarRecipes = await db.Recipe.findAll({
-      include: [{
-        model: RecipeTag,
-        as: 'tags',
-        where: {
-          tag_name: tagNames
-        }
-      }],
-      where: {
-        recipe_id: { [db.Sequelize.Op.ne]: recipeId }
-      },
-      limit
-    });
-
-    res.json({
-      success: true,
-      similarRecipes
-    });
-  } catch (error) {
-    console.error('Error getting similar recipes:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get similar recipes',
-      message: error.message
-    });
-  }
+  res.status(410).json({
+    success: false,
+    error: 'Similar recipes are no longer available. Please use the frontend Spoonacular integration.',
+    message: 'This endpoint has been disabled as similar recipes are now handled by Spoonacular API in the frontend.'
+  });
 };
 
 // Get popular recipes based on ratings and interactions
