@@ -15,7 +15,8 @@
 - [ ] Improve error responses with consistent format
 
 ## Phase 3: Code Quality and Cleanup
-- [ ] Remove commented-out code in frontend files (home.js)
+- [x] Remove commented-out code in frontend files (home.js)
+- [x] Remove unused files (styles.css, logo.svg, Navbar.js, mockData/users.js, unused scripts)
 - [ ] Refactor large components into smaller, reusable ones
 - [ ] Add PropTypes or TypeScript for type checking
 - [ ] Implement consistent code formatting with Prettier/ESLint

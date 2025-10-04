@@ -123,8 +123,6 @@
 //fixing the useEffect warning and a search input and sorting dropdown
 import React, { useState, useEffect, useCallback } from 'react';
 import './home.css';
-import Navbar from './components/Navbar';
-
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -271,9 +269,8 @@ const Home = () => {
 
   return (
     <div>
-      <Navbar />
       <div className="home-page">
-        <h2>Popular Recipes</h2>
+        <h2 className="gradient-heading">Popular Recipes</h2>
         <div className="popular-carousel">
           <button
             className="carousel-arrow carousel-arrow-left"
@@ -319,7 +316,7 @@ const Home = () => {
           </button>
         </div>
 
-        <h2>All Recipes</h2>
+        <h2 className="gradient-heading">All Recipes</h2>
 
         <div className="filters">
           <input
