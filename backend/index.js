@@ -1,10 +1,11 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const db = require('./models'); // Sequelize Models
-require('dotenv').config();
 
 const app = express();
 // const PORT = process.env.PORT || 3306;
@@ -31,8 +32,6 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(bodyParser.json({ limit: '10mb' })); // Limit payload size
 app.use(express.json({ limit: '10mb' })); // ✅ Enables JSON parsing for incoming requests
 
-
-
 // Test DB connection only
 db.sequelize.authenticate()
   .then(() => {
@@ -51,10 +50,8 @@ const mlRoutes = require('./routes/mlRecommendation.routes');
 app.use('/api/ml', mlRoutes);
 const authRoutes = require('./routes/auth.routes');
 app.use('/api/auth', authRoutes);
-
-
-
-
+const userInteractionRoutes = require('./routes/userInteraction.routes');
+app.use('/api/user-interactions', userInteractionRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

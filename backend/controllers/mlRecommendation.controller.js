@@ -202,6 +202,41 @@ exports.getUserRatings = async (req, res) => {
   }
 };
 
+// Get all ratings for a specific recipe
+exports.getRecipeRatings = async (req, res) => {
+  try {
+    const recipeId = req.query.recipe_id;
+    if (!recipeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'recipe_id query parameter is required'
+      });
+    }
+
+    const ratings = await Rating.findAll({
+      where: { recipe_id: recipeId },
+      include: [{
+        model: db.User,
+        as: 'user',
+        attributes: ['user_id', 'f_name', 'l_name', 'user_type']
+      }],
+      order: [['datestamp', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      ratings
+    });
+  } catch (error) {
+    console.error('Error getting recipe ratings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get recipe ratings',
+      message: error.message
+    });
+  }
+};
+
 // Get user's interaction history
 exports.getUserInteractions = async (req, res) => {
   try {
@@ -337,9 +372,12 @@ exports.getPopularRecipes = async (req, res) => {
         r.food_category,
         r.diet_type,
         AVG(rg.rating) as avg_rating,
-        COUNT(rg.rating) as rating_count
+        COUNT(rg.rating) as rating_count,
+        CONCAT(u.f_name, ' ', u.l_name) as chef_name
       FROM recipe r
       LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      LEFT JOIN user u ON r.chef_id = u.user_id
+      WHERE r.chef_id IS NOT NULL
       GROUP BY r.recipe_id
       HAVING COUNT(rg.rating) > 0
       ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
@@ -360,7 +398,8 @@ exports.getPopularRecipes = async (req, res) => {
         food_category: recipe.food_category,
         diet_type: recipe.diet_type,
         avg_rating: parseFloat(recipe.avg_rating).toFixed(1),
-        rating_count: recipe.rating_count
+        rating_count: recipe.rating_count,
+        chef_name: recipe.chef_name
       }))
     });
   } catch (error) {
@@ -392,6 +431,126 @@ exports.deleteRating = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to delete rating',
+      message: error.message
+    });
+  }
+};
+
+// Get chef statistics
+exports.getChefStats = async (req, res) => {
+  try {
+    const chefId = req.params.chefId;
+
+    // Get total recipes by chef
+    const totalRecipes = await db.Recipe.count({
+      where: { chef_id: chefId }
+    });
+
+    // Get average rating across all chef's recipes
+    const ratingStats = await db.sequelize.query(`
+      SELECT
+        AVG(rg.rating) as averageRating,
+        COUNT(DISTINCT r.recipe_id) as ratedRecipes
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id = ?
+    `, {
+      replacements: [chefId],
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    // Get recipes in top 10 global rankings
+    const top10Recipes = await db.sequelize.query(`
+      SELECT r.recipe_id
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id IS NOT NULL
+      GROUP BY r.recipe_id
+      HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
+      LIMIT 10
+    `, {
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    const top10RecipeIds = top10Recipes.map(recipe => recipe.recipe_id);
+
+    const recipesInTop10 = await db.Recipe.count({
+      where: {
+        chef_id: chefId,
+        recipe_id: top10RecipeIds
+      }
+    });
+
+    res.json({
+      success: true,
+      totalRecipes,
+      averageRating: ratingStats[0].averageRating ? parseFloat(ratingStats[0].averageRating).toFixed(2) : null,
+      recipesInTop10
+    });
+  } catch (error) {
+    console.error('Error getting chef stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get chef stats',
+      message: error.message
+    });
+  }
+};
+
+// Get global rankings with time period filtering
+exports.getGlobalRankings = async (req, res) => {
+  try {
+    const period = req.query.period || 'all'; // daily, weekly, monthly, all
+    let dateFilter = '';
+
+    if (period === 'daily') {
+      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+    } else if (period === 'weekly') {
+      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+    } else if (period === 'monthly') {
+      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+    }
+
+    // Get current rankings
+    const currentRankings = await db.sequelize.query(`
+      SELECT
+        r.recipe_id,
+        r.title,
+        r.image_url,
+        r.chef_id,
+        AVG(rg.rating) as avg_rating,
+        COUNT(rg.rating) as rating_count,
+        ROW_NUMBER() OVER (ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC) as current_rank
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id IS NOT NULL ${dateFilter}
+      GROUP BY r.recipe_id
+      HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
+      LIMIT 50
+    `, {
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    // For rank change calculation, we'd need historical data
+    // For now, we'll simulate rank changes (in a real implementation, store previous rankings)
+    const rankingsWithChange = currentRankings.map((recipe, index) => ({
+      ...recipe,
+      rank: index + 1,
+      rankChange: Math.floor(Math.random() * 3) - 1 // -1, 0, or 1 for demo
+    }));
+
+    res.json({
+      success: true,
+      period,
+      rankings: rankingsWithChange
+    });
+  } catch (error) {
+    console.error('Error getting global rankings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get global rankings',
       message: error.message
     });
   }

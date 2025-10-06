@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './addrecipe.css';
 
 const AddRecipe = () => {
@@ -13,9 +13,26 @@ const AddRecipe = () => {
     preparation_time: '',
     cooking_time: '',
     nutrition_info: '',
-    user_id: 1, // Example user_id for testing; replace with dynamic value if needed
-    chef_id: 2  // Example chef_id; change according to app logic
+    user_id: null,
+    chef_id: null
   });
+
+  const [user, setUser] = useState(null);
+  const [isChef, setIsChef] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      setFormData(prev => ({
+        ...prev,
+        user_id: parsedUser.user_id,
+        chef_id: parsedUser.user_type === 'chef' ? parsedUser.user_id : null
+      }));
+      setIsChef(parsedUser.user_type === 'chef');
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,6 +40,11 @@ const AddRecipe = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isChef) {
+      alert('You need a chef account to add recipes. Please become a chef from your profile.');
+      return;
+    }
 
     try {
       const res = await fetch(`http://localhost:5000/api/recipes`, {
@@ -44,6 +66,21 @@ const AddRecipe = () => {
       console.error('Error:', err);
     }
   };
+
+  if (!user) {
+    return <p>Please log in to add a recipe.</p>;
+  }
+
+  if (!isChef) {
+    return (
+      <div className="add-recipe-page">
+        <div className="add-recipe-container">
+          <h2>Add a New Recipe</h2>
+          <p>You need to have a chef account to add a recipe. You can become a chef from your profile page.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="add-recipe-page">

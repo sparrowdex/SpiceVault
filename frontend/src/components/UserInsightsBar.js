@@ -1,21 +1,96 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './UserInsightsBar.css';
 
-const UserInsightsBar = ({ insights }) => {
+const UserInsightsBar = ({ user }) => {
+  const [userStats, setUserStats] = useState(null);
+  const [globalRankings, setGlobalRankings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchUserStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/ml/chef-stats/${user.user_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user stats');
+      }
+      const data = await response.json();
+      setUserStats(data);
+    } catch (err) {
+      setError(err.message);
+    }
+  }, [user.user_id]);
+
+  const fetchGlobalRankings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/ml/global-rankings', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch global rankings');
+      }
+      const data = await response.json();
+      setGlobalRankings(data.rankings);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && user.role === 'chef') {
+      fetchUserStats();
+      fetchGlobalRankings();
+    }
+  }, [user, fetchUserStats, fetchGlobalRankings]);
+
+  if (!user || user.user_type !== 'chef') {
+    return null;
+  }
+
   return (
     <div className="user-insights-bar">
-      <div className="insight-item">
-        <strong>{insights.savedRecipesCount}</strong> Saved Recipes
-      </div>
-      <div className="insight-item">
-        <strong>{insights.likedRecipesCount}</strong> Liked Recipes
-      </div>
-      <div className="insight-item">
-        <strong>{insights.ratedRecipesCount}</strong> Rated Recipes
-      </div>
-      <div className="insight-item">
-        <strong>{insights.favoriteCategories.join(', ') || 'None'}</strong> Favorite Categories
-      </div>
+      <h3 className="insights-title">Chef Insights</h3>
+      {loading ? (
+        <p>Loading insights...</p>
+      ) : error ? (
+        <p className="error-message">{error}</p>
+      ) : (
+        <div className="insights-content">
+          <div className="user-stats">
+            <h4>Your Recipe Performance</h4>
+            {userStats ? (
+              <ul>
+                <li>Total Recipes: {userStats.totalRecipes}</li>
+                <li>Average Rating: {userStats.averageRating?.toFixed(2)}</li>
+                <li>Recipes in Top 10: {userStats.recipesInTop10}</li>
+              </ul>
+            ) : (
+              <p>No stats available.</p>
+            )}
+          </div>
+          <div className="global-rankings">
+            <h4>Global Recipe Leaderboard</h4>
+            <ol>
+              {globalRankings.map((recipe, index) => (
+                <li key={recipe.recipe_id}>
+                  <span>{index + 1}. {recipe.title} - {parseFloat(recipe.avg_rating)?.toFixed(2) || 'N/A'}</span>
+                  {recipe.chef_id === user.user_id && <span className="your-recipe">(Your Recipe)</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

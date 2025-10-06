@@ -1,5 +1,33 @@
 /* UserProfile.css */
 
+@font-face {
+  font-family: 'Trovical';
+  src: url('../assets/fonts/TrovicalCalmFreeRegular-0vam4.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ElegantWoman';
+  src: url('../assets/fonts/ElegantWomanDemo-2O9Ve.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Nostalgia';
+  src: url('../assets/fonts/NostalgiaRegular-pg3lK.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MerivalRounded';
+  src: url('../assets/fonts/MerivaleroundedRegularDemo-7OEWD.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .profile-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -10,12 +38,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #ff6600, #ff8533);
+  background: linear-gradient(135deg, #ff6600, #ff8533, #cc6600);
   color: white;
   padding: 30px;
-  border-radius: 15px;
+  border-radius: 30px / 60px;
   margin-bottom: 30px;
   box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+  clip-path: none;
+  filter: drop-shadow(0 0 5px rgba(255, 102, 0, 0.5));
+  transition: filter 0.3s ease;
+}
+
+.profile-header:hover {
+  filter: drop-shadow(0 0 15px rgba(255, 102, 0, 0.8));
+}
+
+.welcome-text {
+  font-family: 'MerivalRounded', serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.username-text {
+  font-family: 'MerivalRounded', serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-left: 8px;
 }
 
 .profile-info h1 {
@@ -62,14 +110,19 @@
 .tab-button {
   background: none;
   border: none;
-  padding: 15px 25px;
+  padding: 15px 40px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: 600;
   color: #666;
   border-bottom: 3px solid transparent;
   transition: all 0.3s ease;
   border-radius: 8px 8px 0 0;
+  font-family: 'Trovical', serif;
+  letter-spacing: 0.1em;
+  background: linear-gradient(90deg, red, brown);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .tab-button:hover {
@@ -88,10 +141,13 @@
 }
 
 .tab-content h2 {
-  color: #333;
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: 600;
+  font-family: 'Nostalgia', serif;
+  background: linear-gradient(90deg, #d4af37, #ffd700, #b8860b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .recipes-grid {
@@ -297,12 +353,19 @@
 }
 
 .delete-button {
-  background: linear-gradient(135deg, #f44336, #ef5350);
+  background: transparent;
   color: white;
+  border: 2px solid #f44336;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .delete-button:hover {
-  background: linear-gradient(135deg, #d32f2f, #f44336);
+  background: #f44336;
+  color: white;
   transform: translateY(-1px);
 }
 
@@ -353,4 +416,59 @@
     align-items: flex-start;
     gap: 10px;
   }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 22px;
+  color: #333;
+}
+
+.modal-content p {
+  font-size: 16px;
+  margin-bottom: 25px;
+  color: #555;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+}
+
+.modal-actions button {
+  font-family: 'Trovical', serif !important;
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  max-width: 150px;
+  text-align: center;
 }

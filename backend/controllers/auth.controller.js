@@ -2,7 +2,8 @@
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const db = require('../models');
+const { User } = db;
 
 // Register a new user
 exports.register = async (req, res) => {
@@ -136,6 +137,112 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get profile',
+      message: error.message
+    });
+  }
+};
+
+// Delete user account and all associated data
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Start a transaction to ensure all deletions happen atomically
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      // Delete user's recipes where chef_id
+      await db.Recipe.destroy({
+        where: { chef_id: userId },
+        transaction
+      });
+
+      // Delete user's recipes where user_id
+      await db.Recipe.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Delete user's ratings
+      await db.Rating.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Delete user's interactions (likes, saves, etc.) using raw query to ensure all deleted
+      await db.sequelize.query(
+        'DELETE FROM user_interactions WHERE user_id = :userId',
+        {
+          replacements: { userId },
+          transaction
+        }
+      );
+
+      // Delete notification type multi entries
+      await db.Notification_Type_Multi.destroy({
+        where: {
+          notification_id: db.Sequelize.literal(`(SELECT notification_id FROM Receives_Notification WHERE user_id = ${userId})`)
+        },
+        transaction
+      });
+
+      // Delete receives notification entries
+      await db.Receives_Notification.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Delete leaderboard entries
+      await db.Leaderboard.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Delete class offered entries
+      await db.Class_Offered.destroy({
+        where: {
+          chef_id: db.Sequelize.literal(`(SELECT chef_id FROM Chef_Posts WHERE user_id = ${userId})`)
+        },
+        transaction
+      });
+
+      // Delete chef specialization entries
+      await db.Chef_Specialization.destroy({
+        where: {
+          chef_id: db.Sequelize.literal(`(SELECT chef_id FROM Chef_Posts WHERE user_id = ${userId})`)
+        },
+        transaction
+      });
+
+      // Delete chef posts entries
+      await db.Chef_Posts.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Finally, delete the user account
+      await db.User.destroy({
+        where: { user_id: userId },
+        transaction
+      });
+
+      // Commit the transaction
+      await transaction.commit();
+
+      res.json({
+        success: true,
+        message: 'Account and all associated data deleted successfully'
+      });
+    } catch (error) {
+      // Rollback the transaction on error
+      await transaction.rollback();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete account',
       message: error.message
     });
   }

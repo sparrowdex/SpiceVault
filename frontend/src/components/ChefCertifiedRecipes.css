@@ -1,0 +1,117 @@
+@font-face {
+  font-family: 'Elegant Woman Demo';
+  src: url('../assets/fonts/ElegantWomanDemo-2O9Ve.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.chef-certified-recipes-container {
+  padding: 20px;
+  background-color: #ffe5b4;
+  min-height: 100vh;
+}
+
+.chef-certified-title {
+  font-family: 'Elegant Woman Demo', cursive;
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #b35c00;
+}
+
+.chef-certified-description {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #6b4c00;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chef-certified-recipes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px 40px;
+  justify-items: center;
+}
+
+.chef-certified-recipes .recipe-card {
+  background: linear-gradient(135deg, #fff8e1, #ffe0b2) !important;
+  background-color: #fff3d4 !important;
+  border-radius: 15px;
+  box-shadow: 0 8px 15px rgba(255, 165, 0, 0.3);
+  width: 320px;
+  padding: 15px 15px 25px 15px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #f0c27b;
+}
+
+.chef-certified-recipes .recipe-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(255, 140, 0, 0.5);
+}
+
+.chef-certified-recipes .recipe-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 8px rgba(255, 165, 0, 0.4);
+  transition: transform 0.3s ease;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chef-certified-recipes .recipe-card:hover .recipe-image {
+  transform: scale(1.05);
+}
+
+.chef-certified-recipes .recipe-title {
+  font-family: 'Trovical Calm Free Regular', serif;
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #6b3e00;
+  text-shadow: 1px 1px 2px #f0c27b;
+}
+
+.chef-certified-recipes .chef-name {
+  font-size: 1rem;
+  color: #a0522d;
+  text-align: center;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.chef-certified-recipes .chef-name::before {
+  content: "Chef: ";
+  font-weight: 900;
+  color: #d2691e;
+}
+
+.chef-certified-recipes .badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 6px 14px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: white;
+  background: linear-gradient(45deg, #f6d365 0%, #fda085 100%);
+  box-shadow: 0 3px 8px rgba(255, 140, 0, 0.4);
+  user-select: none;
+}
+
+.chef-certified-recipes .badge.excellent {
+  background: linear-gradient(45deg, #56ab2f 0%, #a8e063 100%);
+  box-shadow: 0 3px 8px rgba(86, 171, 47, 0.6);
+}
+
+.chef-certified-recipes .badge.good {
+  background: linear-gradient(45deg, #f6d365 0%, #fda085 100%);
+  box-shadow: 0 3px 8px rgba(253, 160, 133, 0.6);
+}

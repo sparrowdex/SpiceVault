@@ -1,7 +1,11 @@
 'use strict';
 
 require('dotenv').config();
-console.log('Loaded env:', process.env.DB_DIALECT);
+console.log('Loaded env DB_USER:', process.env.DB_USER);
+console.log('Loaded env DB_PASSWORD:', process.env.DB_PASSWORD ? 'present' : 'missing');
+console.log('Loaded env DB_NAME:', process.env.DB_NAME);
+console.log('Loaded env DB_HOST:', process.env.DB_HOST);
+console.log('Loaded env DB_DIALECT:', process.env.DB_DIALECT);
 const { Sequelize, DataTypes } = require('sequelize');
 
 // Set up Sequelize connection using .env variables
@@ -11,7 +15,7 @@ const sequelize = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: process.env.DB_HOST,
-    dialect: process.env.DB_DIALECT
+    dialect: process.env.DB_DIALECT || 'mysql'
   }
 );
 
@@ -44,6 +48,9 @@ db.UserInteraction.belongsTo(db.Recipe, { foreignKey: 'recipe_id', as: 'recipe' 
 
 db.Recipe.hasMany(db.RecipeTag, { foreignKey: 'recipe_id', as: 'tags' });
 db.RecipeTag.belongsTo(db.Recipe, { foreignKey: 'recipe_id', as: 'recipe' });
+
+db.Recipe.belongsTo(db.User, { foreignKey: 'chef_id', as: 'chef' });
+db.User.hasMany(db.Recipe, { foreignKey: 'chef_id', as: 'chefRecipes' });
 
 // Export db object
 module.exports = db;

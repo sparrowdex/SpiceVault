@@ -7,10 +7,31 @@ const Rating = db.Rating;
 // Create a new recipe
 exports.createRecipe = async (req, res) => {
   try {
+    const { title } = req.body;
+
+    // Check if a recipe with the same title already exists
+    const existingRecipe = await Recipe.findOne({
+      where: { title: title }
+    });
+
+    if (existingRecipe) {
+      return res.status(400).json({
+        success: false,
+        error: 'A recipe with this title already exists. Please choose a different title.'
+      });
+    }
+
     const recipe = await Recipe.create(req.body);
-    res.status(201).json(recipe);
+    res.status(201).json({
+      success: true,
+      recipe,
+      message: 'Recipe created successfully'
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
@@ -122,6 +143,54 @@ exports.rateRecipe = async (req, res) => {
       return res.status(201).json({ message: "Rating added successfully", rating: newRating });
     }
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get chef certified recipes with ratings and chef info
+exports.getChefCertifiedRecipes = async (req, res) => {
+  try {
+    const User = db.User;
+    console.log('Fetching chef certified recipes...');
+    const recipes = await Recipe.findAll({
+      where: {
+        chef_id: { [db.Sequelize.Op.ne]: null } // Recipes with a chef assigned
+      },
+      include: [
+        {
+          model: User,
+          as: 'chef', // Assuming association is set up
+          attributes: ['f_name', 'l_name']
+        },
+        {
+          model: Rating,
+          as: 'ratings', // Assuming association is set up
+          attributes: ['rating']
+        }
+      ]
+    });
+    console.log('Found recipes:', recipes.length);
+
+    // Calculate average rating for each recipe
+    const recipesWithAvgRating = recipes.map(recipe => {
+      const ratings = recipe.ratings || [];
+      const avgRating = ratings.length > 0
+        ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+        : null;
+      return {
+        ...recipe.toJSON(),
+        avg_rating: avgRating,
+        chef_name: recipe.chef ? `${recipe.chef.f_name} ${recipe.chef.l_name}` : null
+      };
+    });
+
+    console.log('Recipes with avg rating:', recipesWithAvgRating.length);
+    res.json({
+      success: true,
+      recipes: recipesWithAvgRating
+    });
+  } catch (error) {
+    console.error('Error in getChefCertifiedRecipes:', error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserProfile.css';
 
@@ -9,13 +9,11 @@ const UserProfile = ({ user, onLogout }) => {
   const [ratedRecipes, setRatedRecipes] = useState([]);
   const [addedRecipes, setAddedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [modalType, setModalType] = useState(null); // 'deleteAccount' or 'deleteInteractions'
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -73,7 +71,11 @@ const UserProfile = ({ user, onLogout }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.user_id]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const handleRemoveInteraction = async (idToRemove, type) => {
     try {
@@ -259,10 +261,102 @@ const UserProfile = ({ user, onLogout }) => {
           <p className="user-type">{user.user_type} Account</p>
           <p className="user-email">{user.email}</p>
         </div>
-        <button onClick={onLogout} className="logout-button">
-          Logout
-        </button>
+      <div>
+          <button className="delete-button" onClick={() => { setModalType('deleteInteractions'); setShowDeleteModal(true); }}>
+            Delete Account
+          </button>
+        </div>
       </div>
+
+      {showDeleteModal && modalType === 'deleteAccount' && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Confirm Account Deletion</h3>
+            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button 
+                className="delete-button" 
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`http://localhost:5000/api/users/${user.user_id}`, {
+                      method: 'DELETE',
+                      headers: {
+                        'Authorization': `Bearer ${token}`
+                      }
+                    });
+                    if (response.ok) {
+                      showNotification('Account deleted successfully.', 'success');
+                      onLogout();
+                      navigate('/');
+                    } else {
+                      const errorData = await response.json();
+                      throw new Error(errorData.message || 'Failed to delete account');
+                    }
+                  } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                  } finally {
+                    setShowDeleteModal(false);
+                    setModalType(null);
+                  }
+                }}
+              >
+                Confirm Delete
+              </button>
+              <button 
+                className="delete-button" 
+                onClick={() => { setShowDeleteModal(false); setModalType(null); }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && modalType === 'deleteInteractions' && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Delete All Interactions</h3>
+            <p>This will delete all your saved, liked, and other interactions. This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button
+                className="delete-button"
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('http://localhost:5000/api/user-interactions/delete-all', {
+                      method: 'DELETE',
+                      headers: {
+                        'Authorization': `Bearer ${token}`
+                      }
+                    });
+                    if (response.ok) {
+                      showNotification('All interactions deleted successfully.', 'success');
+                      // Refresh user data to reflect changes
+                      await fetchUserData();
+                      setModalType('deleteAccount');
+                    } else {
+                      const errorData = await response.json();
+                      throw new Error(errorData.message || 'Failed to delete interactions');
+                    }
+                  } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                  }
+                }}
+              >
+                Confirm Delete All Interactions
+              </button>
+              <button
+                className="delete-button"
+                onClick={() => { setShowDeleteModal(false); setModalType(null); }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="profile-tabs">
         <button 

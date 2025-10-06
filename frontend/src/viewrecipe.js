@@ -8,29 +8,160 @@ function ViewRecipe({ user }) {
   const [recipe, setRecipe] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [rating, setRating] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [errorReviews, setErrorReviews] = useState(null);
+
+  // New state for review comment and rating input
+  const [newReviewText, setNewReviewText] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(0);
+
+  // New state for reply box open and reply text
+  const [replyBoxOpen, setReplyBoxOpen] = useState(null);
+  const [replyText, setReplyText] = useState('');
+
+  const toggleReplyBox = (reviewId) => {
+    if (replyBoxOpen === reviewId) {
+      setReplyBoxOpen(null);
+      setReplyText('');
+    } else {
+      setReplyBoxOpen(reviewId);
+      setReplyText('');
+    }
+  };
+
+  const submitReview = async () => {
+    if (!user || !user.user_id) {
+      alert('Please log in to submit a review.');
+      return;
+    }
+    if (newReviewRating === 0) {
+      alert('Please select a rating.');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/ml/ratings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          recipe_id: id,
+          rating: newReviewRating,
+          user_id: user.user_id,
+          review_text: newReviewText,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Refresh reviews list
+        setReviews((prev) => [...prev, data.rating]);
+        setNewReviewText('');
+        setNewReviewRating(0);
+      } else {
+        alert('Failed to submit review.');
+      }
+    } catch (error) {
+      console.error('Submit review failed:', error);
+      alert('Failed to submit review.');
+    }
+  };
+
+  const submitReply = async (reviewId) => {
+    if (!user || !user.user_id) {
+      alert('Please log in to submit a reply.');
+      return;
+    }
+    if (!replyText.trim()) {
+      alert('Reply text cannot be empty.');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5000/api/ml/replies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          review_id: reviewId,
+          user_id: user.user_id,
+          text: replyText,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Update the specific review with new reply
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review.review_id === reviewId
+              ? { ...review, replies: [...(review.replies || []), data.newReply] }
+              : review
+          )
+        );
+        setReplyBoxOpen(null);
+        setReplyText('');
+      } else {
+        alert('Failed to submit reply.');
+      }
+    } catch (error) {
+      console.error('Submit reply failed:', error);
+      alert('Failed to submit reply.');
+    }
+  };
 
   useEffect(() => {
     const fetchRecipeAndRating = async () => {
       try {
         // Fetch recipe details
         const resRecipe = await fetch(`http://localhost:5000/api/recipes/${id}`);
-        const dataRecipe = await resRecipe.json();
-        setRecipe(dataRecipe);
+      const dataRecipe = await resRecipe.json();
+      setRecipe(dataRecipe);
 
-        // Fetch user's existing rating for this recipe
-        if (user && user.user_id) { // Check if user is logged in
-          const resRating = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}?recipe_id=${id}`);
-          const dataRating = await resRating.json();
-
-          if (dataRating.success && dataRating.ratings.length > 0) {
-            setRating(dataRating.ratings[0].rating);
-          }
-        }
-
-      } catch (error) {
-        console.error('Failed to fetch recipe or rating:', error);
+      // Fetch user's existing rating for this recipe
+      if (user && user.user_id && user.token) { // Check if user and token are present
+    console.log('Fetching user rating with token:', user.token);
+    const resRating = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}?recipe_id=${id}`, {
+      headers: {
+        'Authorization': `Bearer ${user.token}`
       }
-    };
+    });
+    if (!resRating.ok) {
+      const errorText = await resRating.text();
+      console.error('Failed to fetch user rating:', resRating.status, errorText);
+      throw new Error(`Failed to fetch user rating: ${resRating.status}`);
+    }
+    const dataRating = await resRating.json();
+
+    if (dataRating.success && dataRating.ratings.length > 0) {
+      setRating(dataRating.ratings[0].rating);
+    }
+  } else {
+    console.warn('User or token missing, skipping user rating fetch', user);
+  }
+
+    // Fetch reviews for this recipe
+    setLoadingReviews(true);
+    const resReviews = await fetch(`http://localhost:5000/api/ml/ratings?recipe_id=${id}`, {
+      headers: {
+        'Authorization': `Bearer ${user.token}`
+      }
+    });
+    const dataReviews = await resReviews.json();
+    if (dataReviews.success) {
+      setReviews(dataReviews.ratings);
+    } else {
+      console.error('Failed to fetch reviews:', resReviews.status, dataReviews.error || 'Unknown error');
+      setErrorReviews('Failed to load reviews: ' + (dataReviews.error || 'Unknown error'));
+    }
+  } catch (error) {
+    console.error('Failed to fetch recipe or rating:', error);
+    setErrorReviews('Failed to load reviews');
+  } finally {
+    setLoadingReviews(false);
+  }
+};
 
     fetchRecipeAndRating();
   }, [id, user]); // Add user to dependency array
@@ -57,6 +188,7 @@ function ViewRecipe({ user }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
         },
         body: JSON.stringify({ recipe_id: id, rating: newRating, user_id: user.user_id }),
       });
@@ -100,7 +232,7 @@ function ViewRecipe({ user }) {
 
         <div className="section">
           <h3>Instructions</h3>
-          <p>{recipe.instructions}</p>
+          <pre className="instructions-text">{recipe.instructions}</pre>
         </div>
 
         <div className="section">
@@ -155,6 +287,97 @@ function ViewRecipe({ user }) {
               </span>
             ))}
           </div>
+        </div>
+
+        <div className="section">
+          <h3>Reviews</h3>
+          {loadingReviews ? (
+            <p>Loading reviews...</p>
+          ) : errorReviews ? (
+            <p className="error-message">{errorReviews}</p>
+          ) : (
+            <div className="reviews-list">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div key={review.review_id} className="review-item">
+                    <div className="review-header">
+                      <span className="review-rating">
+                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                      </span>
+                      <span className="review-date">{review.datestamp}</span>
+                    </div>
+                    {review.review_text && (
+                      <p className="review-text">{review.review_text}</p>
+                    )}
+                    <p className="review-user">
+                      By: {review.user ? `${review.user.f_name} ${review.user.l_name}` : 'Anonymous'}
+                      {review.user && review.user.user_type === 'chef' && ' (Chef)'}
+                    </p>
+                    {/* Reply section for chef who owns the recipe */}
+                    {user && user.user_id === recipe.chef_id && (
+                      <div className="reply-section">
+                        <button
+                          onClick={() => toggleReplyBox(review.review_id)}
+                          className="reply-button"
+                        >
+                          Reply
+                        </button>
+                        {replyBoxOpen === review.review_id && (
+                          <div className="reply-box">
+                            <textarea
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Write your reply..."
+                            />
+                            <button onClick={() => submitReply(review.review_id)}>Submit Reply</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {/* Display replies */}
+                    {review.replies && review.replies.length > 0 && (
+                      <div className="replies-list">
+                        {review.replies.map((reply) => (
+                          <div key={reply.reply_id} className="reply-item">
+                            <p className="reply-text">{reply.text}</p>
+                            <p className="reply-user">
+                              By: {reply.user ? `${reply.user.f_name} ${reply.user.l_name}` : 'Anonymous'}
+                              {reply.user && reply.user.user_type === 'chef' && ' (Chef)'}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p>No reviews yet. Be the first to rate this recipe!</p>
+              )}
+            </div>
+          )}
+          {/* Add new review comment section */}
+          {user && (
+            <div className="add-review-section">
+              <h4>Add Your Review</h4>
+              <div className="rating-stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={star <= newReviewRating ? 'star-filled' : 'star-empty'}
+                    onClick={() => setNewReviewRating(star)}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+              <textarea
+                value={newReviewText}
+                onChange={(e) => setNewReviewText(e.target.value)}
+                placeholder="Write your review here..."
+              />
+              <button onClick={submitReview}>Submit Review</button>
+            </div>
+          )}
         </div>
 
         <div className="section">

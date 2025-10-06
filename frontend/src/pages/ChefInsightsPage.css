@@ -1,0 +1,61 @@
+.chef-insights-page {
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.leaderboard-section {
+  margin-top: 30px;
+}
+
+.period-filter {
+  margin-bottom: 15px;
+}
+
+.period-filter label {
+  margin-right: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.leaderboard-table th {
+  background-color: #f4f4f4;
+  font-weight: 700;
+}
+
+.dish-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.rank-up {
+  color: green;
+  font-size: 18px;
+}
+
+.rank-down {
+  color: red;
+  font-size: 18px;
+}
+
+.rank-same {
+  color: gray;
+  font-size: 18px;
+}
+
+.your-recipe {
+  background-color: #e6f7ff;
+}

@@ -8,7 +8,7 @@ const Signup = ({ onLogin, onSwitchToLogin }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    user_type: 'Regular'
+    user_type: 'Regular' // default to Regular user
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -157,15 +157,15 @@ const Signup = ({ onLogin, onSwitchToLogin }) => {
           
           <div className="form-group">
             <label htmlFor="user_type">Account Type</label>
-            <select
-              id="user_type"
-              name="user_type"
-              value={formData.user_type}
-              onChange={handleChange}
-            >
-              <option value="Regular">Regular User</option>
-              <option value="Chef">Chef</option>
-            </select>
+          <select
+            id="user_type"
+            name="user_type"
+            value={formData.user_type}
+            onChange={handleChange}
+          >
+            <option value="Regular">Regular User</option>
+            <option value="chef">Chef</option>
+          </select>
           </div>
           
           <div className="form-group">

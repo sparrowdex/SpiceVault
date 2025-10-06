@@ -6,16 +6,19 @@ const Recommendations = ({ user }) => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [recommendationType, setRecommendationType] = useState('random');
+  const [recommendationType, setRecommendationType] = useState(() => {
+    // Load from localStorage or default to 'random'
+    return localStorage.getItem('recommendationType') || 'random';
+  });
   const [ratedRecipes, setRatedRecipes] = useState({}); // Track which recipes have been rated
   const [hoveredStar, setHoveredStar] = useState({}); // Track hover state for stars
   const [selectedRecipe, setSelectedRecipe] = useState(null); // For modal display
   const [showRecipeModal, setShowRecipeModal] = useState(false);
-  const [popularUserRecipes, setPopularUserRecipes] = useState([]); // Popular recipes from user database
+
 
   const navigate = useNavigate();
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (type) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -23,7 +26,7 @@ const Recommendations = ({ user }) => {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${recommendationType}&limit=10`, { headers });
+      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${type}&limit=10`, { headers });
       if (!response.ok) {
         throw new Error(`Failed to fetch recommendations: ${response.status}`);
       }
@@ -97,8 +100,7 @@ const Recommendations = ({ user }) => {
     }
 
     const fetchData = async () => {
-      await fetchRecommendations();
-      await fetchPopularUserRecipes();
+      await fetchRecommendations(recommendationType);
       // Fetch user's existing ratings
       try {
         const token = localStorage.getItem('token');
@@ -124,33 +126,36 @@ const Recommendations = ({ user }) => {
     fetchData();
   }, [recommendationType, user]);
 
-  const fetchPopularUserRecipes = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/ml/popular');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch popular user recipes: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.success) {
-        setPopularUserRecipes(data.popularRecipes);
-      } else {
-        throw new Error('Failed to get popular user recipes');
-      }
-    } catch (err) {
-      console.error('Error fetching popular user recipes:', err);
-    }
+  const handleRecommendationTypeChange = (e) => {
+    const newType = e.target.value;
+    setRecommendationType(newType);
+    localStorage.setItem('recommendationType', newType);
   };
 
   return (
     <div className="recommendations-page">
       <h2 className="recommendation-title">Recommended Recipes for You</h2>
       <p className="recommendation-description">
-        This page shows personalized recipe recommendations generated using a hybrid machine learning approach combining collaborative filtering and content-based filtering. You can rate recipes to improve your recommendations, like or save recipes, and view popular recipes by other chefs.
+        This page shows personalized recipe recommendations generated using a hybrid machine learning approach combining collaborative filtering and content-based filtering. You can rate recipes to improve your recommendations, like or save recipes.
       </p>
+
+      {/* Recommendation Type Selector */}
+      <div className="recommendation-type-selector">
+        <select id="recommendationType" value={recommendationType} onChange={handleRecommendationTypeChange}>
+          <option value="" disabled>Choose Type</option>
+          <option value="random">Random</option>
+          <option value="collaborative">Collaborative Filtering</option>
+          <option value="hybrid">Hybrid Filtering</option>
+        </select>
+      </div>
 
       {/* Recommendations List */}
       <div className="recommendation-list">
-        {recommendations.length === 0 ? (
+        {loading ? (
+          <p>Loading recommendations...</p>
+        ) : error ? (
+          <p className="error-message">{error}</p>
+        ) : recommendations.length === 0 ? (
           <div className="no-recommendations">
             <p>No recommendations available at the moment.</p>
             <p>Try rating some recipes to get personalized recommendations!</p>

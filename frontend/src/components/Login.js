@@ -38,6 +38,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
         localStorage.setItem('user', JSON.stringify(data.user));
         onLogin(data.user);
         showNotification('Login successful!', 'success');
+        // Redirect to profile page after successful login
+        window.location.href = '/profile';
       } else {
         setError(data.error || 'Login failed');
       }
