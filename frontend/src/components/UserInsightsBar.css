@@ -1,44 +1,72 @@
 .user-insights-bar {
-    background-color: #f9f9f9;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-  }
-  
-  .insights-title {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  .insights-content {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .user-stats,
-  .global-rankings {
-    width: 48%;
-  }
-  
-  .user-stats h4,
-  .global-rankings h4 {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .user-stats ul,
-  .global-rankings ol {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .user-stats li,
-  .global-rankings li {
-    margin-bottom: 0.5rem;
-  }
-  
-  .your-recipe {
-    font-weight: bold;
-    color: #007bff;
-    margin-left: 0.5rem;
-  }
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+}
+
+.insights-title {
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+  color: #333;
+  font-weight: 700;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+}
+
+.insights-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.user-stats,
+.global-rankings {
+  width: 48%;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.user-stats h4,
+.global-rankings h4 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.user-stats ul,
+.global-rankings ol {
+  list-style-type: none;
+  padding: 0;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.user-stats li,
+.global-rankings li {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: #555;
+}
+
+.your-recipe {
+  font-weight: 700;
+  color: #007bff;
+  margin-left: 0.5rem;
+}
+
+.tips-section {
+  margin-top: 1.5rem;
+  background-color: #e9f5ff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 123, 255, 0.15);
+  color: #004085;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}

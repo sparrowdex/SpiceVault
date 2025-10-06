@@ -2,44 +2,7 @@
 
 const mlRecommendationService = require('../services/mlRecommendationService');
 const db = require('../models');
-const { Rating, UserInteraction, RecipeTag } = db;
-
-// Get ML-powered recommendations for a user
-exports.getRecommendations = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const type = req.query.type || 'hybrid'; // hybrid, collaborative, content
-    const limit = parseInt(req.query.limit) || 10;
-
-    let recommendations;
-    switch (type) {
-      case 'collaborative':
-        recommendations = await mlRecommendationService.generateUserBasedRecommendations(userId, limit);
-        break;
-      case 'content':
-        recommendations = await mlRecommendationService.generateContentBasedRecommendations(userId, limit);
-        break;
-      case 'hybrid':
-      default:
-        recommendations = await mlRecommendationService.generateHybridRecommendations(userId, limit);
-        break;
-    }
-
-    res.json({
-      success: true,
-      type,
-      recommendations,
-      count: recommendations.length
-    });
-  } catch (error) {
-    console.error('Error getting recommendations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate recommendations',
-      message: error.message
-    });
-  }
-};
+const { Rating, UserInteraction, RecipeTag, User } = db;
 
 // Add a rating for a recipe
 exports.addRating = async (req, res) => {
@@ -66,10 +29,19 @@ exports.addRating = async (req, res) => {
         review_text,
         datestamp: new Date().toISOString().split('T')[0]
       });
+      // Reload with user info
+      const updatedRating = await Rating.findOne({
+        where: { review_id: existingRating.review_id },
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['user_id', 'f_name', 'l_name', 'user_type']
+        }]
+      });
       res.json({
         success: true,
         message: 'Rating updated successfully',
-        rating: existingRating
+        rating: updatedRating
       });
     } else {
       // Create new rating
@@ -80,10 +52,19 @@ exports.addRating = async (req, res) => {
         review_text,
         datestamp: new Date().toISOString().split('T')[0]
       });
+      // Reload with user info
+      const createdRating = await Rating.findOne({
+        where: { review_id: newRating.review_id },
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['user_id', 'f_name', 'l_name', 'user_type']
+        }]
+      });
       res.status(201).json({
         success: true,
         message: 'Rating added successfully',
-        rating: newRating
+        rating: createdRating
       });
     }
   } catch (error) {
@@ -342,6 +323,30 @@ exports.getRecipeTags = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to get recipe tags',
+      message: error.message
+    });
+  }
+};
+
+// Get personalized recommendations for a user
+exports.getRecommendations = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const type = req.query.type || 'random';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const recommendations = await mlRecommendationService.getRecommendations(userId, type, limit);
+
+    res.json({
+      success: true,
+      recommendations
+    });
+  } catch (error) {
+    console.error('Error getting recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get recommendations',
       message: error.message
     });
   }

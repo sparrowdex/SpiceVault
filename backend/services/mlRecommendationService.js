@@ -437,6 +437,56 @@ class MLRecommendationService {
       };
     }).filter(rec => rec !== null);
   }
+
+  // Main method to get recommendations based on type
+  async getRecommendations(userId, type = 'random', limit = 10) {
+    let recommendations = [];
+
+    try {
+      switch (type) {
+        case 'collaborative':
+          recommendations = await this.generateUserBasedRecommendations(userId, limit);
+          break;
+        case 'hybrid':
+          recommendations = await this.generateHybridRecommendations(userId, limit);
+          break;
+        case 'random':
+        default:
+          recommendations = await this.getFallbackRecommendations(userId, limit);
+          break;
+      }
+
+      // Add avg_rating to each recommendation
+      const recipeIds = recommendations.map(rec => rec.recipe_id);
+      if (recipeIds.length > 0) {
+        const db = require('../models');
+        const avgRatings = await db.sequelize.query(`
+          SELECT recipe_id, AVG(rating) as avg_rating
+          FROM reviews_given
+          WHERE recipe_id IN (${recipeIds.map(id => '?').join(',')})
+          GROUP BY recipe_id
+        `, {
+          replacements: recipeIds,
+          type: db.sequelize.QueryTypes.SELECT
+        });
+
+        const avgRatingMap = {};
+        avgRatings.forEach(row => {
+          avgRatingMap[row.recipe_id] = parseFloat(row.avg_rating);
+        });
+
+        recommendations = recommendations.map(rec => ({
+          ...rec,
+          avg_rating: avgRatingMap[rec.recipe_id] || null
+        }));
+      }
+
+      return recommendations;
+    } catch (error) {
+      console.error('Error in getRecommendations:', error);
+      return await this.getFallbackRecommendations(userId, limit);
+    }
+  }
 }
 
 module.exports = new MLRecommendationService();

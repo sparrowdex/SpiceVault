@@ -42,10 +42,10 @@ const ChefInsightsPage = ({ user }) => {
 
   return (
     <div className="chef-insights-page">
-      <h1>Chef Insights</h1>
+      {/* Removed small "Chef Insights" text as requested */}
       <UserInsightsBar user={user} />
       <div className="leaderboard-section">
-        <h2>Global Leaderboard</h2>
+        <h2 className="global-leaderboard-header">Global Leaderboard</h2>
         <div className="period-filter">
           <label>
             <input

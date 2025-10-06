@@ -59,6 +59,7 @@ function ViewRecipe({ user }) {
         setReviews((prev) => [...prev, data.rating]);
         setNewReviewText('');
         setNewReviewRating(0);
+        setRating(newReviewRating); // Update the rating state to persist the star rating
       } else {
         alert('Failed to submit review.');
       }
@@ -136,17 +137,22 @@ function ViewRecipe({ user }) {
 
     if (dataRating.success && dataRating.ratings.length > 0) {
       setRating(dataRating.ratings[0].rating);
+    } else {
+      setRating(0); // Reset rating if no rating found
     }
   } else {
     console.warn('User or token missing, skipping user rating fetch', user);
+    setRating(0); // Reset rating if user or token missing
   }
 
     // Fetch reviews for this recipe
     setLoadingReviews(true);
+    const headers = {};
+    if (user && user.token) {
+      headers['Authorization'] = `Bearer ${user.token}`;
+    }
     const resReviews = await fetch(`http://localhost:5000/api/ml/ratings?recipe_id=${id}`, {
-      headers: {
-        'Authorization': `Bearer ${user.token}`
-      }
+      headers
     });
     const dataReviews = await resReviews.json();
     if (dataReviews.success) {

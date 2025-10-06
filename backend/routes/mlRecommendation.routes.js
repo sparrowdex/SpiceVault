@@ -28,9 +28,9 @@ router.get('/chef-stats/:chefId', auth, validateUserId, mlRecommendationControll
 router.get('/global-rankings', auth, mlRecommendationController.getGlobalRankings);
 
 // Rating routes (require auth)
-router.post('/ratings', auth, validateRating, mlRecommendationController.addRating);
+router.post('/ratings', validateRating, mlRecommendationController.addRating); // Removed auth middleware to allow review submission
 router.get('/ratings/:userId', auth, validateUserId, validatePagination, mlRecommendationController.getUserRatings);
-router.get('/ratings', auth, mlRecommendationController.getRecipeRatings);
+router.get('/ratings', mlRecommendationController.getRecipeRatings); // Allow unauthenticated access to reviews
 router.delete('/ratings/:reviewId', auth, validateReviewId, mlRecommendationController.deleteRating);
 
 // Interaction routes (require auth)

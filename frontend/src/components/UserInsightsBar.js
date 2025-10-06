@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ReviewSlideshow from './ReviewSlideshow';
 import './UserInsightsBar.css';
 
 const UserInsightsBar = ({ user }) => {
   const [userStats, setUserStats] = useState(null);
-  const [globalRankings, setGlobalRankings] = useState([]);
+  const [popularRecipes, setPopularRecipes] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const tipsAndTricks = [
+    "Keep adding diverse recipes to improve your ranking!",
+    "Focus on quality to increase your average rating.",
+    "Engage with reviewers to get more feedback.",
+    "Use the app's features to promote your recipes.",
+    "Regularly update your recipes to keep them fresh."
+  ];
 
   const fetchUserStats = useCallback(async () => {
     try {
@@ -25,37 +35,69 @@ const UserInsightsBar = ({ user }) => {
     }
   }, [user.user_id]);
 
-  const fetchGlobalRankings = useCallback(async () => {
+  const fetchPopularRecipes = useCallback(async () => {
     try {
-      setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/ml/global-rankings', {
+      const response = await fetch(`http://localhost:5000/api/recipes/popular/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch global rankings');
+        throw new Error('Failed to fetch popular recipes');
       }
       const data = await response.json();
-      setGlobalRankings(data.rankings);
+      setPopularRecipes(data.recipes);
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error(err.message);
     }
-  }, []);
+  }, [user.user_id]);
+
+  const fetchReviews = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/reviews/chef/${user.user_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews');
+      }
+      const data = await response.json();
+      setReviews(data.reviews);
+    } catch (err) {
+      console.error(err.message);
+    }
+  }, [user.user_id]);
 
   useEffect(() => {
     if (user && user.role === 'chef') {
-      fetchUserStats();
-      fetchGlobalRankings();
+      setLoading(true);
+      Promise.all([fetchUserStats(), fetchPopularRecipes(), fetchReviews()])
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
     }
-  }, [user, fetchUserStats, fetchGlobalRankings]);
+  }, [user, fetchUserStats, fetchPopularRecipes, fetchReviews]);
 
   if (!user || user.user_type !== 'chef') {
     return null;
   }
+
+  const slideshowItems = [
+    {
+      type: 'tips',
+      content: tipsAndTricks,
+    },
+    {
+      type: 'popularRecipes',
+      content: popularRecipes,
+    },
+    {
+      type: 'reviews',
+      content: reviews,
+    },
+  ];
 
   return (
     <div className="user-insights-bar">
@@ -65,31 +107,7 @@ const UserInsightsBar = ({ user }) => {
       ) : error ? (
         <p className="error-message">{error}</p>
       ) : (
-        <div className="insights-content">
-          <div className="user-stats">
-            <h4>Your Recipe Performance</h4>
-            {userStats ? (
-              <ul>
-                <li>Total Recipes: {userStats.totalRecipes}</li>
-                <li>Average Rating: {userStats.averageRating?.toFixed(2)}</li>
-                <li>Recipes in Top 10: {userStats.recipesInTop10}</li>
-              </ul>
-            ) : (
-              <p>No stats available.</p>
-            )}
-          </div>
-          <div className="global-rankings">
-            <h4>Global Recipe Leaderboard</h4>
-            <ol>
-              {globalRankings.map((recipe, index) => (
-                <li key={recipe.recipe_id}>
-                  <span>{index + 1}. {recipe.title} - {parseFloat(recipe.avg_rating)?.toFixed(2) || 'N/A'}</span>
-                  {recipe.chef_id === user.user_id && <span className="your-recipe">(Your Recipe)</span>}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
+        <ReviewSlideshow items={slideshowItems} />
       )}
     </div>
   );
