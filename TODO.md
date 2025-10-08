@@ -1,26 +1,45 @@
-# Fix Recommend Recipes Page 500 Error
+# Planned Machine Learning Enhancements for Spice Vault
 
-## Issues Identified
-- Controller `getRecommendations` ignores the `type` query parameter sent by frontend
-- Service `mlRecommendationService` lacks a `getRecommendations` method
-- Returned recommendations lack `avg_rating` field expected by frontend
+## 1. Chef Performance Analytics Enhancements
+- Extend backend `getChefStats` endpoint to include:
+  - Trends in chef's recipe ratings over time
+  - Engagement metrics (likes, saves, shares)
+  - Recipe success prediction scores
+  - Nutritional quality and health-oriented recipe counts
+- Update frontend `UserInsightsBar` to display new metrics and visualizations
+- Consider dedicated Chef Insights page for detailed analytics
 
-## Plan
-1. Update `backend/controllers/mlRecommendation.controller.js`:
-   - Read `type` from `req.query.type` (default to 'random')
-   - Pass `type` to service method
+## 2. Personalized Meal Planning
+- Develop meal planning feature based on user preferences and dietary restrictions
+- Use constraint optimization and recommendation system integration
+- Provide weekly meal plans with nutritional balance
+- **Location**: Available in profile sections of both chefs and users
 
-2. Add `getRecommendations` method to `backend/services/mlRecommendationService.js`:
-   - Accept `userId`, `type`, `limit` parameters
-   - Switch based on type:
-     - 'random': call `getFallbackRecommendations`
-     - 'collaborative': call `generateUserBasedRecommendations`
-     - 'hybrid': call `generateHybridRecommendations`
-   - Ensure returned recipes include `avg_rating` by querying database
+## 3. Recipe Success Prediction
+- Build models to predict recipe success based on metadata and early ratings
+- Provide feedback to chefs during recipe creation
 
-3. Test the endpoint to verify 500 error is resolved
+## 4. Nutritional Analysis and Health Recommendations
+- Integrate nutritional data and health profiles
+- Recommend recipes aligned with user health goals
 
-## Status
-- [x] Update controller
-- [x] Add service method
-- [ ] Test endpoint
+## 5. Recipe Similarity Recommendations
+- Implement item-based collaborative filtering for "Similar Recipes" sections
+- Enhance recipe discovery and engagement
+
+## 6. User Clustering and Segmentation
+- Cluster users by preferences and behavior for targeted recommendations
+
+## 7. Trend Analysis and Seasonal Recommendations
+- Analyze recipe popularity trends and seasonal patterns
+
+## 8. Ingredient-Based Recipe Suggestions
+- Suggest recipes based on user's available ingredients
+
+## 9. Recipe Completion Prediction
+- Predict likelihood of users completing recipes to optimize UX
+
+## Next Steps
+- Prioritize Chef Performance Analytics enhancements to add predictive insights to Chef Insights Bar
+- Incrementally implement and test each feature
+- Perform thorough testing of frontend components and backend endpoints impacted

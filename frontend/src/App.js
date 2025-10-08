@@ -5,6 +5,7 @@ import AddRecipe from './addrecipe';
 import Recommendations from './recommendation';
 import ChefCertifiedRecipesPage from './pages/ChefCertifiedRecipes';
 import ChefInsightsPage from './pages/ChefInsightsPage';
+import GlobalRankingsPage from './pages/GlobalRankingsPage';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import UserProfile from './components/UserProfile';
@@ -65,6 +66,7 @@ function App() {
             {user && <NavLink to="/addrecipe" className={({ isActive }) => isActive ? "active" : ""}>Add Recipe</NavLink>}
             {user && <NavLink to="/recommendations" className={({ isActive }) => isActive ? "active" : ""}>Recommendations</NavLink>}
             {user && <NavLink to="/chef-certified-recipes" className={({ isActive }) => isActive ? "active" : ""}>Chef Certified Recipes</NavLink>}
+            {user && <NavLink to="/global-rankings" className={({ isActive }) => isActive ? "active" : ""}>Global Rankings</NavLink>}
             {isChef && <NavLink to="/chef-insights" className={({ isActive }) => isActive ? "active" : ""}>Chef Insights</NavLink>}
 
 
@@ -96,6 +98,7 @@ function App() {
           )}
           <Route path="/chef-certified-recipes" element={<ChefCertifiedRecipesPage />} />
           <Route path="/chef-insights" element={user && isChef ? <ChefInsightsPage user={user} /> : <Home />} />
+          <Route path="/global-rankings" element={user ? <GlobalRankingsPage user={user} /> : <Home />} />
           <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Home />} />
           <Route path="/viewrecipe" element={<ViewRecipe user={user} />} />
           <Route path="/recipes/:id" element={<ViewRecipe user={user} />} />

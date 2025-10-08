@@ -176,6 +176,7 @@ const Home = () => {
       options: [
         { value: '', label: 'All' },
         { value: 'vegetarian', label: 'Vegetarian' },
+        { value: 'vegan', label: 'Vegan' },
         { value: 'non_vegetarian', label: 'Non-Vegetarian' },
         { value: 'mixed', label: 'Mixed' }
       ],

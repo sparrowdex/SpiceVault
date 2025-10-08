@@ -14,11 +14,14 @@ module.exports = (sequelize, DataTypes) => {
     tag_name: {
       type: DataTypes.STRING(255),
       primaryKey: true,
-      allowNull: false
+      allowNull: false,
+      field: 'occasion'
     },
     tag_category: {
-      type: DataTypes.ENUM('occasion', 'allergy'),
-      allowNull: false
+      type: DataTypes.VIRTUAL,
+      get() {
+        return 'occasion';
+      }
     }
   }, {
     tableName: 'recipe_occasion', // We'll use this as base, can extend for allergies

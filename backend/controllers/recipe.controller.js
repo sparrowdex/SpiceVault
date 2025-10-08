@@ -194,3 +194,57 @@ exports.getChefCertifiedRecipes = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Get popular recipes by a specific chef
+exports.getPopularRecipesByChef = async (req, res) => {
+  try {
+    const chefId = req.params.chefId;
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Get recipes by chef ordered by average rating and number of ratings
+    const popularRecipes = await db.sequelize.query(`
+      SELECT
+        r.recipe_id,
+        r.title,
+        r.description,
+        r.image_url,
+        r.difficulty,
+        r.food_category,
+        r.diet_type,
+        AVG(rg.rating) as avg_rating,
+        COUNT(rg.rating) as rating_count
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id = ?
+      GROUP BY r.recipe_id
+      HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
+      LIMIT ?
+    `, {
+      replacements: [chefId, limit],
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      recipes: popularRecipes.map(recipe => ({
+        recipe_id: recipe.recipe_id,
+        title: recipe.title,
+        description: recipe.description,
+        image_url: recipe.image_url,
+        difficulty: recipe.difficulty,
+        food_category: recipe.food_category,
+        diet_type: recipe.diet_type,
+        avg_rating: parseFloat(recipe.avg_rating).toFixed(1),
+        rating_count: recipe.rating_count
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting popular recipes by chef:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get popular recipes by chef',
+      message: error.message
+    });
+  }
+};

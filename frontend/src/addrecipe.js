@@ -127,6 +127,7 @@ const AddRecipe = () => {
           <label>Diet Type</label>
           <select name="diet_type" value={formData.diet_type} onChange={handleChange}>
             <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
             <option value="non_vegetarian">Non-Vegetarian</option>
             <option value="mixed">Mixed (Both Options)</option>
           </select>

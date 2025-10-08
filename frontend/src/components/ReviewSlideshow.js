@@ -71,6 +71,39 @@ const ReviewSlideshow = ({ items }) => {
     );
   }
 
+  if (currentItem.type === 'performanceAnalytics') {
+    const stats = currentItem.content;
+    return (
+      <div className="review-slideshow performance-slide" style={{ padding: '1rem', backgroundColor: '#e8f5e8', borderRadius: '8px' }}>
+        <h4>Performance Analytics</h4>
+        {stats ? (
+          <div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Average Rating:</strong> {stats.averageRating || 'N/A'}
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Total Recipes:</strong> {stats.totalRecipes}
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Recipes in Top 10:</strong> {stats.recipesInTop10}
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Success Score:</strong> {stats.successScore}/100
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Health Recipes:</strong> {stats.healthRecipes}
+            </div>
+            <div>
+              <strong>Engagement:</strong> {Object.entries(stats.engagementMetrics || {}).map(([type, count]) => `${type}: ${count}`).join(', ') || 'No data'}
+            </div>
+          </div>
+        ) : (
+          <p>Loading performance data...</p>
+        )}
+      </div>
+    );
+  }
+
   return null;
 };
 

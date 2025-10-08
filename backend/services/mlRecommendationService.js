@@ -91,16 +91,10 @@ class MLRecommendationService {
       const { Recipe, RecipeTag, UserInteraction } = db;
 
       // Get user's interaction history
+      // Step 1: Get user's interaction history (likes, saves, etc.)
       const userInteractions = await UserInteraction.findAll({
         where: { user_id: userId },
-        include: [{
-          model: Recipe,
-          as: 'recipe', // Add the alias here
-          include: [{
-            model: RecipeTag,
-            as: 'tags'
-          }]
-        }]
+        attributes: ['recipe_id', 'interaction_type'] // Only need these columns
       });
 
       if (userInteractions.length === 0) {
@@ -108,8 +102,22 @@ class MLRecommendationService {
         return await this.getFallbackRecommendations(userId, limit);
       }
 
-      // Build user preference profile
-      const userPreferences = this.buildUserPreferenceProfile(userInteractions);
+      // Step 2: Get the unique recipe IDs from the interactions
+      const interactedRecipeIds = [...new Set(userInteractions.map(i => i.recipe_id))];
+
+      // Step 3: Fetch those recipes and their associated tags in a separate query
+      const interactedRecipes = await Recipe.findAll({
+        where: {
+          recipe_id: interactedRecipeIds
+        },
+        include: {
+          model: RecipeTag,
+          as: 'tags'
+        }
+      });
+
+      // Step 4: Build user preference profile from the fetched recipes and their tags
+      const userPreferences = this.buildUserPreferenceProfile(interactedRecipes);
 
       // Get all recipes with tags
       const allRecipes = await Recipe.findAll({
@@ -120,7 +128,10 @@ class MLRecommendationService {
       });
 
       // Calculate similarity scores
+      // Exclude recipes the user has already interacted with from the recommendations
+      const alreadyInteractedSet = new Set(interactedRecipeIds);
       const recommendations = allRecipes
+        .filter(recipe => !alreadyInteractedSet.has(recipe.recipe_id))
         .map(recipe => ({
           recipe,
           score: this.calculateContentSimilarity(recipe, userPreferences)
@@ -320,7 +331,7 @@ class MLRecommendationService {
   }
 
   // Build user preference profile from interactions
-  buildUserPreferenceProfile(interactions) {
+  buildUserPreferenceProfile(recipesWithTags) {
     const preferences = {
       tags: {},
       cuisines: {},
@@ -328,13 +339,12 @@ class MLRecommendationService {
       mealTypes: {}
     };
 
-    interactions.forEach(interaction => {
-      const recipe = interaction.recipe;
+    recipesWithTags.forEach(recipe => {
       if (recipe.tags) {
         recipe.tags.forEach(tag => {
           const category = tag.tag_category;
           const name = tag.tag_name;
-          
+
           if (!preferences[category]) {
             preferences[category] = {};
           }
@@ -440,6 +450,9 @@ class MLRecommendationService {
 
   // Main method to get recommendations based on type
   async getRecommendations(userId, type = 'random', limit = 10) {
+    // Ensure userId is a number
+    userId = parseInt(userId);
+
     let recommendations = [];
 
     try {

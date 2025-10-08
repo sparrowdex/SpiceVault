@@ -1,103 +1,260 @@
 .chef-insights-page {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #fff1e6 0%, #f6d365 100%);
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
-.leaderboard-section {
-  margin-top: 30px;
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
-}
-
-.global-leaderboard-header {
-  font-family: 'ElegantWomanDemo', cursive;
-  font-size: 1.8rem;
-  font-weight: 700;
+.page-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 40px;
   color: #333;
-  margin-bottom: 1rem;
+  font-weight: 700;
 }
 
-.period-filter {
+.access-denied {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.access-denied h2 {
+  color: #ff6b35;
   margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.access-denied p {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error-message {
+  color: #e74c3c;
+  background: #fdf2f2;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #e74c3c;
+}
+
+.insights-content {
   display: flex;
-  gap: 15px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.period-filter label {
+.insights-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.insights-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  color: #333;
   font-weight: 600;
+  border-bottom: 2px solid #ff6b35;
+  padding-bottom: 10px;
+}
+
+/* Performance Analytics Section */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ff6b35;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.engagement-card .stat-value {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Popular Recipes Section */
+.popular-recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.popular-recipe-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  background-color: #e9f5ff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  user-select: none;
-  border: 1px solid transparent;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.period-filter input[type="radio"] {
-  display: none;
+.popular-recipe-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-.period-filter input[type="radio"]:checked + label {
-  background-color: #007bff;
-  color: #fff;
-  border-color: #007bff;
-}
-
-.leaderboard-table {
+.popular-recipe-card .recipe-image {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
+  height: 180px;
+  object-fit: cover;
+}
+
+.recipe-details {
+  padding: 15px;
+  text-align: center;
+}
+
+.recipe-details h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+}
+
+.recipe-details .rating {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ff6b35;
+  font-weight: 500;
+}
+
+/* Reviews Section */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.review-card {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  border-left: 4px solid #ff6b35;
+}
+
+.review-content .review-text {
+  font-style: italic;
+  color: #333;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.review-author {
+  color: #666;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Tips & Tricks Section */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.tip-card {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.tip-card:hover {
+  transform: translateY(-2px);
+}
+
+.tip-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.tip-card p {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
   font-size: 1rem;
 }
 
-.leaderboard-table th,
-.leaderboard-table td {
-  padding: 12px 15px;
-  text-align: center;
-  background-color: #fff;
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chef-insights-page {
+    padding: 15px;
+  }
 
-.leaderboard-table th {
-  background-color: transparent;
-  font-weight: 700;
-  color: #007bff;
-}
+  .page-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
 
-.leaderboard-table td img.dish-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 8px;
-}
+  .insights-section {
+    padding: 20px;
+  }
 
-.rank-up {
-  color: #28a745;
-  font-size: 20px;
-}
+  .insights-section h2 {
+    font-size: 1.5rem;
+  }
 
-.rank-down {
-  color: #dc3545;
-  font-size: 20px;
-}
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
 
-.rank-same {
-  color: #6c757d;
-  font-size: 20px;
-}
+  .stat-value {
+    font-size: 1.5rem;
+  }
 
-.your-recipe {
-  background-color: #d1ecf1;
-  font-weight: 600;
-  color: #0c5460;
-  border-radius: 8px;
+  .popular-recipes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+  }
+
+  .tips-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .tip-card {
+    padding: 15px;
+  }
 }

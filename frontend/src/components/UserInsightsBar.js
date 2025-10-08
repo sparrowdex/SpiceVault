@@ -90,6 +90,10 @@ const UserInsightsBar = ({ user }) => {
       content: tipsAndTricks,
     },
     {
+      type: 'performanceAnalytics',
+      content: userStats,
+    },
+    {
       type: 'popularRecipes',
       content: popularRecipes,
     },

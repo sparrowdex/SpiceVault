@@ -24,8 +24,8 @@ exports.addRating = async (req, res) => {
 
     if (existingRating) {
       // Update existing rating
-      await existingRating.update({ 
-        rating, 
+      await existingRating.update({
+        rating,
         review_text,
         datestamp: new Date().toISOString().split('T')[0]
       });
@@ -281,7 +281,7 @@ exports.addRecipeTags = async (req, res) => {
 
     // Add new tags
     const newTags = await Promise.all(
-      tags.map(tag => 
+      tags.map(tag =>
         RecipeTag.create({
           recipe_id,
           tag_name: tag.name,
@@ -487,11 +487,65 @@ exports.getChefStats = async (req, res) => {
       }
     });
 
+    // NEW: Get rating trends over the last 6 months
+    const ratingTrends = await db.sequelize.query(`
+      SELECT
+        DATE_FORMAT(rg.datestamp, '%Y-%m') as month,
+        AVG(rg.rating) as avg_rating,
+        COUNT(rg.rating) as rating_count
+      FROM recipe r
+      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id = ? AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+      GROUP BY DATE_FORMAT(rg.datestamp, '%Y-%m')
+      ORDER BY month DESC
+    `, {
+      replacements: [chefId],
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    // NEW: Get engagement metrics (likes, saves, shares)
+    const engagementMetrics = await db.sequelize.query(`
+      SELECT
+        interaction_type,
+        COUNT(*) as count
+      FROM user_interactions ui
+      JOIN recipe r ON ui.recipe_id = r.recipe_id
+      WHERE r.chef_id = ?
+      GROUP BY interaction_type
+    `, {
+      replacements: [chefId],
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    // NEW: Count health-oriented recipes
+    const healthRecipes = await db.Recipe.count({
+      where: {
+        chef_id: chefId,
+        diet_type: ['vegetarian', 'vegan', 'gluten_free', 'keto', 'paleo']
+      }
+    });
+
+    // NEW: Calculate recipe success prediction score (simple algorithm)
+    const successScore = ratingStats[0].averageRating ?
+      Math.min(100, (ratingStats[0].averageRating * 20) + (engagementMetrics.reduce((sum, metric) => sum + metric.count, 0) * 0.1)) : 0;
+
     res.json({
       success: true,
       totalRecipes,
       averageRating: ratingStats[0].averageRating ? parseFloat(ratingStats[0].averageRating).toFixed(2) : null,
-      recipesInTop10
+      recipesInTop10,
+      // NEW: Additional metrics
+      ratingTrends: ratingTrends.map(trend => ({
+        month: trend.month,
+        avgRating: parseFloat(trend.avg_rating).toFixed(2),
+        ratingCount: trend.rating_count
+      })),
+      engagementMetrics: engagementMetrics.reduce((acc, metric) => {
+        acc[metric.interaction_type] = metric.count;
+        return acc;
+      }, {}),
+      healthRecipes,
+      successScore: parseFloat(successScore.toFixed(1))
     });
   } catch (error) {
     console.error('Error getting chef stats:', error);

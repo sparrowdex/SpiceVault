@@ -45,6 +45,12 @@ const Recommendations = ({ user }) => {
   };
 
   const handleRateRecipe = async (recipeId, rating) => {
+    // Update state immediately for instant UI feedback
+    setRatedRecipes(prev => ({
+      ...prev,
+      [recipeId]: rating
+    }));
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/api/ml/ratings', {
@@ -59,16 +65,23 @@ const Recommendations = ({ user }) => {
           rating,
         }),
       });
-      if (response.ok) {
-        setRatedRecipes(prev => ({
-          ...prev,
-          [recipeId]: rating
-        }));
-      } else {
+      if (!response.ok) {
         console.error('Failed to rate recipe');
+        // Revert the state if the request failed
+        setRatedRecipes(prev => {
+          const newRated = { ...prev };
+          delete newRated[recipeId];
+          return newRated;
+        });
       }
     } catch (err) {
       console.error('Error rating recipe:', err);
+      // Revert the state if the request failed
+      setRatedRecipes(prev => {
+        const newRated = { ...prev };
+        delete newRated[recipeId];
+        return newRated;
+      });
     }
   };
 
