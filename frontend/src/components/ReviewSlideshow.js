@@ -62,7 +62,7 @@ const ReviewSlideshow = ({ items }) => {
           <ul>
             {currentItem.content.map((review) => (
               <li key={review.review_id} style={{ marginBottom: '0.5rem' }}>
-                "{review.text}" - {review.author}
+                "{review.review_text}" - {review.reviewer_name}
               </li>
             ))}
           </ul>

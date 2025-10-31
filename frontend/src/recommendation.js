@@ -10,6 +10,7 @@ const Recommendations = ({ user }) => {
     // Load from localStorage or default to 'random'
     return localStorage.getItem('recommendationType') || 'random';
   });
+  const [healthFocus, setHealthFocus] = useState('balanced');
   const [ratedRecipes, setRatedRecipes] = useState({}); // Track which recipes have been rated
   const [hoveredStar, setHoveredStar] = useState({}); // Track hover state for stars
   const [selectedRecipe, setSelectedRecipe] = useState(null); // For modal display
@@ -21,24 +22,55 @@ const Recommendations = ({ user }) => {
   const fetchRecommendations = async (type) => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
       const token = localStorage.getItem('token');
       const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?type=${type}&limit=10`, { headers });
+
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const params = new URLSearchParams({
+        type,
+        limit: '10'
+      });
+
+      if (type === 'nutritional') {
+        params.append('healthFocus', healthFocus);
+      }
+
+      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?${params.toString()}`, {
+        headers,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch recommendations: ${response.status}`);
       }
       const data = await response.json();
       if (data.success) {
         setRecommendations(data.recommendations);
+        // If fallback was used, show a subtle message
+        if (data.fallback) {
+          console.warn('Using fallback recommendations due to:', data.error);
+        }
       } else {
         throw new Error('Failed to get recommendations');
       }
     } catch (err) {
       console.error('Error fetching recommendations:', err);
-      setError(err.message);
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError(err.message);
+      }
+      // Set empty recommendations on error to prevent stale data
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -143,6 +175,8 @@ const Recommendations = ({ user }) => {
     const newType = e.target.value;
     setRecommendationType(newType);
     localStorage.setItem('recommendationType', newType);
+    // Clear any previous errors when switching types
+    setError(null);
   };
 
   return (
@@ -159,7 +193,21 @@ const Recommendations = ({ user }) => {
           <option value="random">Random</option>
           <option value="collaborative">Collaborative Filtering</option>
           <option value="hybrid">Hybrid Filtering</option>
+          <option value="nutritional">Nutritional Recommendations</option>
         </select>
+
+        {recommendationType === 'nutritional' && (
+          <select
+            id="healthFocus"
+            value={healthFocus}
+            onChange={(e) => setHealthFocus(e.target.value)}
+            style={{ marginLeft: '10px' }}
+          >
+            <option value="balanced">Balanced</option>
+            <option value="excellent">Excellent Health</option>
+            <option value="healthy">Very Healthy</option>
+          </select>
+        )}
       </div>
 
       {/* Recommendations List */}
@@ -167,7 +215,15 @@ const Recommendations = ({ user }) => {
         {loading ? (
           <p>Loading recommendations...</p>
         ) : error ? (
-          <p className="error-message">{error}</p>
+          <div className="error-message">
+            <p>{error}</p>
+            <button
+              onClick={() => fetchRecommendations(recommendationType)}
+              className="retry-button"
+            >
+              Retry
+            </button>
+          </div>
         ) : recommendations.length === 0 ? (
           <div className="no-recommendations">
             <p>No recommendations available at the moment.</p>
@@ -197,7 +253,12 @@ const Recommendations = ({ user }) => {
                 {/* ML Score and Reason */}
                 <div className="ml-info">
                   <span className="ml-score">Avg Rating: {recipe.avg_rating?.toFixed(1) || 'N/A'}</span>
-                  <span className="ml-reason">Based on user ratings</span>
+                  {recommendationType === 'nutritional' && recipe.healthScore && (
+                    <span className="health-score">Health Score: {recipe.healthScore}/100 ({recipe.healthCategory})</span>
+                  )}
+                  <span className="ml-reason">
+                    {recommendationType === 'nutritional' ? recipe.reason : 'Based on user ratings'}
+                  </span>
                 </div>
 
                 {/* Rating System */}

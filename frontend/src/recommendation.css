@@ -58,7 +58,13 @@
   font-size: 0.9rem;
   color: #666;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.health-score {
+  color: #28a745;
+  font-weight: bold;
 }
 
 .rating-section {
@@ -258,4 +264,29 @@
   gap: 20px;
   margin: 0 auto;
   max-width: 1200px;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  background-color: #ffeaea;
+}
+
+.retry-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.retry-button:hover {
+  background-color: #0056b3;
 }

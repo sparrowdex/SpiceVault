@@ -48,6 +48,8 @@ const GlobalRankingsPage = ({ user }) => {
   const topThree = rankings.slice(0, 3);
   const remainingRankings = rankings.slice(3);
 
+  const hasNoDailyChanges = period === 'daily' && (rankings.length === 0 || rankings.every(recipe => recipe.rankChange === 0));
+
   return (
     <div className="global-rankings-page">
       <h1 className="page-title">Global Recipe Rankings</h1>
@@ -96,6 +98,10 @@ const GlobalRankingsPage = ({ user }) => {
         <p className="loading">Loading rankings...</p>
       ) : error ? (
         <p className="error-message">{error}</p>
+      ) : hasNoDailyChanges ? (
+        <div className="no-changes-message">
+          No changes in rankings today. Make a rating on a recipe to see daily rankings!
+        </div>
       ) : (
         <>
           {/* Podium Section */}

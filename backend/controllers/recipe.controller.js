@@ -21,7 +21,10 @@ exports.createRecipe = async (req, res) => {
       });
     }
 
-    const recipe = await Recipe.create(req.body);
+    // Set chef_id for authenticated users (assuming all authenticated users can create recipes)
+    const recipeData = { ...req.body, chef_id: req.user.user_id };
+
+    const recipe = await Recipe.create(recipeData);
     res.status(201).json({
       success: true,
       recipe,
@@ -108,11 +111,28 @@ exports.updateRecipe = async (req, res) => {
 // Delete a recipe by ID
 exports.deleteRecipe = async (req, res) => {
   try {
+    // First, check if the recipe exists and belongs to the authenticated user
+    const recipe = await Recipe.findByPk(req.params.id);
+    if (!recipe) {
+      return res.status(404).json({ message: "Recipe not found" });
+    }
+
+    // Check if the authenticated user is the owner of the recipe
+    if (recipe.user_id !== req.user.user_id) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only delete your own recipes"
+      });
+    }
+
     const deleted = await Recipe.destroy({
       where: { recipe_id: req.params.id }
     });
     if (deleted) {
-      res.json({ message: "Recipe deleted successfully" });
+      res.json({
+        success: true,
+        message: "Recipe deleted successfully"
+      });
     } else {
       res.status(404).json({ message: "Recipe not found" });
     }
@@ -198,7 +218,7 @@ exports.getChefCertifiedRecipes = async (req, res) => {
 // Get popular recipes by a specific chef
 exports.getPopularRecipesByChef = async (req, res) => {
   try {
-    const chefId = req.params.chefId;
+    const chefId = req.params.userId;
     const limit = parseInt(req.query.limit) || 10;
 
     // Get recipes by chef ordered by average rating and number of ratings
@@ -248,3 +268,45 @@ exports.getPopularRecipesByChef = async (req, res) => {
     });
   }
 };
+
+// Get reviews for a chef's recipes
+exports.getReviewsByChef = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Get reviews for recipes created by this chef
+    const reviews = await db.sequelize.query(`
+      SELECT
+        rg.review_id,
+        rg.recipe_id,
+        rg.user_id as reviewer_id,
+        rg.rating,
+        rg.review_text,
+        rg.datestamp,
+        r.title as recipe_title,
+        CONCAT(u.f_name, ' ', u.l_name) as reviewer_name
+      FROM reviews_given rg
+      JOIN Recipe r ON rg.recipe_id = r.recipe_id
+      JOIN User u ON rg.user_id = u.user_id
+      WHERE r.chef_id = :userId
+      ORDER BY rg.datestamp DESC
+      LIMIT 10
+    `, {
+      replacements: { userId },
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
+    res.json({
+      success: true,
+      reviews: reviews
+    });
+  } catch (error) {
+    console.error('Error getting reviews by chef:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get reviews by chef',
+      message: error.message
+    });
+  }
+};
+

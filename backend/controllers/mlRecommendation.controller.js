@@ -335,18 +335,151 @@ exports.getRecommendations = async (req, res) => {
     const type = req.query.type || 'random';
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
+    const healthFocus = req.query.healthFocus || 'balanced';
 
-    const recommendations = await mlRecommendationService.getRecommendations(userId, type, limit);
+    console.log(`Getting ${type} recommendations for user ${userId}, limit: ${limit}`);
+
+    // Add timeout protection for the entire recommendation process
+    const recommendations = await Promise.race([
+      mlRecommendationService.getRecommendations(userId, type, limit, { healthFocus }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Recommendation request timeout')), 15000)
+      )
+    ]);
+
+    console.log(`Successfully returned ${recommendations.length} recommendations`);
 
     res.json({
       success: true,
-      recommendations
+      recommendations,
+      type,
+      healthFocus: type === 'nutritional' ? healthFocus : undefined
     });
   } catch (error) {
     console.error('Error getting recommendations:', error);
+    console.error('Stack trace:', error.stack);
+
+    // Return fallback recommendations instead of error
+    try {
+      const fallbackRecommendations = await mlRecommendationService.getFallbackRecommendations(req.params.userId, 10);
+      res.json({
+        success: true,
+        recommendations: fallbackRecommendations,
+        fallback: true,
+        error: error.message
+      });
+    } catch (fallbackError) {
+      console.error('Fallback also failed:', fallbackError);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get recommendations',
+        message: error.message
+      });
+    }
+  }
+};
+
+// Get nutritional recommendations for a user
+exports.getNutritionalRecommendations = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const healthFocus = req.query.healthFocus || 'balanced';
+    const limit = parseInt(req.query.limit) || 10;
+
+    console.log(`Getting nutritional recommendations for user ${userId}, focus: ${healthFocus}, limit: ${limit}`);
+
+    const recommendations = await Promise.race([
+      mlRecommendationService.generateNutritionalRecommendations(userId, limit, healthFocus),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Nutritional recommendation timeout')), 10000)
+      )
+    ]);
+
+    res.json({
+      success: true,
+      recommendations,
+      healthFocus,
+      total: recommendations.length
+    });
+  } catch (error) {
+    console.error('Error getting nutritional recommendations:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get recommendations',
+      error: 'Failed to get nutritional recommendations',
+      message: error.message
+    });
+  }
+};
+
+// Get user's dietary preferences
+exports.getUserDietaryPreferences = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const preferences = await mlRecommendationService.getUserDietaryPreferences(userId);
+
+    res.json({
+      success: true,
+      preferences
+    });
+  } catch (error) {
+    console.error('Error getting user dietary preferences:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get user dietary preferences',
+      message: error.message
+    });
+  }
+};
+
+// Calculate health score for a specific recipe
+exports.getRecipeHealthScore = async (req, res) => {
+  try {
+    const recipeId = req.params.recipeId;
+    const userId = req.query.userId; // Optional: for personalized scoring
+
+    const db = require('../models');
+    const { Recipe } = db;
+
+    const recipe = await Recipe.findByPk(recipeId);
+    if (!recipe) {
+      return res.status(404).json({
+        success: false,
+        error: 'Recipe not found'
+      });
+    }
+
+    const nutrition = mlRecommendationService.parseNutritionInfo(recipe.nutrition_info);
+    if (!nutrition) {
+      return res.json({
+        success: true,
+        healthScore: null,
+        category: 'unknown',
+        message: 'No nutritional information available'
+      });
+    }
+
+    let userPreferences = {};
+    if (userId) {
+      userPreferences = await mlRecommendationService.getUserDietaryPreferences(userId);
+    }
+
+    const healthScore = mlRecommendationService.calculateHealthScore(nutrition, userPreferences);
+    const category = mlRecommendationService.getHealthScoreCategory(healthScore);
+
+    res.json({
+      success: true,
+      recipe_id: recipeId,
+      healthScore,
+      category,
+      nutrition,
+      userPreferences: userId ? userPreferences : undefined
+    });
+  } catch (error) {
+    console.error('Error calculating recipe health score:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to calculate health score',
       message: error.message
     });
   }
@@ -444,7 +577,7 @@ exports.deleteRating = async (req, res) => {
 // Get chef statistics
 exports.getChefStats = async (req, res) => {
   try {
-    const chefId = req.params.chefId;
+    const chefId = req.params.userId;
 
     // Get total recipes by chef
     const totalRecipes = await db.Recipe.count({

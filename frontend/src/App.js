@@ -17,6 +17,7 @@ import ViewRecipe from './viewrecipe';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -60,7 +61,7 @@ function App() {
     <BackgroundGradient>
       <Router>
         <div className="navbar">
-          <h1 className="nav-center" style={spiceVaultStyle}>Spice Vault</h1>
+          <h1 className="nav-center" style={spiceVaultStyle} onClick={() => setIsSidebarOpen(!isSidebarOpen)}>Spice Vault</h1>
           <nav className="nav-left">
             {user && <NavLink to="/" className={({ isActive }) => isActive ? "active" : ""}>Home</NavLink>}
             {user && <NavLink to="/addrecipe" className={({ isActive }) => isActive ? "active" : ""}>Add Recipe</NavLink>}
@@ -68,8 +69,6 @@ function App() {
             {user && <NavLink to="/chef-certified-recipes" className={({ isActive }) => isActive ? "active" : ""}>Chef Certified Recipes</NavLink>}
             {user && <NavLink to="/global-rankings" className={({ isActive }) => isActive ? "active" : ""}>Global Rankings</NavLink>}
             {isChef && <NavLink to="/chef-insights" className={({ isActive }) => isActive ? "active" : ""}>Chef Insights</NavLink>}
-
-
           </nav>
           <nav className="nav-right">
             {user ? (
@@ -87,6 +86,35 @@ function App() {
             )}
           </nav>
         </div>
+        {isSidebarOpen && (
+          <div className="sidebar">
+            <div className="sidebar-content">
+              {user && (
+                <>
+                  <NavLink to="/" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Home</NavLink>
+                  <NavLink to="/addrecipe" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Add Recipe</NavLink>
+                  <NavLink to="/recommendations" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Recommendations</NavLink>
+                  <NavLink to="/chef-certified-recipes" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Chef Certified Recipes</NavLink>
+                  <NavLink to="/global-rankings" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Global Rankings</NavLink>
+                  {isChef && <NavLink to="/chef-insights" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Chef Insights</NavLink>}
+                </>
+              )}
+              {user ? (
+                <>
+                  <NavLink to="/profile" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
+                  <button onClick={() => { handleLogout(); setIsSidebarOpen(false); }} className="logout-btn">
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <NavLink to="/login" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => `auth-btn ${isActive ? "active" : ""}`}>Login</NavLink>
+                  <NavLink to="/signup" onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => `auth-btn signup-btn ${isActive ? "active" : ""}`}>Sign Up</NavLink>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         <Routes>
           <Route path="/" element={<Home />} />

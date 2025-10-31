@@ -16,13 +16,16 @@ const {
 
 // ML Recommendation routes (require auth)
 router.get('/recommendations/:userId', auth, validateUserId, validatePagination, mlRecommendationController.getRecommendations);
+router.get('/nutritional/:userId', auth, validateUserId, validatePagination, mlRecommendationController.getNutritionalRecommendations);
+router.get('/dietary-preferences/:userId', auth, validateUserId, mlRecommendationController.getUserDietaryPreferences);
+router.get('/recipe-health-score/:recipeId', auth, validateRecipeId, mlRecommendationController.getRecipeHealthScore);
 router.get('/similar/:recipeId', auth, validateRecipeId, mlRecommendationController.getSimilarRecipes);
 
 // Popular recipes route (public)
 router.get('/popular', mlRecommendationController.getPopularRecipes);
 
 // Chef stats route (require auth)
-router.get('/chef-stats/:chefId', auth, validateUserId, mlRecommendationController.getChefStats);
+router.get('/chef-stats/:userId', auth, validateUserId, mlRecommendationController.getChefStats);
 
 // Global rankings route (require auth)
 router.get('/global-rankings', auth, mlRecommendationController.getGlobalRankings);

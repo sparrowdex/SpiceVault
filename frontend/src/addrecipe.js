@@ -6,12 +6,18 @@ const AddRecipe = () => {
     title: '',
     description: '',
     instructions: '',
+    ingredients: '',
     difficulty: '',
     food_category: 'main_course',
     diet_type: 'vegetarian',
     image_url: '',
     preparation_time: '',
     cooking_time: '',
+    calories: '',
+    protein: '',
+    carbs: '',
+    fat: '',
+    fiber: '',
     nutrition_info: '',
     user_id: null,
     chef_id: null
@@ -46,13 +52,23 @@ const AddRecipe = () => {
       return;
     }
 
+    // Construct nutrition_info from individual fields
+    const nutritionInfo = `calories: ${formData.calories}, protein: ${formData.protein}g, carbs: ${formData.carbs}g, fat: ${formData.fat}g, fiber: ${formData.fiber}g`;
+
+    const updatedFormData = {
+      ...formData,
+      nutrition_info: nutritionInfo
+    };
+
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/api/recipes`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(updatedFormData)
       });
 
       const data = await res.json();
@@ -92,6 +108,9 @@ const AddRecipe = () => {
 
           <label>Description</label>
           <textarea name="description" value={formData.description} onChange={handleChange}></textarea>
+
+          <label>Ingredients</label>
+          <textarea name="ingredients" value={formData.ingredients} onChange={handleChange} placeholder="List ingredients, one per line"></textarea>
 
           <label>Instructions</label>
           <textarea name="instructions" value={formData.instructions} onChange={handleChange}></textarea>
@@ -138,8 +157,20 @@ const AddRecipe = () => {
           <label>Cooking Time</label>
           <input type="text" name="cooking_time" value={formData.cooking_time} onChange={handleChange} />
 
-          <label>Nutrition Info</label>
-          <input type="text" name="nutrition_info" value={formData.nutrition_info} onChange={handleChange} />
+          <label>Calories</label>
+          <input type="number" name="calories" value={formData.calories} onChange={handleChange} placeholder="e.g., 420" />
+
+          <label>Protein (g)</label>
+          <input type="number" name="protein" value={formData.protein} onChange={handleChange} placeholder="e.g., 18" />
+
+          <label>Carbs (g)</label>
+          <input type="number" name="carbs" value={formData.carbs} onChange={handleChange} placeholder="e.g., 45" />
+
+          <label>Fat (g)</label>
+          <input type="number" name="fat" value={formData.fat} onChange={handleChange} placeholder="e.g., 12" />
+
+          <label>Fiber (g)</label>
+          <input type="number" name="fiber" value={formData.fiber} onChange={handleChange} placeholder="e.g., 8" />
 
           <label>Image URL</label>
           <input type="text" name="image_url" value={formData.image_url} onChange={handleChange} />

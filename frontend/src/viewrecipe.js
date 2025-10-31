@@ -11,6 +11,8 @@ function ViewRecipe({ user }) {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [errorReviews, setErrorReviews] = useState(null);
+  const [healthScore, setHealthScore] = useState(null);
+  const [healthCategory, setHealthCategory] = useState(null);
 
   // New state for review comment and rating input
   const [newReviewText, setNewReviewText] = useState('');
@@ -145,7 +147,7 @@ function ViewRecipe({ user }) {
     setRating(0); // Reset rating if user or token missing
   }
 
-    // Fetch reviews for this recipe
+      // Fetch reviews for this recipe
     setLoadingReviews(true);
     const headers = {};
     if (user && user.token) {
@@ -161,6 +163,20 @@ function ViewRecipe({ user }) {
       console.error('Failed to fetch reviews:', resReviews.status, dataReviews.error || 'Unknown error');
       setErrorReviews('Failed to load reviews: ' + (dataReviews.error || 'Unknown error'));
     }
+
+    // Fetch health score for this recipe
+    try {
+      const resHealth = await fetch(`http://localhost:5000/api/ml/recipe-health-score/${id}`, {
+        headers
+      });
+      const dataHealth = await resHealth.json();
+      if (dataHealth.success) {
+        setHealthScore(dataHealth.healthScore);
+        setHealthCategory(dataHealth.category);
+      }
+    } catch (healthError) {
+      console.warn('Failed to fetch health score:', healthError);
+    }
   } catch (error) {
     console.error('Failed to fetch recipe or rating:', error);
     setErrorReviews('Failed to load reviews');
@@ -173,13 +189,26 @@ function ViewRecipe({ user }) {
   }, [id, user]); // Add user to dependency array
 
   const handleDelete = async () => {
+    if (!user || !user.token) {
+      alert('Please log in to delete recipes.');
+      return;
+    }
     try {
-      await fetch(`http://localhost:5000/api/recipes/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/recipes/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
       });
-      navigate('/'); // Redirect to homepage after delete
+      const data = await response.json();
+      if (response.ok && data.success) {
+        navigate('/'); // Redirect to homepage after delete
+      } else {
+        alert(data.error || 'Failed to delete recipe');
+      }
     } catch (error) {
       console.error('Delete failed:', error);
+      alert('Failed to delete recipe');
     }
   };
 
@@ -245,13 +274,16 @@ function ViewRecipe({ user }) {
           <h3>Recipe Info</h3>
           <div className="recipe-info-row">
             <div className="recipe-info-box">
-              <strong>Prep Time:</strong><br />{recipe.preparation_time} 
+              <strong>Prep Time:</strong><br />{recipe.preparation_time}
             </div>
             <div className="recipe-info-box">
-              <strong>Cooking Time:</strong><br />{recipe.cooking_time} 
+              <strong>Cooking Time:</strong><br />{recipe.cooking_time}
             </div>
             <div className="recipe-info-box">
-              <strong>Nutrition:</strong><br />{recipe.nutrition_info}
+              <strong>Nutrition:</strong><br />
+              {recipe.nutrition_info && recipe.nutrition_info.split(', ').map((item, index) => (
+                <div key={index}>{item}</div>
+              ))}
             </div>
           </div>
         </div>
@@ -277,6 +309,14 @@ function ViewRecipe({ user }) {
                 {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'Vegetarian'}
               </span>
             </div>
+            {healthScore !== null && (
+              <div className="recipe-info-box">
+                <strong>Health Score:</strong><br />
+                <span className={`health-tag ${healthCategory?.toLowerCase()}`}>
+                  {healthScore}/100 ({healthCategory})
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -386,11 +426,13 @@ function ViewRecipe({ user }) {
           )}
         </div>
 
-        <div className="section">
-          <button className="delete-button" onClick={() => setShowModal(true)}>
-            Delete Recipe
-          </button>
-        </div>
+        {user && user.user_id === recipe.user_id && (
+          <div className="section">
+            <button className="delete-button" onClick={() => setShowModal(true)}>
+              Delete Recipe
+            </button>
+          </div>
+        )}
       </div>
 
       {showModal && (

@@ -1,6 +1,6 @@
 // scripts/testDatabase.js - Test database tables and connections
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const { sequelize } = require('../models');
 
 async function testDatabase() {

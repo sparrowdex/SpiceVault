@@ -138,6 +138,34 @@
   color: #856404;
 }
 
+.health-tag {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.health-tag.excellent {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.health-tag.good {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.health-tag.fair {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.health-tag.poor {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
 .recipe-info-row {
   display: flex;
   flex-wrap: wrap;

@@ -15,7 +15,7 @@ const enhancedRecipes = [
     image_url: 'mediterranean_bowl.jpg',
     preparation_time: '15 min',
     cooking_time: '10 min',
-    nutrition_info: '420 kcal, 45g carbs, 18g protein'
+    nutrition_info: 'calories: 420, protein: 18g, carbs: 45g, fat: 12g, fiber: 8g'
   },
   {
     recipe_id: 12,
@@ -28,7 +28,7 @@ const enhancedRecipes = [
     image_url: 'teriyaki_salmon.jpg',
     preparation_time: '20 min',
     cooking_time: '15 min',
-    nutrition_info: '380 kcal, 25g protein, 15g fats'
+    nutrition_info: 'calories: 380, protein: 25g, carbs: 20g, fat: 15g, fiber: 3g'
   },
   {
     recipe_id: 13,
@@ -41,7 +41,7 @@ const enhancedRecipes = [
     image_url: 'mushroom_risotto.jpg',
     preparation_time: '10 min',
     cooking_time: '30 min',
-    nutrition_info: '520 kcal, 60g carbs, 20g protein'
+    nutrition_info: 'calories: 520, protein: 20g, carbs: 60g, fat: 25g, fiber: 4g'
   },
   {
     recipe_id: 14,
@@ -54,7 +54,7 @@ const enhancedRecipes = [
     image_url: 'chocolate_cookies.jpg',
     preparation_time: '15 min',
     cooking_time: '12 min',
-    nutrition_info: '180 kcal per cookie, 25g carbs, 2g protein'
+    nutrition_info: 'calories: 180, protein: 2g, carbs: 25g, fat: 8g, fiber: 1g'
   },
   {
     recipe_id: 15,
@@ -67,7 +67,7 @@ const enhancedRecipes = [
     image_url: 'thai_green_curry.jpg',
     preparation_time: '25 min',
     cooking_time: '20 min',
-    nutrition_info: '350 kcal, 30g carbs, 12g protein'
+    nutrition_info: 'calories: 350, protein: 12g, carbs: 30g, fat: 15g, fiber: 5g'
   }
 ];
 

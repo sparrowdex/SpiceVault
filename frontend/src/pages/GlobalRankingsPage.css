@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'ElegantWoman';
+  src: url('../assets/fonts/ElegantWomanDemo-2O9Ve.ttf') format('truetype');
+}
+
 .global-rankings-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -9,7 +14,11 @@
   text-align: center;
   font-size: 2.5rem;
   margin-bottom: 30px;
-  color: #333;
+  font-family: 'ElegantWoman', cursive;
+  background: linear-gradient(to right, #8B4513, #D2691E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   font-weight: 700;
 }
 
@@ -159,8 +168,13 @@
   text-align: center;
   font-size: 2rem;
   margin-bottom: 30px;
-  color: #333;
+  font-family: 'ElegantWoman', cursive;
+  background: linear-gradient(to right, #8B4513, #D2691E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.3);
 }
 
 .rankings-list {
@@ -242,6 +256,20 @@
   color: #95a5a6;
 }
 
+.no-changes-message {
+  text-align: center;
+  font-size: 1.5rem;
+  color: #ff6600;
+  padding: 40px;
+  background: #fff8f0;
+  border-radius: 10px;
+  margin: 40px auto;
+  max-width: 600px;
+  font-weight: 600;
+  border: 2px dashed #ff6600;
+  line-height: 1.4;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .page-title {
@@ -293,5 +321,11 @@
   .rank-change {
     margin-left: 0;
     margin-top: 10px;
+  }
+
+  .no-changes-message {
+    font-size: 1.2rem;
+    padding: 30px 20px;
+    margin: 20px;
   }
 }

@@ -320,99 +320,100 @@ const Home = () => {
 
         <h2 className="gradient-heading">All Recipes</h2>
 
-        <div className="filters">
-          <input
-            type="text"
-            placeholder="Search by title..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
+        <div className="all-recipes-container">
+          <div className="filters">
+            <input
+              type="text"
+              placeholder="Search by title..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
 
-          <div 
-            className="filter-carousel"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <button className="carousel-arrow carousel-arrow-left" onClick={prevFilterSection}>
-              ‹
-            </button>
-            
-            <div className="filter-section">
-              <h3 className={`filter-section-title ${filterSections[currentFilterSection].id === 'difficulty' ? 'difficulty-font' : ''}`}>
-                {filterSections[currentFilterSection].id === 'difficulty' ? 'Filter Your Choice' : filterSections[currentFilterSection].title}
-              </h3>
-              <div className="filter-options">
-                {filterSections[currentFilterSection].options.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      filterSections[currentFilterSection].setValue(option.value);
-                      setPage(1);
-                    }}
-                    className={`filter-option ${filterSections[currentFilterSection].currentValue === option.value ? 'active' : ''}`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+            <div 
+              className="filter-carousel"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <button className="carousel-arrow carousel-arrow-left" onClick={prevFilterSection}>
+                ‹
+              </button>
+              
+              <div className="filter-section">
+                <h3 className="filter-section-title difficulty-font">
+                  {filterSections[currentFilterSection].id === 'difficulty' ? 'Filter Your Choice' : filterSections[currentFilterSection].title}
+                </h3>
+                <div className="filter-options">
+                  {filterSections[currentFilterSection].options.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        filterSections[currentFilterSection].setValue(option.value);
+                        setPage(1);
+                      }}
+                      className={`filter-option ${filterSections[currentFilterSection].currentValue === option.value ? 'active' : ''}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+              
+              <button className="carousel-arrow carousel-arrow-right" onClick={nextFilterSection}>
+                ›
+              </button>
             </div>
             
-            <button className="carousel-arrow carousel-arrow-right" onClick={nextFilterSection}>
-              ›
-            </button>
+            <div className="filter-indicators">
+              {filterSections.map((_, index) => (
+                <button
+                  key={index}
+                  className={`filter-indicator ${index === currentFilterSection ? 'active' : ''}`}
+                  onClick={() => setCurrentFilterSection(index)}
+                />
+              ))}
+            </div>
           </div>
-          
-          <div className="filter-indicators">
-            {filterSections.map((_, index) => (
-              <button
-                key={index}
-                className={`filter-indicator ${index === currentFilterSection ? 'active' : ''}`}
-                onClick={() => setCurrentFilterSection(index)}
-              />
+
+          <div className="recipe-list">
+            {recipes.map((recipe) => (
+              <div key={recipe.recipe_id} className="popular-recipe-card" onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
+                <img
+                  src={`http://localhost:5000/images/${recipe.image_url}`}
+                  alt={recipe.title}
+                  style={{ width: '202px', height: '113px', objectFit: 'cover' }}
+                />
+                <h3>{recipe.title}</h3>
+                <p>{recipe.description}</p>
+                <div className="recipe-meta">
+                  <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
+                    {recipe.difficulty}
+                  </span>
+                  <span className="category-tag">
+                    {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
+                  </span>
+                  <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
+                    {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
 
-        <div className="recipe-list">
-          {recipes.map((recipe) => (
-            <div key={recipe.recipe_id} className="popular-recipe-card" onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
-              <img
-                src={`http://localhost:5000/images/${recipe.image_url}`}
-                alt={recipe.title}
-                style={{ width: '202px', height: '113px', objectFit: 'cover' }}
-              />
-              <h3>{recipe.title}</h3>
-              <p>{recipe.description}</p>
-              <div className="recipe-meta">
-                <span className={`difficulty-tag ${recipe.difficulty?.toLowerCase()}`}>
-                  {recipe.difficulty}
-                </span>
-                <span className="category-tag">
-                  {recipe.food_category?.replace('_', ' ').toUpperCase() || 'MAIN COURSE'}
-                </span>
-                <span className={`diet-tag ${recipe.diet_type?.toLowerCase()}`}>
-                  {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'VEGETARIAN'}
-                </span>
-              </div>
-              <div className="view-recipe-overlay">View Recipe</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="pagination">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => setPage(i + 1)}
-              className={page === i + 1 ? 'active' : ''}
-            >
-              {i + 1}
-            </button>
-          ))}
+          <div className="pagination">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={page === i + 1 ? 'active' : ''}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
