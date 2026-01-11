@@ -125,7 +125,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './home.css';
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
   const [popularRecipes, setPopularRecipes] = useState([]);
   const [difficulty, setDifficulty] = useState('');
   const [foodCategory, setFoodCategory] = useState('');
@@ -230,18 +229,12 @@ const Home = () => {
 
       const res = await fetch(`http://localhost:5000/api/recipes?${query}`);
       const data = await res.json();
-      setRecipes(data.recipes);
+      setRecipes(data.recipes || []);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error('Failed to fetch recipes:', error);
     }
   }, [page, difficulty, foodCategory, dietType, search]);
-
-  // Fetch recommendations for a test user (userId=1)
-  const fetchRecommendations = useCallback(async () => {
-    setRecommendations([]);
-    return;
-  }, []);
 
   // Fetch popular recipes for homepage
   const fetchPopularRecipes = useCallback(async () => {
@@ -249,7 +242,7 @@ const Home = () => {
       const res = await fetch('http://localhost:5000/api/ml/popular?limit=12');
       const data = await res.json();
       if (data.success) {
-        setPopularRecipes(data.popularRecipes);
+        setPopularRecipes(data.popularRecipes || []);
       }
     } catch (error) {
       console.error('Failed to fetch popular recipes:', error);
@@ -259,10 +252,6 @@ const Home = () => {
   useEffect(() => {
     fetchRecipes();
   }, [fetchRecipes]);
-
-  useEffect(() => {
-    fetchRecommendations();
-  }, [fetchRecommendations]);
 
   useEffect(() => {
     fetchPopularRecipes();

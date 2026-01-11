@@ -76,6 +76,10 @@
   margin-bottom: 10px;
   color: #6b3e00;
   text-shadow: 1px 1px 2px #f0c27b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .chef-certified-recipes .chef-name {

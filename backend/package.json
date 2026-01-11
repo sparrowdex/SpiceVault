@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "pm2 start index.js --name spicevault-backend",
     "dev": "nodemon index.js",
+    "prod:start": "pm2 start index.js --name spicevault-backend",
+    "prod:stop": "pm2 stop spicevault-backend",
+    "prod:restart": "pm2 restart spicevault-backend",
+    "prod:logs": "pm2 logs spicevault-backend",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:ml": "node scripts/seedMLData.js",
     "test:ml": "node scripts/testMLFeatures.js",
@@ -42,6 +46,7 @@
     "sequelize-cli": "^6.6.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "pm2": "^5.4.0"
   }
 }

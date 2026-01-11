@@ -189,6 +189,9 @@
   color: #333;
   font-size: 18px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .recipe-content p {
@@ -196,6 +199,12 @@
   color: #666;
   margin: 10px 0 15px 0;
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 42px; /* fallback for browsers that don't support line-clamp, 14px * 1.5 * 2 lines */
 }
 
 .rating-display {

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './recommendation.css';
+import FilterButtons from './components/FilterButtons';
 
 const Recommendations = ({ user }) => {
   const [recommendations, setRecommendations] = useState([]);
@@ -13,13 +14,24 @@ const Recommendations = ({ user }) => {
   const [healthFocus, setHealthFocus] = useState('balanced');
   const [ratedRecipes, setRatedRecipes] = useState({}); // Track which recipes have been rated
   const [hoveredStar, setHoveredStar] = useState({}); // Track hover state for stars
-  const [selectedRecipe, setSelectedRecipe] = useState(null); // For modal display
-  const [showRecipeModal, setShowRecipeModal] = useState(false);
 
 
   const navigate = useNavigate();
 
-  const fetchRecommendations = async (type) => {
+  const recommendationTypeOptions = [
+    { value: 'random', label: 'Random' },
+    { value: 'collaborative', label: 'For You' },
+    { value: 'hybrid', label: 'Hybrid' },
+    { value: 'nutritional', label: 'By Health' },
+  ];
+
+  const healthFocusOptions = [
+    { value: 'balanced', label: 'Balanced' },
+    { value: 'excellent', label: 'Extremely Healthy' },
+    { value: 'healthy', label: 'Very Healthy' },
+  ];
+
+  const fetchRecommendations = useCallback(async (type) => {
     try {
       setLoading(true);
       setError(null); // Clear previous errors
@@ -74,7 +86,7 @@ const Recommendations = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, healthFocus]);
 
   const handleRateRecipe = async (recipeId, rating) => {
     // Update state immediately for instant UI feedback
@@ -169,13 +181,11 @@ const Recommendations = ({ user }) => {
       }
     };
     fetchData();
-  }, [recommendationType, user]);
+  }, [recommendationType, user, healthFocus, fetchRecommendations]);
 
-  const handleRecommendationTypeChange = (e) => {
-    const newType = e.target.value;
+  const handleRecommendationTypeChange = (newType) => {
     setRecommendationType(newType);
     localStorage.setItem('recommendationType', newType);
-    // Clear any previous errors when switching types
     setError(null);
   };
 
@@ -183,32 +193,25 @@ const Recommendations = ({ user }) => {
     <div className="recommendations-page">
       <h2 className="recommendation-title">Recommended Recipes for You</h2>
       <p className="recommendation-description">
-        This page shows personalized recipe recommendations generated using a hybrid machine learning approach combining collaborative filtering and content-based filtering. You can rate recipes to improve your recommendations, like or save recipes.
+        Discover recipes tailored just for you. Rate them to enhance future recommendations.
       </p>
 
       {/* Recommendation Type Selector */}
-      <div className="recommendation-type-selector">
-        <select id="recommendationType" value={recommendationType} onChange={handleRecommendationTypeChange}>
-          <option value="" disabled>Choose Type</option>
-          <option value="random">Random</option>
-          <option value="collaborative">Collaborative Filtering</option>
-          <option value="hybrid">Hybrid Filtering</option>
-          <option value="nutritional">Nutritional Recommendations</option>
-        </select>
+      <FilterButtons
+        options={recommendationTypeOptions}
+        selectedValue={recommendationType}
+        onChange={handleRecommendationTypeChange}
+        aria-label="Recommendation type filter"
+      />
 
-        {recommendationType === 'nutritional' && (
-          <select
-            id="healthFocus"
-            value={healthFocus}
-            onChange={(e) => setHealthFocus(e.target.value)}
-            style={{ marginLeft: '10px' }}
-          >
-            <option value="balanced">Balanced</option>
-            <option value="excellent">Excellent Health</option>
-            <option value="healthy">Very Healthy</option>
-          </select>
-        )}
-      </div>
+      {recommendationType === 'nutritional' && (
+        <FilterButtons
+          options={healthFocusOptions}
+          selectedValue={healthFocus}
+          onChange={setHealthFocus}
+          aria-label="Health focus filter"
+        />
+      )}
 
       {/* Recommendations List */}
       <div className="recommendation-list">
