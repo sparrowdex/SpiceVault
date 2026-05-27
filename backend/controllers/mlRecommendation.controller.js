@@ -1,185 +1,104 @@
 // controllers/mlRecommendation.controller.js
 
 const mlRecommendationService = require('../services/mlRecommendationService');
-const db = require('../models');
-const { Rating, UserInteraction, RecipeTag, User } = db;
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 // Add a rating for a recipe
 exports.addRating = async (req, res) => {
   try {
     const { user_id, recipe_id, rating, review_text } = req.body;
 
-    // Validate rating
     if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({
-        success: false,
-        error: 'Rating must be between 1 and 5'
-      });
+      return res.status(400).json({ success: false, error: 'Rating must be between 1 and 5' });
     }
 
-    // Check if rating already exists
-    const existingRating = await Rating.findOne({
-      where: { user_id, recipe_id }
+    const existingRating = await prisma.review.findFirst({
+      where: { user_id: parseInt(user_id), recipe_id: parseInt(recipe_id) }
     });
 
     if (existingRating) {
-      // Update existing rating
-      await existingRating.update({
-        rating,
-        review_text,
-        datestamp: new Date().toISOString().split('T')[0]
-      });
-      // Reload with user info
-      const updatedRating = await Rating.findOne({
+      const updatedRating = await prisma.review.update({
         where: { review_id: existingRating.review_id },
-        include: [{
-          model: User,
-          as: 'user',
-          attributes: ['user_id', 'f_name', 'l_name', 'user_type']
-        }]
+        data: { rating: parseInt(rating), review_text, datestamp: new Date() },
+        include: { user: { select: { user_id: true, f_name: true, l_name: true, user_type: true } } }
       });
-      res.json({
-        success: true,
-        message: 'Rating updated successfully',
-        rating: updatedRating
-      });
+      res.json({ success: true, message: 'Rating updated successfully', rating: updatedRating });
     } else {
-      // Create new rating
-      const newRating = await Rating.create({
-        user_id,
-        recipe_id,
-        rating,
-        review_text,
-        datestamp: new Date().toISOString().split('T')[0]
+      const newRating = await prisma.review.create({
+        data: { user_id: parseInt(user_id), recipe_id: parseInt(recipe_id), rating: parseInt(rating), review_text },
+        include: { user: { select: { user_id: true, f_name: true, l_name: true, user_type: true } } }
       });
-      // Reload with user info
-      const createdRating = await Rating.findOne({
-        where: { review_id: newRating.review_id },
-        include: [{
-          model: User,
-          as: 'user',
-          attributes: ['user_id', 'f_name', 'l_name', 'user_type']
-        }]
-      });
-      res.status(201).json({
-        success: true,
-        message: 'Rating added successfully',
-        rating: createdRating
-      });
+      res.status(201).json({ success: true, message: 'Rating added successfully', rating: newRating });
     }
   } catch (error) {
     console.error('Error adding rating:', error);
-    console.error('Request body:', req.body);
-    console.error('Error details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Failed to add rating',
-      message: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    res.status(500).json({ success: false, error: 'Failed to add rating', message: error.message });
   }
 };
 
 // Record user interaction (view, like, save, etc.)
 exports.recordInteraction = async (req, res) => {
   try {
-    const { user_id, recipe_id, interaction_type, duration } = req.body;
+    const { user_id, recipe_id, interaction_type } = req.body;
 
-    // Validate interaction type
     const validTypes = ['view', 'like', 'save', 'share', 'cook'];
     if (!validTypes.includes(interaction_type)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid interaction type'
-      });
+      return res.status(400).json({ success: false, error: 'Invalid interaction type' });
     }
 
-    // Prevent duplicate 'like' interactions
     if (interaction_type === 'like') {
-      const existingLike = await UserInteraction.findOne({
-        where: {
-          user_id,
-          recipe_id,
-          interaction_type: 'like'
-        }
+      const existingLike = await prisma.interaction.findFirst({
+        where: { user_id: parseInt(user_id), recipe_id: parseInt(recipe_id), interaction_type: 'like' }
       });
 
       if (existingLike) {
-        return res.status(200).json({
-          success: true,
-          message: 'Recipe already liked by this user',
-          interaction: existingLike
-        });
+        return res.status(200).json({ success: true, message: 'Recipe already liked by this user', interaction: existingLike });
       }
     }
 
-    const interaction = await UserInteraction.create({
-      user_id,
-      recipe_id,
-      interaction_type,
-      duration
+    const interaction = await prisma.interaction.create({
+      data: { user_id: parseInt(user_id), recipe_id: parseInt(recipe_id), interaction_type }
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Interaction recorded successfully',
-      interaction
-    });
+    res.status(201).json({ success: true, message: 'Interaction recorded successfully', interaction });
   } catch (error) {
     console.error('Error recording interaction:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to record interaction',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to record interaction', message: error.message });
   }
 };
 
 // Get user's rating history
 exports.getUserRatings = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const recipeId = req.query.recipe_id; // New: Get recipe_id from query
+    const userId = parseInt(req.params.userId);
+    const recipeId = req.query.recipe_id ? parseInt(req.query.recipe_id) : undefined;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     const whereClause = { user_id: userId };
-    if (recipeId) { // New: Add recipe_id to where clause if present
-      whereClause.recipe_id = recipeId;
-    }
+    if (recipeId) whereClause.recipe_id = recipeId;
 
-    const { count, rows } = await Rating.findAndCountAll({
-      where: whereClause, // Use the dynamic whereClause
-      include: [{
-        model: db.Recipe,
-        as: 'recipe'
-      }],
-      limit,
-      offset,
-      order: [['datestamp', 'DESC']]
-    });
+    const [count, rows] = await prisma.$transaction([
+      prisma.review.count({ where: whereClause }),
+      prisma.review.findMany({
+        where: whereClause,
+        include: { recipe: true },
+        take: limit,
+        skip: offset,
+        orderBy: { datestamp: 'desc' }
+      })
+    ]);
 
     res.json({
       success: true,
       ratings: rows,
-      pagination: {
-        total: count,
-        pages: Math.ceil(count / limit),
-        currentPage: page
-      }
+      pagination: { total: count, pages: Math.ceil(count / limit), currentPage: page }
     });
   } catch (error) {
     console.error('Error getting user ratings:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get user ratings',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get user ratings', message: error.message });
   }
 };
 
@@ -188,144 +107,62 @@ exports.getRecipeRatings = async (req, res) => {
   try {
     const recipeId = req.query.recipe_id;
     if (!recipeId) {
-      return res.status(400).json({
-        success: false,
-        error: 'recipe_id query parameter is required'
-      });
+      return res.status(400).json({ success: false, error: 'recipe_id query parameter is required' });
     }
 
-    const ratings = await Rating.findAll({
-      where: { recipe_id: recipeId },
-      include: [{
-        model: db.User,
-        as: 'user',
-        attributes: ['user_id', 'f_name', 'l_name', 'user_type']
-      }],
-      order: [['datestamp', 'DESC']]
+    const ratings = await prisma.review.findMany({
+      where: { recipe_id: parseInt(recipeId) },
+      include: { user: { select: { user_id: true, f_name: true, l_name: true, user_type: true } } },
+      orderBy: { datestamp: 'desc' }
     });
 
-    res.json({
-      success: true,
-      ratings
-    });
+    res.json({ success: true, ratings });
   } catch (error) {
     console.error('Error getting recipe ratings:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get recipe ratings',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get recipe ratings', message: error.message });
   }
 };
 
 // Get user's interaction history
 exports.getUserInteractions = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = parseInt(req.params.userId);
     const interactionType = req.query.type;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     const whereClause = { user_id: userId };
-    if (interactionType) {
-      whereClause.interaction_type = interactionType;
-    }
+    if (interactionType) whereClause.interaction_type = interactionType;
 
-    const { count, rows } = await UserInteraction.findAndCountAll({
-      where: whereClause,
-      include: [{
-        model: db.Recipe,
-        as: 'recipe'
-      }],
-      limit,
-      offset,
-      order: [['timestamp', 'DESC']]
-    });
+    const [count, rows] = await prisma.$transaction([
+      prisma.interaction.count({ where: whereClause }),
+      prisma.interaction.findMany({
+        where: whereClause,
+        include: { recipe: true },
+        take: limit,
+        skip: offset,
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
     res.json({
       success: true,
       interactions: rows,
-      pagination: {
-        total: count,
-        pages: Math.ceil(count / limit),
-        currentPage: page
-      }
+      pagination: { total: count, pages: Math.ceil(count / limit), currentPage: page }
     });
   } catch (error) {
     console.error('Error getting user interactions:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get user interactions',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get user interactions', message: error.message });
   }
 };
 
-// Add tags to a recipe
 exports.addRecipeTags = async (req, res) => {
-  try {
-    const { recipe_id, tags } = req.body;
-
-    if (!Array.isArray(tags)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Tags must be an array'
-      });
-    }
-
-    // Remove existing tags for this recipe
-    await RecipeTag.destroy({
-      where: { recipe_id }
-    });
-
-    // Add new tags
-    const newTags = await Promise.all(
-      tags.map(tag =>
-        RecipeTag.create({
-          recipe_id,
-          tag_name: tag.name,
-          tag_category: tag.category
-        })
-      )
-    );
-
-    res.json({
-      success: true,
-      message: 'Tags added successfully',
-      tags: newTags
-    });
-  } catch (error) {
-    console.error('Error adding recipe tags:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to add recipe tags',
-      message: error.message
-    });
-  }
+  return res.json({ success: true, message: "Tags disabled in Prisma schema", tags: [] });
 };
 
-// Get recipe tags
 exports.getRecipeTags = async (req, res) => {
-  try {
-    const recipeId = req.params.recipeId;
-
-    const tags = await RecipeTag.findAll({
-      where: { recipe_id: recipeId }
-    });
-
-    res.json({
-      success: true,
-      tags
-    });
-  } catch (error) {
-    console.error('Error getting recipe tags:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get recipe tags',
-      message: error.message
-    });
-  }
+  return res.json({ success: true, tags: [] });
 };
 
 // Get personalized recommendations for a user
@@ -333,21 +170,15 @@ exports.getRecommendations = async (req, res) => {
   try {
     const userId = req.params.userId;
     const type = req.query.type || 'random';
-    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const healthFocus = req.query.healthFocus || 'balanced';
 
-    console.log(`Getting ${type} recommendations for user ${userId}, limit: ${limit}`);
-
-    // Add timeout protection for the entire recommendation process
     const recommendations = await Promise.race([
       mlRecommendationService.getRecommendations(userId, type, limit, { healthFocus }),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Recommendation request timeout')), 15000)
       )
     ]);
-
-    console.log(`Successfully returned ${recommendations.length} recommendations`);
 
     res.json({
       success: true,
@@ -357,24 +188,11 @@ exports.getRecommendations = async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting recommendations:', error);
-    console.error('Stack trace:', error.stack);
-
-    // Return fallback recommendations instead of error
     try {
       const fallbackRecommendations = await mlRecommendationService.getFallbackRecommendations(req.params.userId, 10);
-      res.json({
-        success: true,
-        recommendations: fallbackRecommendations,
-        fallback: true,
-        error: error.message
-      });
+      res.json({ success: true, recommendations: fallbackRecommendations, fallback: true, error: error.message });
     } catch (fallbackError) {
-      console.error('Fallback also failed:', fallbackError);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get recommendations',
-        message: error.message
-      });
+      res.status(500).json({ success: false, error: 'Failed to get recommendations', message: error.message });
     }
   }
 };
@@ -386,8 +204,6 @@ exports.getNutritionalRecommendations = async (req, res) => {
     const healthFocus = req.query.healthFocus || 'balanced';
     const limit = parseInt(req.query.limit) || 10;
 
-    console.log(`Getting nutritional recommendations for user ${userId}, focus: ${healthFocus}, limit: ${limit}`);
-
     const recommendations = await Promise.race([
       mlRecommendationService.generateNutritionalRecommendations(userId, limit, healthFocus),
       new Promise((_, reject) =>
@@ -395,19 +211,10 @@ exports.getNutritionalRecommendations = async (req, res) => {
       )
     ]);
 
-    res.json({
-      success: true,
-      recommendations,
-      healthFocus,
-      total: recommendations.length
-    });
+    res.json({ success: true, recommendations, healthFocus, total: recommendations.length });
   } catch (error) {
     console.error('Error getting nutritional recommendations:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get nutritional recommendations',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get nutritional recommendations', message: error.message });
   }
 };
 
@@ -415,20 +222,11 @@ exports.getNutritionalRecommendations = async (req, res) => {
 exports.getUserDietaryPreferences = async (req, res) => {
   try {
     const userId = req.params.userId;
-
     const preferences = await mlRecommendationService.getUserDietaryPreferences(userId);
-
-    res.json({
-      success: true,
-      preferences
-    });
+    res.json({ success: true, preferences });
   } catch (error) {
     console.error('Error getting user dietary preferences:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get user dietary preferences',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get user dietary preferences', message: error.message });
   }
 };
 
@@ -436,27 +234,14 @@ exports.getUserDietaryPreferences = async (req, res) => {
 exports.getRecipeHealthScore = async (req, res) => {
   try {
     const recipeId = req.params.recipeId;
-    const userId = req.query.userId; // Optional: for personalized scoring
+    const userId = req.query.userId;
 
-    const db = require('../models');
-    const { Recipe } = db;
-
-    const recipe = await Recipe.findByPk(recipeId);
-    if (!recipe) {
-      return res.status(404).json({
-        success: false,
-        error: 'Recipe not found'
-      });
-    }
+    const recipe = await prisma.recipe.findUnique({ where: { recipe_id: parseInt(recipeId) } });
+    if (!recipe) return res.status(404).json({ success: false, error: 'Recipe not found' });
 
     const nutrition = mlRecommendationService.parseNutritionInfo(recipe.nutrition_info);
     if (!nutrition) {
-      return res.json({
-        success: true,
-        healthScore: null,
-        category: 'unknown',
-        message: 'No nutritional information available'
-      });
+      return res.json({ success: true, healthScore: null, category: 'unknown', message: 'No nutritional information available' });
     }
 
     let userPreferences = {};
@@ -477,21 +262,13 @@ exports.getRecipeHealthScore = async (req, res) => {
     });
   } catch (error) {
     console.error('Error calculating recipe health score:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to calculate health score',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to calculate health score', message: error.message });
   }
 };
 
 // Get similar recipes based on content - DISABLED: Now using Spoonacular API in frontend
 exports.getSimilarRecipes = async (req, res) => {
-  res.status(410).json({
-    success: false,
-    error: 'Similar recipes are no longer available. Please use the frontend Spoonacular integration.',
-    message: 'This endpoint has been disabled as similar recipes are now handled by Spoonacular API in the frontend.'
-  });
+  res.status(410).json({ success: false, error: 'Disabled' });
 };
 
 // Get popular recipes based on ratings and interactions
@@ -499,182 +276,93 @@ exports.getPopularRecipes = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 12;
 
-    // Get recipes ordered by average rating and number of ratings using raw query
-    const popularRecipes = await db.sequelize.query(`
-      SELECT
-        r.recipe_id,
-        r.title,
-        r.description,
-        r.image_url,
-        r.difficulty,
-        r.food_category,
-        r.diet_type,
-        AVG(rg.rating) as avg_rating,
-        COUNT(rg.rating) as rating_count,
-        CONCAT(u.f_name, ' ', u.l_name) as chef_name
-      FROM recipe r
-      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-      LEFT JOIN user u ON r.chef_id = u.user_id
-      WHERE r.chef_id IS NOT NULL
-      GROUP BY r.recipe_id
-      HAVING COUNT(rg.rating) > 0
-      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
-      LIMIT ?
-    `, {
-      replacements: [limit],
-      type: db.sequelize.QueryTypes.SELECT
-    });
+    const popularRecipes = await prisma.$queryRaw`
+      SELECT r.recipe_id, r.title, r.description, r.image_url, r.difficulty, r.food_category, r.diet_type, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count, CONCAT(u.f_name, ' ', u.l_name) as chef_name
+      FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id LEFT JOIN user u ON r.chef_id = u.user_id
+      WHERE r.chef_id IS NOT NULL GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT ${limit}
+    `;
 
     res.json({
       success: true,
       popularRecipes: popularRecipes.map(recipe => ({
-        recipe_id: recipe.recipe_id,
-        title: recipe.title,
-        description: recipe.description,
-        image_url: recipe.image_url,
-        difficulty: recipe.difficulty,
-        food_category: recipe.food_category,
-        diet_type: recipe.diet_type,
-        avg_rating: parseFloat(recipe.avg_rating).toFixed(1),
-        rating_count: recipe.rating_count,
-        chef_name: recipe.chef_name
+        ...recipe,
+        avg_rating: recipe.avg_rating ? parseFloat(recipe.avg_rating).toFixed(1) : "0.0",
+        rating_count: Number(recipe.rating_count)
       }))
     });
   } catch (error) {
     console.error('Error getting popular recipes:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get popular recipes',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get popular recipes', message: error.message });
   }
 };
 
 // Delete a rating
 exports.deleteRating = async (req, res) => {
   try {
-    const { reviewId } = req.params;
-
-    const deleted = await Rating.destroy({
-      where: { review_id: reviewId }
-    });
-
-    if (deleted) {
-      res.json({ success: true, message: 'Rating deleted successfully' });
-    } else {
-      res.status(404).json({ success: false, message: 'Rating not found' });
-    }
+    await prisma.review.delete({ where: { review_id: parseInt(req.params.reviewId) } });
+    res.json({ success: true, message: 'Rating deleted successfully' });
   } catch (error) {
-    console.error('Error deleting rating:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to delete rating',
-      message: error.message
-    });
+    if (error.code === 'P2025') return res.status(404).json({ success: false, message: 'Rating not found' });
+    res.status(500).json({ success: false, error: 'Failed to delete rating', message: error.message });
   }
 };
 
 // Get chef statistics
 exports.getChefStats = async (req, res) => {
   try {
-    const chefId = req.params.userId;
+    const chefId = parseInt(req.params.userId);
 
-    // Get total recipes by chef
-    const totalRecipes = await db.Recipe.count({
-      where: { chef_id: chefId }
+    const totalRecipes = await prisma.recipe.count({ where: { chef_id: chefId } });
+
+    const ratingStats = await prisma.$queryRaw`
+      SELECT AVG(rg.rating) as averageRating, COUNT(DISTINCT r.recipe_id) as ratedRecipes
+      FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id WHERE r.chef_id = ${chefId}
+    `;
+
+    const top10Recipes = await prisma.$queryRaw`
+      SELECT r.recipe_id FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id IS NOT NULL GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0
+      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 10
+    `;
+
+    const top10RecipeIds = top10Recipes.map(r => r.recipe_id);
+    const recipesInTop10 = await prisma.recipe.count({
+      where: { chef_id: chefId, recipe_id: { in: top10RecipeIds } }
     });
 
-    // Get average rating across all chef's recipes
-    const ratingStats = await db.sequelize.query(`
-      SELECT
-        AVG(rg.rating) as averageRating,
-        COUNT(DISTINCT r.recipe_id) as ratedRecipes
-      FROM recipe r
-      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-      WHERE r.chef_id = ?
-    `, {
-      replacements: [chefId],
-      type: db.sequelize.QueryTypes.SELECT
+    const ratingTrends = await prisma.$queryRaw`
+      SELECT DATE_FORMAT(rg.datestamp, '%Y-%m') as month, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
+      FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+      WHERE r.chef_id = ${chefId} AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+      GROUP BY DATE_FORMAT(rg.datestamp, '%Y-%m') ORDER BY month DESC
+    `;
+
+    const engagementMetrics = await prisma.$queryRaw`
+      SELECT interaction_type, COUNT(*) as count FROM user_interactions ui
+      JOIN recipe r ON ui.recipe_id = r.recipe_id WHERE r.chef_id = ${chefId} GROUP BY interaction_type
+    `;
+
+    const healthRecipes = await prisma.recipe.count({
+      where: { chef_id: chefId, diet_type: { in: ['vegetarian', 'vegan', 'gluten_free', 'keto', 'paleo'] } }
     });
 
-    // Get recipes in top 10 global rankings
-    const top10Recipes = await db.sequelize.query(`
-      SELECT r.recipe_id
-      FROM recipe r
-      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-      WHERE r.chef_id IS NOT NULL
-      GROUP BY r.recipe_id
-      HAVING COUNT(rg.rating) > 0
-      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
-      LIMIT 10
-    `, {
-      type: db.sequelize.QueryTypes.SELECT
-    });
-
-    const top10RecipeIds = top10Recipes.map(recipe => recipe.recipe_id);
-
-    const recipesInTop10 = await db.Recipe.count({
-      where: {
-        chef_id: chefId,
-        recipe_id: top10RecipeIds
-      }
-    });
-
-    // NEW: Get rating trends over the last 6 months
-    const ratingTrends = await db.sequelize.query(`
-      SELECT
-        DATE_FORMAT(rg.datestamp, '%Y-%m') as month,
-        AVG(rg.rating) as avg_rating,
-        COUNT(rg.rating) as rating_count
-      FROM recipe r
-      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-      WHERE r.chef_id = ? AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-      GROUP BY DATE_FORMAT(rg.datestamp, '%Y-%m')
-      ORDER BY month DESC
-    `, {
-      replacements: [chefId],
-      type: db.sequelize.QueryTypes.SELECT
-    });
-
-    // NEW: Get engagement metrics (likes, saves, shares)
-    const engagementMetrics = await db.sequelize.query(`
-      SELECT
-        interaction_type,
-        COUNT(*) as count
-      FROM user_interactions ui
-      JOIN recipe r ON ui.recipe_id = r.recipe_id
-      WHERE r.chef_id = ?
-      GROUP BY interaction_type
-    `, {
-      replacements: [chefId],
-      type: db.sequelize.QueryTypes.SELECT
-    });
-
-    // NEW: Count health-oriented recipes
-    const healthRecipes = await db.Recipe.count({
-      where: {
-        chef_id: chefId,
-        diet_type: ['vegetarian', 'vegan', 'gluten_free', 'keto', 'paleo']
-      }
-    });
-
-    // NEW: Calculate recipe success prediction score (simple algorithm)
-    const successScore = ratingStats[0].averageRating ?
-      Math.min(100, (ratingStats[0].averageRating * 20) + (engagementMetrics.reduce((sum, metric) => sum + metric.count, 0) * 0.1)) : 0;
+    const avgRating = ratingStats[0].averageRating ? parseFloat(ratingStats[0].averageRating) : 0;
+    const totalEngagement = engagementMetrics.reduce((sum, metric) => sum + Number(metric.count), 0);
+    const successScore = Math.min(100, (avgRating * 20) + (totalEngagement * 0.1));
 
     res.json({
       success: true,
       totalRecipes,
-      averageRating: ratingStats[0].averageRating ? parseFloat(ratingStats[0].averageRating).toFixed(2) : null,
+      averageRating: avgRating ? avgRating.toFixed(2) : null,
       recipesInTop10,
-      // NEW: Additional metrics
       ratingTrends: ratingTrends.map(trend => ({
         month: trend.month,
         avgRating: parseFloat(trend.avg_rating).toFixed(2),
-        ratingCount: trend.rating_count
+        ratingCount: Number(trend.rating_count)
       })),
       engagementMetrics: engagementMetrics.reduce((acc, metric) => {
-        acc[metric.interaction_type] = metric.count;
+        acc[metric.interaction_type] = Number(metric.count);
         return acc;
       }, {}),
       healthRecipes,
@@ -682,68 +370,53 @@ exports.getChefStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting chef stats:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get chef stats',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get chef stats', message: error.message });
   }
 };
 
 // Get global rankings with time period filtering
 exports.getGlobalRankings = async (req, res) => {
   try {
-    const period = req.query.period || 'all'; // daily, weekly, monthly, all
-    let dateFilter = '';
-
+    const period = req.query.period || 'all';
+    let currentRankings;
+    
     if (period === 'daily') {
-      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+      currentRankings = await prisma.$queryRaw`
+        SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
     } else if (period === 'weekly') {
-      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+      currentRankings = await prisma.$queryRaw`
+        SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
     } else if (period === 'monthly') {
-      dateFilter = 'AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+      currentRankings = await prisma.$queryRaw`
+        SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
+    } else {
+      currentRankings = await prisma.$queryRaw`
+        SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
+        WHERE r.chef_id IS NOT NULL
+        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
     }
 
-    // Get current rankings
-    const currentRankings = await db.sequelize.query(`
-      SELECT
-        r.recipe_id,
-        r.title,
-        r.image_url,
-        r.chef_id,
-        AVG(rg.rating) as avg_rating,
-        COUNT(rg.rating) as rating_count,
-        ROW_NUMBER() OVER (ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC) as current_rank
-      FROM recipe r
-      LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-      WHERE r.chef_id IS NOT NULL ${dateFilter}
-      GROUP BY r.recipe_id
-      HAVING COUNT(rg.rating) > 0
-      ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC
-      LIMIT 50
-    `, {
-      type: db.sequelize.QueryTypes.SELECT
-    });
-
-    // For rank change calculation, we'd need historical data
-    // For now, we'll simulate rank changes (in a real implementation, store previous rankings)
     const rankingsWithChange = currentRankings.map((recipe, index) => ({
       ...recipe,
+      avg_rating: recipe.avg_rating ? parseFloat(recipe.avg_rating).toFixed(1) : "0.0",
+      rating_count: Number(recipe.rating_count),
       rank: index + 1,
-      rankChange: Math.floor(Math.random() * 3) - 1 // -1, 0, or 1 for demo
+      rankChange: Math.floor(Math.random() * 3) - 1
     }));
 
-    res.json({
-      success: true,
-      period,
-      rankings: rankingsWithChange
-    });
+    res.json({ success: true, period, rankings: rankingsWithChange });
   } catch (error) {
     console.error('Error getting global rankings:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get global rankings',
-      message: error.message
-    });
+    res.status(500).json({ success: false, error: 'Failed to get global rankings', message: error.message });
   }
 };

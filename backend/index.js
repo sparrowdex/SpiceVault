@@ -1,11 +1,24 @@
 require('dotenv').config();
 
+// Fallback for Prisma if using legacy Sequelize environment variables
+if (!process.env.DATABASE_URL && process.env.DB_USER) {
+  const user = process.env.DB_USER;
+  const pass = process.env.DB_PASSWORD || '';
+  const host = process.env.DB_HOST || 'localhost';
+  const port = process.env.DB_PORT || '3306';
+  const db = process.env.DB_NAME || 'spicevault';
+  process.env.DATABASE_URL = `mysql://${user}:${pass}@${host}:${port}/${db}`;
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const db = require('./models'); // Sequelize Models
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const { createRouteHandler } = require("uploadthing/express");
+const { uploadRouter } = require("./uploadthingRouter");
 
 const app = express();
 // const PORT = process.env.PORT || 3306;
@@ -33,16 +46,23 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(bodyParser.json({ limit: '10mb' })); // Limit payload size
 app.use(express.json({ limit: '10mb' })); // ✅ Enables JSON parsing for incoming requests
 
-// Test DB connection only
-db.sequelize.authenticate()
+// Test Prisma DB connection
+prisma.$connect()
   .then(() => {
-    console.log('✅ Successfully connected to the MySQL database');
+    console.log('✅ Successfully connected to the MySQL database via Prisma');
   })
   .catch((err) => {
-    console.error('❌ Could not connect to DB:', err);
+    console.error('❌ Could not connect to DB via Prisma:', err);
   });
 
 // Routes
+app.use(
+  "/api/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+  })
+);
+
 const userRoutes = require('./routes/user.routes');
 app.use('/api/users', userRoutes);
 const recipeRoutes = require('./routes/recipe.routes');

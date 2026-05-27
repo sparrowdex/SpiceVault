@@ -37,10 +37,7 @@ The backend is an Express.js application that connects to a MySQL database.
 
     ```env
     # MySQL Database Configuration
-    DB_HOST=localhost
-    DB_USER=root
-    DB_PASSWORD=your_mysql_password # Replace with your MySQL root password or a dedicated user's password
-    DB_NAME=spicevault
+    DATABASE_URL="mysql://root:your_mysql_password@localhost:3306/spicevault"
 
     # Application Configuration
     PORT=5000

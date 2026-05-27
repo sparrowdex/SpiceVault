@@ -1,16 +1,13 @@
-const db = require('../models');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 exports.deleteAllUserInteractions = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // Delete all user interactions for the logged-in user
-    await db.sequelize.query(
-      'DELETE FROM user_interactions WHERE user_id = :userId',
-      {
-        replacements: { userId }
-      }
-    );
+    await prisma.interaction.deleteMany({
+      where: { user_id: parseInt(userId) }
+    });
 
     res.json({
       success: true,

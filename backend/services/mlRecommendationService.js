@@ -3,6 +3,8 @@
 const { Matrix } = require('ml-matrix');
 const natural = require('natural');
 const _ = require('lodash');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class MLRecommendationService {
   constructor() {
@@ -97,18 +99,14 @@ class MLRecommendationService {
     }
   }
 
-  // Content-Based Filtering using recipe tags and descriptions
+  // Content-Based Filtering using recipe categories, diets, and difficulty
   async generateContentBasedRecommendations(userId, limit = 10) {
     console.log(`Generating content-based recommendations for user ${userId}`);
     try {
-      const db = require('../models');
-      const { Recipe, RecipeTag, UserInteraction } = db;
-
       // Get user's interaction history
-      // Step 1: Get user's interaction history (likes, saves, etc.)
-      const userInteractions = await UserInteraction.findAll({
-        where: { user_id: userId },
-        attributes: ['recipe_id', 'interaction_type'] // Only need these columns
+      const userInteractions = await prisma.interaction.findMany({
+        where: { user_id: parseInt(userId) },
+        select: { recipe_id: true, interaction_type: true }
       });
 
       if (userInteractions.length === 0) {
@@ -119,45 +117,16 @@ class MLRecommendationService {
       // Step 2: Get the unique recipe IDs from the interactions
       const interactedRecipeIds = [...new Set(userInteractions.map(i => i.recipe_id))];
 
-      // Step 3: Fetch those recipes and their associated tags in a separate query
-      let interactedRecipes = [];
-      try {
-        interactedRecipes = await Recipe.findAll({
-          where: {
-            recipe_id: interactedRecipeIds
-          },
-          include: {
-            model: RecipeTag,
-            as: 'tags',
-            required: false // Left join to avoid errors if no tags
-          }
-        });
-      } catch (includeError) {
-        console.warn('Error including RecipeTag, fetching without tags:', includeError.message);
-        interactedRecipes = await Recipe.findAll({
-          where: {
-            recipe_id: interactedRecipeIds
-          }
-        });
-      }
+      // Step 3: Fetch interacted recipes
+      const interactedRecipes = await prisma.recipe.findMany({
+        where: { recipe_id: { in: interactedRecipeIds } }
+      });
 
-      // Step 4: Build user preference profile from the fetched recipes and their tags
+      // Step 4: Build user preference profile
       const userPreferences = this.buildUserPreferenceProfile(interactedRecipes);
 
-      // Get all recipes with tags
-      let allRecipes = [];
-      try {
-        allRecipes = await Recipe.findAll({
-          include: [{
-            model: RecipeTag,
-            as: 'tags',
-            required: false
-          }]
-        });
-      } catch (includeError) {
-        console.warn('Error including RecipeTag for all recipes, fetching without tags:', includeError.message);
-        allRecipes = await Recipe.findAll();
-      }
+      // Get all recipes
+      const allRecipes = await prisma.recipe.findMany();
 
       // Calculate similarity scores
       // Exclude recipes the user has already interacted with from the recommendations
@@ -252,17 +221,9 @@ class MLRecommendationService {
 
     console.log('Updating ML matrices...');
     try {
-      const db = require('../models');
-      const { Rating, User, Recipe } = db;
-
       // Get all ratings with timeout protection
       const ratings = await Promise.race([
-        Rating.findAll({
-          include: [
-            { model: User, as: 'user' },
-            { model: Recipe, as: 'recipe' }
-          ]
-        }),
+        prisma.review.findMany({ include: { user: true, recipe: true } }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Rating query timeout')), 30000)
         )
@@ -277,13 +238,13 @@ class MLRecommendationService {
       // Get unique users and recipes with timeout protection
       const [users, recipes] = await Promise.all([
         Promise.race([
-          User.findAll({ order: [['user_id', 'ASC']] }),
+          prisma.user.findMany({ orderBy: { user_id: 'asc' } }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('User query timeout')), 10000)
           )
         ]),
         Promise.race([
-          Recipe.findAll({ order: [['recipe_id', 'ASC']] }),
+          prisma.recipe.findMany({ orderBy: { recipe_id: 'asc' } }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Recipe query timeout')), 10000)
           )
@@ -382,26 +343,23 @@ class MLRecommendationService {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
-  // Build user preference profile from interactions
-  buildUserPreferenceProfile(recipesWithTags) {
+  // Build user preference profile from recipe metadata
+  buildUserPreferenceProfile(recipes) {
     const preferences = {
-      tags: {},
-      cuisines: {},
-      difficulties: {},
-      mealTypes: {}
+      categories: {},
+      diets: {},
+      difficulties: {}
     };
 
-    recipesWithTags.forEach(recipe => {
-      if (recipe.tags) {
-        recipe.tags.forEach(tag => {
-          const category = tag.tag_category;
-          const name = tag.tag_name;
-
-          if (!preferences[category]) {
-            preferences[category] = {};
-          }
-          preferences[category][name] = (preferences[category][name] || 0) + 1;
-        });
+    recipes.forEach(recipe => {
+      if (recipe.food_category) {
+        preferences.categories[recipe.food_category] = (preferences.categories[recipe.food_category] || 0) + 1;
+      }
+      if (recipe.diet_type) {
+        preferences.diets[recipe.diet_type] = (preferences.diets[recipe.diet_type] || 0) + 1;
+      }
+      if (recipe.difficulty) {
+        preferences.difficulties[recipe.difficulty] = (preferences.difficulties[recipe.difficulty] || 0) + 1;
       }
     });
 
@@ -413,45 +371,27 @@ class MLRecommendationService {
     let score = 0;
     let totalWeight = 0;
 
-    if (recipe.tags) {
-      recipe.tags.forEach(tag => {
-        const category = tag.tag_category;
-        const name = tag.tag_name;
-        
-        if (userPreferences[category] && userPreferences[category][name]) {
-          const weight = this.getTagWeight(category);
-          score += userPreferences[category][name] * weight;
-          totalWeight += weight;
-        }
-      });
+    if (recipe.food_category && userPreferences.categories[recipe.food_category]) {
+      score += userPreferences.categories[recipe.food_category] * 1.0;
+      totalWeight += 1.0;
+    }
+    if (recipe.diet_type && userPreferences.diets[recipe.diet_type]) {
+      score += userPreferences.diets[recipe.diet_type] * 0.8;
+      totalWeight += 0.8;
+    }
+    if (recipe.difficulty && userPreferences.difficulties[recipe.difficulty]) {
+      score += userPreferences.difficulties[recipe.difficulty] * 0.5;
+      totalWeight += 0.5;
     }
 
     return totalWeight > 0 ? score / totalWeight : 0;
   }
 
-  // Get weight for different tag categories
-  getTagWeight(category) {
-    const weights = {
-      cuisine: 1.0,
-      diet: 0.8,
-      ingredient: 0.6,
-      cooking_method: 0.4,
-      meal_type: 0.7
-    };
-    return weights[category] || 0.5;
-  }
-
   // Fallback recommendations when ML fails
   async getFallbackRecommendations(userId, limit) {
     try {
-      const db = require('../models');
-      const { Recipe, Sequelize } = db;
-
-      // Get popular recipes (most rated)
-      const recipes = await Recipe.findAll({
-        limit,
-        order: Sequelize.literal('RAND()')
-      });
+      const limitNum = parseInt(limit) || 10;
+      const recipes = await prisma.$queryRaw`SELECT * FROM recipe ORDER BY RAND() LIMIT ${limitNum}`;
 
       return recipes.map(recipe => ({
         recipe_id: recipe.recipe_id,
@@ -469,10 +409,8 @@ class MLRecommendationService {
 
   // Helper methods
   async getUserIndex(userId) {
-    const db = require('../models');
-    const { User } = db;
-    const users = await User.findAll({ order: [['user_id', 'ASC']] });
-    return users.findIndex(user => user.user_id === userId);
+    const users = await prisma.user.findMany({ orderBy: { user_id: 'asc' } });
+    return users.findIndex(user => user.user_id === parseInt(userId));
   }
 
   async formatRecommendations(recommendations) {
@@ -619,18 +557,13 @@ class MLRecommendationService {
   async generateNutritionalRecommendations(userId, limit = 10, healthFocus = 'balanced') {
     console.log(`Generating nutritional recommendations for user ${userId}, focus: ${healthFocus}`);
     try {
-      const db = require('../models');
-      const { Recipe, UserInteraction } = db;
-
       // Get user's dietary preferences from interactions and ratings
       const userPreferences = await this.getUserDietaryPreferences(userId);
 
       // Get all recipes with nutrition info
-      const recipes = await Recipe.findAll({
-        where: {
-          nutrition_info: { [db.Sequelize.Op.ne]: null }
-        },
-        limit: 100 // Get more recipes to score and filter
+      const recipes = await prisma.recipe.findMany({
+        where: { nutrition_info: { not: null } },
+        take: 100 // Get more recipes to score and filter
       });
 
       if (recipes.length === 0) {
@@ -694,21 +627,18 @@ class MLRecommendationService {
   // Get user's dietary preferences from their interactions
   async getUserDietaryPreferences(userId) {
     try {
-      const db = require('../models');
-      const { Recipe, UserInteraction, Rating } = db;
-
       // Get user's highly rated recipes
-      const highlyRated = await Rating.findAll({
-        where: { user_id: userId, rating: { [db.Sequelize.Op.gte]: 4 } },
-        include: [{ model: Recipe, as: 'recipe' }],
-        limit: 20
+      const highlyRated = await prisma.review.findMany({
+        where: { user_id: parseInt(userId), rating: { gte: 4 } },
+        include: { recipe: true },
+        take: 20
       });
 
       // Get user's interaction history
-      const interactions = await UserInteraction.findAll({
-        where: { user_id: userId },
-        include: [{ model: Recipe, as: 'recipe' }],
-        limit: 50
+      const interactions = await prisma.interaction.findMany({
+        where: { user_id: parseInt(userId) },
+        include: { recipe: true },
+        take: 50
       });
 
       const preferences = {
@@ -795,16 +725,11 @@ class MLRecommendationService {
       const recipeIds = recommendations.map(rec => rec.recipe_id);
       if (recipeIds.length > 0) {
         try {
-          const db = require('../models');
           const avgRatings = await Promise.race([
-            db.sequelize.query(`
-              SELECT recipe_id, AVG(rating) as avg_rating
-              FROM reviews_given
-              WHERE recipe_id IN (${recipeIds.map(id => '?').join(',')})
-              GROUP BY recipe_id
-            `, {
-              replacements: recipeIds,
-              type: db.sequelize.QueryTypes.SELECT
+            prisma.review.groupBy({
+              by: ['recipe_id'],
+              where: { recipe_id: { in: recipeIds } },
+              _avg: { rating: true }
             }),
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error('Avg rating query timeout')), 5000)
@@ -813,7 +738,7 @@ class MLRecommendationService {
 
           const avgRatingMap = {};
           avgRatings.forEach(row => {
-            avgRatingMap[row.recipe_id] = parseFloat(row.avg_rating);
+            avgRatingMap[row.recipe_id] = parseFloat(row._avg.rating);
           });
 
           recommendations = recommendations.map(rec => ({

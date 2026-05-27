@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id       Int           @id @default(autoincrement())
+  f_name        String
+  l_name        String
+  email         String        @unique
+  password      String
+  user_type     String        @default("Regular")
+  recipes       Recipe[]      @relation("UserRecipes")
+  chef_recipes  Recipe[]      @relation("ChefRecipes")
+  reviews       Review[]
+  replies       Reply[]
+  interactions  Interaction[]
+
+  @@map("user")
+}
+
+model Recipe {
+  recipe_id        Int           @id @default(autoincrement())
+  title            String
+  description      String?       @db.Text
+  instructions     String?       @db.Text
+  ingredients      String?       @db.Text
+  difficulty       String?
+  food_category    String?       @default("main_course")
+  diet_type        String?       @default("vegetarian")
+  image_url        String?
+  preparation_time String?
+  cooking_time     String?
+  calories         Int?
+  protein          Int?
+  carbs            Int?
+  fat              Int?
+  fiber            Int?
+  nutrition_info   String?       @db.Text
+  user_id          Int
+  chef_id          Int?
+  user             User          @relation("UserRecipes", fields: [user_id], references: [user_id])
+  chef             User?         @relation("ChefRecipes", fields: [chef_id], references: [user_id])
+  reviews          Review[]
+  interactions     Interaction[]
+  createdAt        DateTime      @default(now())
+
+  @@map("recipe")
+}
+
+model Review {
+  review_id   Int      @id @default(autoincrement())
+  rating      Int
+  review_text String?  @db.Text
+  datestamp   DateTime @default(now())
+  recipe_id   Int
+  user_id     Int
+  recipe      Recipe   @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  user        User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  replies     Reply[]
+
+  @@map("reviews_given")
+}
+
+model Reply {
+  reply_id  Int      @id @default(autoincrement())
+  text      String   @db.Text
+  review_id Int
+  user_id   Int
+  createdAt DateTime @default(now())
+  review    Review   @relation(fields: [review_id], references: [review_id], onDelete: Cascade)
+  user      User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("replies")
+}
+
+model Interaction {
+  interaction_id   Int      @id @default(autoincrement())
+  interaction_type String   // e.g. 'view', 'like', 'save'
+  recipe_id        Int
+  user_id          Int
+  createdAt        DateTime @default(now())
+  recipe           Recipe   @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  user             User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("user_interactions")
+}

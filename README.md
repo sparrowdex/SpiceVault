@@ -34,9 +34,9 @@ The frontend is a responsive, user-friendly interface built to offer an engaging
 
 | Layer      | Technologies                           |
 |------------|-------------------------------------|
-| Frontend   | React,CSS      |
+| Frontend   | React, Vite, Tailwind CSS, UploadThing |
 | Backend    | Node.js, Express.js                  |
-| Database   | MySQL with Sequelize ORM             |
+| Database   | MySQL with Prisma ORM                |
 | Version Control | Git & GitHub                     |
 | Deployment (future) | TBD (e.g., Heroku, Vercel, Netlify) |
 
@@ -57,10 +57,16 @@ The frontend is a responsive, user-friendly interface built to offer an engaging
    cd SpiceVault
 
 ### For running the app:
+
+**Terminal 1 (Backend):**
 cd backend
-node index.js
+npm run dev
+
+**Terminal 2 (Frontend):**
 cd frontend
 npm start
+
+*(Note: The frontend now uses Vite, which starts almost instantly!)*
 
 ## 📄 License
 

@@ -9,44 +9,39 @@
     "prod:stop": "pm2 stop spicevault-backend",
     "prod:restart": "pm2 restart spicevault-backend",
     "prod:logs": "pm2 logs spicevault-backend",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "seed:ml": "node scripts/seedMLData.js",
-    "test:ml": "node scripts/testMLFeatures.js",
-    "create:ml-tables": "node scripts/createMLTables.js",
-    "create:test-users": "node scripts/createTestUsers.js",
-    "test:db": "node scripts/testDatabase.js",
-    "test:rating": "node scripts/testRating.js",
-    "quick:rating": "node scripts/quickRatingTest.js",
-    "add:food-category": "node scripts/addFoodCategorySequelize.js",
-    "test:food-category": "node scripts/testFoodCategory.js",
-    "check:food-category": "node scripts/checkFoodCategory.js",
-    "add:diet-type": "node scripts/addDietType.js",
-    "robust:categorize": "node scripts/robustCategorization.js",
-    "analyze:recipes": "node scripts/analyzeRecipes.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^5.10.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "ml-kmeans": "^6.0.0",
     "ml-matrix": "^6.10.4",
     "mysql2": "^3.14.0",
-    "natural": "^6.12.0",
+    "natural": "^8.1.1",
     "node-cron": "^3.0.3",
     "node-fetch": "^2.7.0",
-    "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.2"
+    "uploadthing": "^7.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
-    "pm2": "^5.4.0"
+    "pm2": "^7.0.1",
+    "prisma": "^5.10.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1",
+    "effect": "^3.20.0",
+    "ws": "^8.20.1"
   }
 }

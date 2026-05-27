@@ -3,11 +3,7 @@ const path = require('path');
 
 // Create .env file with default database configuration
 const envContent = `# Database Configuration
-DB_NAME=spicevault
-DB_USER=root
-DB_PASSWORD=
-DB_HOST=localhost
-DB_DIALECT=mysql
+DATABASE_URL="mysql://root:your_mysql_password_here@localhost:3306/spicevault"
 
 # JWT Secret (for authentication)
 JWT_SECRET=your-super-secret-jwt-key-here-change-this-in-production
@@ -30,13 +26,10 @@ try {
   }
   
   console.log('\n📝 Current database configuration:');
-  console.log('  Database: spicevault');
-  console.log('  User: root');
-  console.log('  Password: (empty)');
-  console.log('  Host: localhost');
+  console.log('  DATABASE_URL: "mysql://root:your_mysql_password_here@localhost:3306/spicevault"');
   
   console.log('\n💡 If your MySQL setup is different, please edit the .env file');
-  console.log('   For example, if you have a password, change DB_PASSWORD=your_password');
+  console.log('   Make sure to update the password in DATABASE_URL if needed.');
   
 } catch (error) {
   console.error('❌ Error creating .env file:', error.message);
