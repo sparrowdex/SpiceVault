@@ -1,13 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #ff6600;
+    --color-primary-rgb: 255, 102, 0;
+    --color-primary-light: #ff8533;
+    --gradient-bg-start: #FFE6CC;
+    --gradient-bg-end: #FFCC99;
+    --text-gradient-start: red;
+    --text-gradient-end: orange;
+  }
+
+  @font-face {
+    font-family: 'ElegantWomanDemo';
+    src: url('./assets/fonts/ElegantWomanDemo-2O9Ve.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'SweetHipster';
+    src: url('./assets/fonts/SweetHipster-PzlE.ttf') format('truetype');
+  }
+
+  @font-face {
+    font-family: 'TropicalCalm';
+    src: url('./assets/fonts/TrovicalCalmFreeRegular-0vam4.otf') format('opentype');
+  }
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(180deg, var(--gradient-bg-start), var(--gradient-bg-end));
+  min-height: 100vh;
 }
 
 code {
