@@ -21,6 +21,10 @@ function ViewRecipe({ user }) {
   const [replyBoxOpen, setReplyBoxOpen] = useState(null);
   const [replyText, setReplyText] = useState('');
 
+  // Pagination state for reviews
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 5;
+
   const toggleReplyBox = (reviewId) => {
     if (replyBoxOpen === reviewId) {
       setReplyBoxOpen(null);
@@ -56,11 +60,12 @@ function ViewRecipe({ user }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        // Refresh reviews list
-        setReviews((prev) => [...prev, data.rating]);
+        // Refresh reviews list, add to top since we sort by newest
+        setReviews((prev) => [data.rating, ...prev]);
         setNewReviewText('');
         setNewReviewRating(0);
         setRating(newReviewRating); // Update the rating state to persist the star rating
+        setCurrentPage(1); // Jump to first page to see the new review
       } else {
         alert('Failed to submit review.');
       }
@@ -259,6 +264,38 @@ function ViewRecipe({ user }) {
     }
   };
 
+  const renderListOrText = (text, listType = 'ul') => {
+    if (!text) return <p className="text-[#888] italic text-center">Not provided</p>;
+    
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    if (lines.length > 1) {
+      const ListTag = listType;
+      const listClasses = listType === 'ol' 
+        ? "text-left m-0 p-0 pl-[25px] list-decimal leading-[1.8] text-[1rem] max-w-[600px] w-full marker:text-[#ff6600] marker:font-bold"
+        : "text-left m-0 p-0 pl-[25px] list-disc leading-[1.8] text-[1rem] max-w-[600px] w-full marker:text-[#ff6600]";
+      return (
+        <ListTag className={listClasses}>
+          {lines.map((line, index) => {
+            // Only strip standard list markers (e.g. "- ", "* ", "1. ", "2) ") so we don't accidentally strip ingredient quantities like "1 cup"
+            const cleanedLine = line.replace(/^[-*•]\s+/, '').replace(/^\d+[\.\)]\s+/, '');
+            return (
+              <li key={index} className="pl-[5px] mb-[8px] text-[#444]">
+                {cleanedLine}
+              </li>
+            );
+          })}
+        </ListTag>
+      );
+    }
+    return <p className={`leading-[1.8] text-[1rem] text-[#444] max-w-[600px] w-full mx-auto ${text.length > 100 ? 'text-justify' : 'text-center'}`}>{text}</p>;
+  };
+
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+
   if (!recipe) return <div className="font-['Poppins',_sans-serif] min-h-screen py-10 px-5 flex justify-center items-start">Loading...</div>;
 
   return (
@@ -273,7 +310,7 @@ function ViewRecipe({ user }) {
         <h2 className="text-[28px] mb-[15px] text-[#bc8f8e] text-center">{recipe.title}</h2>
         <img
           className="w-full rounded-lg mb-5 object-cover"
-          src={`http://localhost:5000/images/${recipe.image_url}`}
+          src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
           alt={recipe.title}
         />
 
@@ -282,26 +319,42 @@ function ViewRecipe({ user }) {
           <p className="text-center leading-[1.6]">{recipe.description}</p>
         </div>
 
-        <div className="mt-5 text-center">
+        <div className="mt-5 flex flex-col items-center">
+          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Ingredients</h3>
+          {renderListOrText(recipe.ingredients, 'ul')}
+        </div>
+
+        <div className="mt-5 flex flex-col items-center">
           <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Instructions</h3>
-          <pre className="whitespace-pre-wrap bg-transparent border-none p-0 font-inherit text-[1rem] leading-[1.6] m-0 max-w-full break-words text-left">{recipe.instructions}</pre>
+          {renderListOrText(recipe.instructions, 'ol')}
         </div>
 
         <div className="mt-5 text-center">
           <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Recipe Info</h3>
           <div className="flex flex-wrap gap-5 mt-2.5 justify-center">
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
+            <div className="flex-[1_1_40%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
               <strong>Prep Time:</strong><br />{recipe.preparation_time}
             </div>
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
+            <div className="flex-[1_1_40%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
               <strong>Cooking Time:</strong><br />{recipe.cooking_time}
             </div>
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Nutrition:</strong><br />
-              {recipe.nutrition_info && recipe.nutrition_info.split(', ').map((item, index) => (
-                <div key={index}>{item}</div>
-              ))}
-            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 text-center">
+          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Nutrition Info</h3>
+          <div className="flex flex-wrap gap-[10px] justify-center mt-2.5">
+            {recipe.nutrition_info ? recipe.nutrition_info.split(', ').map((item, index) => {
+              const parts = item.split(':');
+              if (parts.length >= 2) {
+                return (
+                  <span key={index} className="inline-block py-[6px] px-[12px] bg-[#f9f9f9] border border-[#ddd] rounded-lg text-[13px] shadow-sm whitespace-nowrap">
+                    <span className="font-bold text-[#ff6600] capitalize">{parts[0].trim()}:</span> <span className="text-[#444] font-medium">{parts[1].trim()}</span>
+                  </span>
+                );
+              }
+              return <span key={index} className="inline-block py-[6px] px-[12px] bg-[#f9f9f9] border border-[#ddd] rounded-lg text-[13px] shadow-sm">{item}</span>;
+            }) : <span className="text-[#777] text-[13px] italic">Not provided</span>}
           </div>
         </div>
 
@@ -360,14 +413,16 @@ function ViewRecipe({ user }) {
             <p className="text-red-600 font-semibold">{errorReviews}</p>
           ) : (
             <div className="mt-2.5 text-left">
-              {reviews.length > 0 ? (
-                reviews.map((review) => (
+              {currentReviews.length > 0 ? (
+                currentReviews.map((review) => (
                   <div key={review.review_id} className="border-b border-[#ddd] py-2.5 px-0">
                     <div className="flex justify-between font-bold mb-1">
                       <span className="text-[#f5a623]">
                         {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
                       </span>
-                      <span className="text-[0.85em] text-[#999]">{review.datestamp}</span>
+                      <span className="text-[0.85em] text-[#999]">
+                        {review.datestamp ? new Date(review.datestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                      </span>
                     </div>
                     {review.review_text && (
                       <p className="my-1 mx-0">{review.review_text}</p>
@@ -416,6 +471,29 @@ function ViewRecipe({ user }) {
                 ))
               ) : (
                 <p>No reviews yet. Be the first to rate this recipe!</p>
+              )}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-[15px] mt-[20px]">
+                  <button
+                    className="py-[6px] px-[12px] border border-[#ddd] rounded-[6px] bg-[#f9f9f9] text-[#555] cursor-pointer transition-colors duration-200 hover:bg-[#eee] disabled:opacity-50 disabled:cursor-not-allowed font-medium text-[0.9em]"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <span className="text-[0.9em] text-[#666] font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="py-[6px] px-[12px] border border-[#ddd] rounded-[6px] bg-[#f9f9f9] text-[#555] cursor-pointer transition-colors duration-200 hover:bg-[#eee] disabled:opacity-50 disabled:cursor-not-allowed font-medium text-[0.9em]"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           )}

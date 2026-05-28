@@ -7,8 +7,8 @@ const uploadRouter = {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  }).onUploadComplete((data) => {
-    console.log("Upload complete for url:", data.file.url);
+  }).onUploadComplete(({ metadata, file }) => {
+    console.log("Upload complete! File URL:", file.url);
   }),
 };
 

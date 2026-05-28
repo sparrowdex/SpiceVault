@@ -8,10 +8,11 @@ Spice Vault is a comprehensive full-stack web application designed as a centrali
 
 ### Technology Stack
 - **Framework**: React.js with React Router for client-side routing
-- **Styling**: CSS with Tailwind CSS for utility classes and custom styling
+- **Build Tool**: Vite for fast development and bundling
+- **Styling**: Tailwind CSS for utility-first styling
 - **State Management**: React hooks (useState, useEffect) for component state
 - **HTTP Client**: Native fetch API for API calls
-- **Authentication**: JWT tokens stored in localStorage
+- **File Uploads**: UploadThing SDK for direct-to-cloud uploads
 
 ### Architecture
 The frontend follows a component-based architecture with the following structure:
@@ -55,26 +56,27 @@ The frontend follows a component-based architecture with the following structure
 
 ### Technology Stack
 - **Runtime**: Node.js with Express.js framework
-- **Database**: MySQL with Sequelize ORM
+- **Database**: MySQL with **Prisma ORM**
 - **Authentication**: JWT with bcrypt password hashing
 - **Security**: Rate limiting, CORS, input validation
-- **File Handling**: Static file serving for recipe images
+- **File Handling**: **UploadThing** for cloud storage integration
 
 ### Architecture
 The backend follows a layered architecture:
 
 #### Entry Point (index.js)
 - Express server configuration
-- Global middleware (CORS, rate limiting, body parsing)
+- Global middleware (CORS, rate limiting, body parsing, Vite proxy support)
 - Route mounting for different modules
 - Error handling and process management
 
 #### Models Layer
-- **User**: Authentication and profile data
-- **Recipe**: Recipe content and metadata
-- **Rating**: User reviews and ratings
-- **UserInteraction**: Behavioral tracking (views, likes, saves)
-- **RecipeTag**: Categorization and tagging system
+The data model is defined declaratively in `prisma/schema.prisma` and includes:
+- **User**: Manages user profiles, authentication, and relationships to other models.
+- **Recipe**: The core model for all recipe data, including nutritional info and relationships to users and reviews.
+- **Review**: Stores user ratings and text reviews for recipes.
+- **Reply**: Allows chefs to reply to reviews on their recipes.
+- **Interaction**: Tracks user behaviors like 'view', 'like', and 'save' for the ML engine.
 
 #### Controllers Layer
 - **auth.controller.js**: Authentication logic
@@ -121,7 +123,7 @@ Spice Vault incorporates a sophisticated machine learning recommendation system 
 - **ml-matrix**: Efficient matrix operations for similarity calculations
 - **natural**: Natural language processing for text analysis
 - **lodash**: Data manipulation utilities
-- **Sequelize**: Database integration for training data
+- **Prisma**: Database integration for fetching training data
 
 #### Service Structure (mlRecommendationService.js)
 The ML service is implemented as a singleton class with the following components:

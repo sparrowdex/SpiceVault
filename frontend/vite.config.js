@@ -6,6 +6,9 @@ export default defineConfig({
   server: {
     port: 3000, // Keeps your port the same as CRA
     open: true, // Opens the browser automatically
+    proxy: {
+      '/api': 'http://localhost:5000',
+    },
   },
   optimizeDeps: {
     include: ['tslib', '@uploadthing/react'],

@@ -26,6 +26,22 @@ This major release focused on modernizing the entire stack, drastically improvin
   - **Resolution:** Vite aggressively cached an incomplete dependency tree. Fixed by adding `tslib` to `optimizeDeps` in `vite.config.js` and clearing the hidden `.vite` cache folder.
 - **Problem:** Global rankings podium layout stacked vertically on desktop screens.
   - **Resolution:** Corrected Tailwind responsive classes (swapped `md:flex-col` for `md:flex-row` on the podium container) to ensure a sleek horizontal layout on larger screens.
+- **Problem:** Vite development server crashed with `[PARSE_ERROR] Unterminated regular expression`.
+  - **Resolution:** Fixed an edge-case bug in Vite's new blazing-fast OXC parser by swapping escaped single quotes (`\'`) for double quotes (`"`) inside JSX template literals in `Home.jsx`.
+
+### 🎨 UI/UX & Feature Enhancements
+- **Home Page:** Transformed the Popular Recipes section into a seamless, endless auto-sliding carousel. Replaced bulky arrows with sleek `lucide-react` Chevrons, added a "Clear Filters" button, and adjusted grid pagination to 10 items per page for better alignment.
+- **Navigation:** Grouped "Chef Certified", "Global Rankings", and "Popular Recipes" under a sleek new "Discover" dropdown.
+- **Authentication UX:** Added a hard redirect to the homepage upon logout to ensure protected session data is completely cleared from the view.
+- **Chef Insights Dashboard:** Replaced static tips with dynamic "Smart AI Tips" based on actual user metrics, added a visual bar chart for 6-month rating trends, and swapped inconsistent standard emojis for `lucide-react` vector icons.
+- **Recipe Auto-Formatting:** Added a smart text formatter that automatically converts line-broken text in Ingredients and Instructions into beautiful bulleted/numbered lists. Added helpful 'i' tooltips to the Add Recipe form explaining this feature.
+- **View Recipe:** Added client-side pagination (5 per page) and human-readable timestamps to the reviews section. Upgraded the Nutrition block to use stylish, wrapped pill-tags instead of raw stacked text.
+- **User Profile:** Redesigned the layout to use a horizontal scrollable tab bar instead of a vertical stack. Scaled down recipe cards for better grid density.
+- **Add Recipe Form:** Streamlined macronutrient inputs into a single compact horizontal row. Customized the UploadThing dropzone to visually match the SpiceVault branding and recommend a 4:3 aspect ratio. Added an automatic form reset on successful submission.
+- **Recommendations Grid:** Removed descriptions from recommendation cards and truncated long titles to ensure perfectly aligned grid heights, keeping the focus on the Machine Learning insights.
+- **Image Rendering:** Implemented smart image URL parsing across all recipe cards to gracefully render both legacy local files and new UploadThing cloud URLs without broken image tags.
+- **Branding:** Replaced the generic React favicon and meta description in `index.html` with a custom `logo.svg` and professional SpiceVault branding.
+- **Background Fix:** Fixed the `BackgroundGradient` cutting off on scrollable pages by switching `background-size: 100% 100vh` to `background-attachment: fixed`.
 
 ---
 
@@ -44,6 +60,8 @@ This major release focused on modernizing the entire stack, drastically improvin
   - **Resolution:** Wrapped the user deletion logic in a Prisma `$transaction`. This cleanly cascades deletions, removing a user's recipes, reviews, interactions, and raw legacy table entries *before* deleting the user record.
 - **Problem:** `P1012: Environment variable not found: DATABASE_URL`.
   - **Resolution:** The legacy `.env` file used separated variables (`DB_USER`, `DB_PASSWORD`). Wrote an auto-fallback script in `index.js` to dynamically stitch these into a Prisma-compatible `DATABASE_URL`.
+- **Problem:** `P2022: Column 'createdAt' does not exist` on the `user_interactions` table.
+  - **Resolution:** Added the missing `createdAt DATETIME DEFAULT CURRENT_TIMESTAMP` column via raw SQL to allow ML recommendation tracking to function without crashing.
 - **Problem:** `P2022: Column 'ingredients', 'calories', 'createdAt' do not exist`. "All Recipes" and "Chef Certified Recipes" pages crashed.
   - **Resolution:** The new Prisma schema introduced fields required for new ML features. Because `npx prisma db push` initially threatened to drop unmodeled legacy tables, `npx prisma db pull` was used to safely introspect the database reality. The remaining missing columns were safely appended using raw `ALTER TABLE` SQL queries to synchronize the database without data loss.
 - **Problem:** "Invalid email or password" for legacy test users.
@@ -52,6 +70,8 @@ This major release focused on modernizing the entire stack, drastically improvin
   - **Resolution:** The background service was still attempting to use Sequelize. Completely refactored `mlRecommendationService.js` to use Prisma and optimized the content-based similarity algorithms.
 - **Problem:** Authenticated users couldn't add or delete recipes (Payload read `user: undefined`).
   - **Resolution:** Fixed a property mismatch in the JWT payload (`userId` vs `user_id`). Standardized `req.user.userId` across `recipe.controller.js` and the auth middleware.
+- **Problem:** UploadThing UI silently hung and failed to report successful uploads.
+  - **Resolution:** Removed restrictive `allowedHeaders` from the Express `cors` configuration so UploadThing's custom headers weren't blocked. Configured a Vite proxy to correctly route `/api` requests and migrated to the v7 standard `UPLOADTHING_TOKEN`.
 
 ---
 

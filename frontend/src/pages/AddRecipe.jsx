@@ -76,6 +76,27 @@ const AddRecipe = () => {
       if (res.ok) {
         alert('Recipe added successfully!');
         console.log(data);
+        // Clear the form, preserving the user and chef IDs
+        setFormData({
+          title: '',
+          description: '',
+          instructions: '',
+          ingredients: '',
+          difficulty: '',
+          food_category: 'main_course',
+          diet_type: 'vegetarian',
+          image_url: '',
+          preparation_time: '',
+          cooking_time: '',
+          calories: '',
+          protein: '',
+          carbs: '',
+          fat: '',
+          fiber: '',
+          nutrition_info: '',
+          user_id: user.user_id,
+          chef_id: user.user_type === 'chef' ? user.user_id : null
+        });
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -88,8 +109,8 @@ const AddRecipe = () => {
     return <p>Please log in to add a recipe.</p>;
   }
 
-  const inputClasses = "px-[15px] py-[12px] border-2 border-[#e0e0e0] rounded-[10px] text-[15px] transition-all duration-300 bg-white font-['TropicalCalm',_serif] focus:outline-none focus:border-[#ff6600] focus:shadow-[0_0_0_3px_rgba(255,102,0,0.1)] focus:-translate-y-[1px]";
-  const labelClasses = "m-0 mb-2 font-semibold text-[#ff6600] text-base font-['SweetHipster',_cursive]";
+  const inputClasses = "px-[15px] py-[12px] border-2 border-[#e0e0e0] rounded-[10px] text-[15px] transition-all duration-300 bg-white font-['Poppins',_sans-serif] text-[#333] focus:outline-none focus:border-[#ff6600] focus:shadow-[0_0_0_3px_rgba(255,102,0,0.1)] focus:-translate-y-[1px]";
+  const labelClasses = "m-0 mb-2 font-semibold text-[#ff6600] text-[1.15rem] font-['Nostalgia',_serif] tracking-[0.02em]";
   const textareaClasses = `${inputClasses} resize-y h-[120px] leading-relaxed`;
 
   if (!isChef) {
@@ -114,10 +135,28 @@ const AddRecipe = () => {
           <label className={labelClasses}>Description</label>
           <textarea className={textareaClasses} name="description" value={formData.description} onChange={handleChange}></textarea>
 
-          <label className={labelClasses}>Ingredients</label>
+          <div className="flex items-center gap-[8px] mb-[-7px]">
+            <label className={`${labelClasses} !mb-0`}>Ingredients</label>
+            <div className="relative group cursor-help flex items-center justify-center">
+              <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-[#ffe6cc] text-[#ff6600] text-[12px] font-bold font-['Poppins',_sans-serif] transition-colors group-hover:bg-[#ff6600] group-hover:text-white">i</span>
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-[140%] w-[260px] p-[12px] bg-[#333] text-white text-[12px] rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.2)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 text-center font-['Poppins',_sans-serif] leading-relaxed">
+                Enter each ingredient on a new line (press Enter). You can use bullets (-, *, •) or numbers (1., 2.), which will be automatically formatted into a neat list!
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-[#333]"></div>
+              </div>
+            </div>
+          </div>
           <textarea className={textareaClasses} name="ingredients" value={formData.ingredients} onChange={handleChange} placeholder="List ingredients, one per line"></textarea>
 
-          <label className={labelClasses}>Instructions</label>
+          <div className="flex items-center gap-[8px] mb-[-7px]">
+            <label className={`${labelClasses} !mb-0`}>Instructions</label>
+            <div className="relative group cursor-help flex items-center justify-center">
+              <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-[#ffe6cc] text-[#ff6600] text-[12px] font-bold font-['Poppins',_sans-serif] transition-colors group-hover:bg-[#ff6600] group-hover:text-white">i</span>
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-[140%] w-[260px] p-[12px] bg-[#333] text-white text-[12px] rounded-[8px] shadow-[0_4px_12px_rgba(0,0,0,0.2)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 text-center font-['Poppins',_sans-serif] leading-relaxed">
+                Enter each instruction step on a new line (press Enter). You can use numbers (1., 2.) or bullets (-, *, •), which will be automatically formatted into a neat list!
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-[#333]"></div>
+              </div>
+            </div>
+          </div>
           <textarea className={textareaClasses} name="instructions" value={formData.instructions} onChange={handleChange}></textarea>
 
           <label className={labelClasses}>Difficulty</label>
@@ -162,20 +201,31 @@ const AddRecipe = () => {
           <label className={labelClasses}>Cooking Time</label>
           <input className={inputClasses} type="text" name="cooking_time" value={formData.cooking_time} onChange={handleChange} />
 
-          <label className={labelClasses}>Calories</label>
-          <input className={inputClasses} type="number" name="calories" value={formData.calories} onChange={handleChange} placeholder="e.g., 420" />
-
-          <label className={labelClasses}>Protein (g)</label>
-          <input className={inputClasses} type="number" name="protein" value={formData.protein} onChange={handleChange} placeholder="e.g., 18" />
-
-          <label className={labelClasses}>Carbs (g)</label>
-          <input className={inputClasses} type="number" name="carbs" value={formData.carbs} onChange={handleChange} placeholder="e.g., 45" />
-
-          <label className={labelClasses}>Fat (g)</label>
-          <input className={inputClasses} type="number" name="fat" value={formData.fat} onChange={handleChange} placeholder="e.g., 12" />
-
-          <label className={labelClasses}>Fiber (g)</label>
-          <input className={inputClasses} type="number" name="fiber" value={formData.fiber} onChange={handleChange} placeholder="e.g., 8" />
+          <div>
+            <label className={labelClasses}>Nutrition Information</label>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-[10px] mt-1">
+              <div className="flex flex-col">
+                <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Calories</span>
+                <input className={inputClasses} type="number" name="calories" value={formData.calories} onChange={handleChange} placeholder="kcal" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Protein (g)</span>
+                <input className={inputClasses} type="number" name="protein" value={formData.protein} onChange={handleChange} placeholder="g" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Carbs (g)</span>
+                <input className={inputClasses} type="number" name="carbs" value={formData.carbs} onChange={handleChange} placeholder="g" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Fat (g)</span>
+                <input className={inputClasses} type="number" name="fat" value={formData.fat} onChange={handleChange} placeholder="g" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Fiber (g)</span>
+                <input className={inputClasses} type="number" name="fiber" value={formData.fiber} onChange={handleChange} placeholder="g" />
+              </div>
+            </div>
+          </div>
 
           <label className={labelClasses}>Recipe Image</label>
           {formData.image_url ? (
@@ -194,6 +244,19 @@ const AddRecipe = () => {
               endpoint="imageUploader"
               onClientUploadComplete={(res) => {
                 setFormData({ ...formData, image_url: res[0].url });
+              }}
+              onUploadError={(error) => {
+                alert(`Upload failed: ${error.message}`);
+              }}
+              content={{
+                allowedContent: "Image up to 4MB (4:3 aspect ratio recommended)"
+              }}
+              appearance={{
+                container: "border-2 border-dashed border-[#ff6600] bg-gradient-to-b from-[#fff5f0] to-white rounded-[12px] py-[20px] px-[15px] h-[220px] cursor-pointer transition-all duration-300 hover:border-[#e55a00] hover:bg-[#fff0e6]",
+                uploadIcon: "text-[#ff6600] w-[45px] h-[45px] mb-[10px]",
+                label: "text-[#333] font-semibold text-[1.1rem] hover:text-[#ff6600] transition-colors",
+                allowedContent: "text-[#888] text-[0.85rem] mt-[5px]",
+                button: "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white text-[0.9rem] font-semibold py-[8px] px-[16px] rounded-[8px] mt-[15px] shadow-[0_2px_8px_rgba(255,102,0,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(255,102,0,0.4)]"
               }}
             />
           )}

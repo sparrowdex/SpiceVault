@@ -8,255 +8,72 @@ The platform allows users to explore recipes, contribute their own creations, ra
 
 ## Tech Stack
 
-- **Frontend**: React.js with CSS/Tailwind for responsive UI
-- **Backend**: Node.js with Express.js framework
-- **Database**: MySQL with Sequelize ORM
+- **Frontend**: React.js (with Hooks)
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Routing**: React Router
+- **File Uploads**: UploadThing SDK
+- **Backend**: Node.js with Express.js
+- **Database**: MySQL with Prisma ORM
 - **Authentication**: JWT (JSON Web Tokens) with bcrypt for password hashing
-- **Machine Learning**: Custom ML service using ml-matrix, natural language processing, and cosine similarity algorithms
-- **Version Control**: Git & GitHub
-- **Deployment**: Planned for future (Heroku/Vercel/Netlify)
+- **Machine Learning**: Custom ML service using `ml-matrix` and `natural`
 
 ## Core Features
 
 ### 1. User Authentication & Profiles
-- User registration and login with secure JWT authentication
-- User profiles with personal information and cooking preferences
-- Password hashing using bcryptjs for security
+- Secure user registration and login with JWT authentication.
+- User profiles displaying saved, liked, rated, and added recipes.
+- Role-based access control (Regular User vs. Chef).
 
 ### 2. Recipe Management
-- **Browse Recipes**: Extensive database of recipes from various cuisines
-- **Search Functionality**: Search recipes by ingredients, cuisine type, or keywords
-- **Filter System**: Filter by difficulty levels (easy, medium, hard), preparation time, cooking time
-- **Recipe Details**: Comprehensive recipe pages with ingredients, instructions, nutritional information, and images
-- **Add Recipes**: Users can contribute their own recipes to the platform
-- **Recipe Categories**: Organized by food categories (main course, dessert, appetizer, etc.) and diet types (vegetarian, vegan, gluten-free, etc.)
+- **Browse & Discover**: A rich homepage with an endless, auto-playing carousel for popular recipes and a filterable grid for all recipes.
+- **Advanced Filtering**: Filter recipes by difficulty, food category, and diet type through an interactive carousel.
+- **Search**: Full-text search for recipe titles.
+- **Recipe Details**: Comprehensive recipe pages with ingredients, instructions, nutritional information, and images, all beautifully auto-formatted into lists or justified text.
+- **Add Recipes (Chefs Only)**: Chefs can contribute their own recipes with a streamlined form, including a themed drag-and-drop image uploader via UploadThing.
 
-### 3. Social Features
-- **Rating System**: 1-5 star rating system for recipes
-- **Reviews & Comments**: Users can leave detailed reviews and feedback
-- **User Interactions**: Like, save, share, and mark recipes as cooked
-- **Chef Certification**: Special status for verified chefs with enhanced features
+### 3. Social & Community Features
+- **Rating & Reviews**: Users can leave 1-5 star ratings and detailed reviews. The reviews section includes pagination for a clean UI.
+- **Chef Replies**: Recipe authors (chefs) can reply directly to user reviews.
+- **User Interactions**: Users can 'like' and 'save' recipes, which feeds into the ML engine.
+- **Global Rankings**: A dynamic leaderboard page showcasing top recipes, filterable by daily, weekly, monthly, and all-time periods.
 
-### 4. Advanced Features
-- **Popular Recipes Section**: Displays top-rated recipes on the homepage based on average ratings and number of ratings (not ML-powered)
-- **Chef Leaderboard**: Global ranking system for chefs based on their recipe performance (average ratings and rating count, not ML-powered)
-- **Chef Insights**: Analytics dashboard for chefs to track their recipe performance and statistics
-- **User Insights Bar**: Personalized insights and statistics for users
+### 4. Advanced Chef Features
+- **Chef Insights Dashboard**: A dedicated analytics dashboard for chefs to track their performance. It includes:
+  - Key metrics (average rating, total recipes, success score).
+  - A visual bar chart showing 6-month rating trends.
+  - A showcase of their most popular recipes.
+  - A slideshow of recent reviews on their recipes.
+  - "Smart AI Tips" that provide personalized advice based on their actual stats.
 
-### 5. User Interface & Experience
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Modern UI**: Clean, intuitive interface with custom fonts and styling
-- **Interactive Components**: Slideshows, modals, and dynamic content loading
-- **Background Gradients**: Aesthetic visual elements for enhanced user experience
+## Machine Learning Implementation
 
-## Machine Learning Features
+Spice Vault incorporates a sophisticated machine learning recommendation system to provide personalized suggestions.
 
-Spice Vault incorporates a sophisticated machine learning recommendation system that analyzes user behavior and recipe characteristics to provide personalized suggestions. The ML system is built using custom algorithms and integrates seamlessly with the existing database structure.
+### ML Techniques
 
-### ML Architecture
+#### 1. Hybrid Recommendation System
+- **Core Strategy**: The primary recommendation engine uses a hybrid approach, combining the strengths of both Collaborative and Content-Based filtering.
+- **Collaborative Filtering**: Analyzes the behavior of similar users to recommend recipes that the current user might enjoy. It builds a user-item matrix and calculates user similarity using cosine similarity.
+- **Content-Based Filtering**: Analyzes the properties of recipes (difficulty, category, diet type) that a user has positively interacted with to recommend similar items.
+- **Score Combination**: The final recommendation score is a weighted average (60% collaborative, 40% content-based) to provide balanced and accurate suggestions.
 
-The ML service is implemented in `backend/services/mlRecommendationService.js` and uses several key technologies:
-- **ml-matrix**: For matrix operations and similarity calculations
-- **natural**: For natural language processing tasks
-- **lodash**: For data manipulation utilities
+#### 2. Nutritional Recommendations
+- **Health Score**: A custom algorithm calculates a health score (0-100) for each recipe based on its nutritional information (calories, protein, fat, etc.).
+- **Personalized Health Focus**: Users can request recommendations based on a health focus, such as "Excellent" or "Very Healthy", which prioritizes recipes with high health scores.
 
-### Detailed ML Techniques and Algorithms
+### Data & Infrastructure
+- **User Interaction Tracking**: The system logs views, likes, and saves to continuously learn user preferences.
+- **Cold Start Problem**: For new users or in case of ML failure, the system gracefully falls back to showing globally popular or random recipes.
+- **Performance**: The ML models and matrices are updated periodically (every 24 hours) to ensure recommendations are fresh without causing real-time performance bottlenecks.
 
-#### 1. Collaborative Filtering (User-Based)
-- **Core Algorithm**: Memory-based collaborative filtering using user-user similarity
-- **Mathematical Foundation**: Cosine similarity for measuring user preferences
-- **Formula**: For users u and v, similarity = cos(θ) = (u · v) / (||u|| * ||v||)
-- **Matrix Construction**:
-  - User-Item Matrix: R[u][i] where u ∈ users, i ∈ items
-  - Sparse matrix handling for missing ratings (treated as 0)
-  - Normalization: Ratings centered by subtracting user mean
-- **Prediction Algorithm**:
-  - Find k most similar users (k=20 in implementation)
-  - Weighted average: P(u,i) = Σ(similarity(u,v) * R[v,i]) / Σ|similarity(u,v)|
-  - Neighborhood selection: Top 20 similar users with positive correlations
-- **Advantages**: Captures complex user preferences, serendipitous discoveries
-- **Limitations**: Cold start problem, sparsity issues, scalability concerns
-- **Implementation Details**: Uses ml-matrix library for efficient matrix operations
+## Project Modernization
 
-#### 2. Content-Based Filtering
-- **Core Algorithm**: Profile-based recommendation using feature similarity
-- **Feature Engineering**:
-  - Multi-dimensional tag vectors for recipes
-  - User preference profiles built from interaction history
-  - Weighted tag categories with different importance scores
-- **Similarity Computation**:
-  - Cosine similarity between user profile and recipe feature vectors
-  - Weighted scoring: score = Σ(weight_category * tag_match) / total_weights
-  - Tag matching: Binary presence/absence with frequency weighting
-- **User Profile Building**:
-  - Analyzes recipes with positive interactions (likes, saves, cooks)
-  - Aggregates tag frequencies across user's preferred recipes
-  - Applies category-specific weights for preference strength
-- **Content Features Used**:
-  - Cuisine types (Italian, Indian, Asian, etc.)
-  - Dietary restrictions (vegetarian, vegan, gluten-free)
-  - Meal types (breakfast, lunch, dinner, dessert)
-  - Cooking methods (grilled, baked, fried, steamed)
-  - Ingredient categories (protein, vegetable, grain, dairy)
-- **Advantages**: No cold start issues, transparent recommendations, domain-specific
-- **Limitations**: Limited discovery, overspecialization, feature engineering complexity
+This project underwent a significant "Great Modernization Refactor" to upgrade its entire technology stack from legacy tools to modern, industry-standard alternatives.
 
-#### 3. Hybrid Recommendation System
-- **Fusion Strategy**: Linear combination of collaborative and content-based scores
-- **Weight Optimization**: Empirical weights (60% collaborative, 40% content-based)
-- **Score Combination Formula**: final_score = 0.6 * collab_score + 0.4 * content_score
-- **Deduplication**: Removes duplicate recipes from combined lists
-- **Re-ranking**: Sorts by combined scores, maintains diversity
-- **Fallback Mechanism**: Random selection when ML methods fail
-- **Advantages**: Combines strengths of both approaches, improved accuracy
-- **Performance Metrics**: Higher precision and recall compared to individual methods
+- **From Create React App to Vite**: Drastically improved build times and developer experience.
+- **From Component CSS to Tailwind CSS**: Centralized styling, eliminated CSS conflicts, and enabled rapid, responsive UI development.
+- **From Sequelize to Prisma**: Migrated the entire backend data layer to a modern, type-safe ORM, simplifying database queries and migrations.
+- **From Local Storage to Cloud Uploads**: Integrated UploadThing for seamless, direct-to-cloud image uploads, replacing a manual URL-pasting system.
 
-#### 4. Advanced ML Techniques Implemented
-
-**Matrix Factorization Concepts**:
-- **SVD-based Approach**: Theoretical foundation for collaborative filtering
-- **Latent Factor Models**: User and item embeddings in lower-dimensional space
-- **Regularization**: Prevents overfitting in similarity calculations
-
-**Similarity Measures**:
-- **Cosine Similarity**: Primary measure for both user-user and item-item similarity
-- **Pearson Correlation**: Alternative similarity measure (implemented but not primary)
-- **Jaccard Similarity**: For binary preference data (explored but not implemented)
-
-**Optimization Techniques**:
-- **Matrix Caching**: 24-hour update intervals to reduce computational load
-- **Batch Processing**: Periodic matrix recalculations instead of real-time updates
-- **Memory Management**: Efficient sparse matrix representations
-- **Query Optimization**: Database-level aggregations for rating statistics
-
-**Scalability Considerations**:
-- **Incremental Updates**: Partial matrix updates for new ratings
-- **Approximate Methods**: Sampling-based similarity calculations for large datasets
-- **Distributed Processing**: Designed for future horizontal scaling
-
-**Evaluation Framework**:
-- **Offline Metrics**: Precision@K, Recall@K, NDCG for recommendation quality
-- **Online Metrics**: Click-through rates, user engagement, conversion rates
-- **A/B Testing**: Framework for comparing different recommendation strategies
-
-### User Interaction Tracking
-
-The ML system tracks various user interactions to build comprehensive behavior profiles:
-- **View**: When a user views a recipe
-- **Like**: When a user likes a recipe
-- **Save**: When a user saves a recipe for later
-- **Cook**: When a user marks a recipe as cooked
-- **Share**: When a user shares a recipe (not yet included)
-
-### Data Processing
-
-- **Matrix Updates**: User-item matrices are updated periodically (every 24 hours) or on-demand
-- **Similarity Calculations**: Cosine similarity is used for both user-user and item-item similarities
-- **Cold Start Problem**: Handles new users and recipes with fallback recommendations
-- **Performance**: Uses efficient matrix operations and caching to ensure fast response times
-
-### API Endpoints
-
-- `GET /api/ml/recommendations/:userId?type=hybrid&limit=10`: Get personalized recommendations
-- `POST /api/ml/ratings`: Submit recipe ratings
-- `GET /api/ml/ratings/:userId`: Get user's rating history
-- `POST /api/ml/interactions`: Record user interactions
-- `GET /api/ml/interactions/:userId`: Get user's interaction history
-
-## Dataset and Data Structure
-
-### Database Schema
-
-The application uses MySQL database with the following key tables:
-
-#### Recipes Table
-- `recipe_id`: Primary key, auto-increment
-- `user_id`: ID of the user who created the recipe
-- `chef_id`: ID of certified chef (if applicable)
-- `title`: Recipe title (max 150 characters)
-- `description`: Recipe description
-- `instructions`: Cooking instructions
-- `difficulty`: Easy/Medium/Hard
-- `food_category`: Main course, dessert, appetizer, etc.
-- `diet_type`: Vegetarian, vegan, gluten-free, etc.
-- `image_url`: Path to recipe image
-- `preparation_time`: Time to prepare
-- `cooking_time`: Cooking duration
-- `nutrition_info`: Nutritional information
-
-#### Users Table
-- Standard user information (username, email, password hash)
-- Profile information and preferences
-
-#### Ratings Table (Reviews_Given)
-- `user_id`: User who gave the rating
-- `recipe_id`: Recipe being rated
-- `rating`: 1-5 star rating
-- `review_text`: Optional review text
-- `timestamp`: When the rating was given
-
-#### User Interactions Table
-- `user_id`: User performing the interaction
-- `recipe_id`: Recipe being interacted with
-- `interaction_type`: view/like/save/cook/share
-- `timestamp`: When the interaction occurred
-
-#### Recipe Tags Table
-- `recipe_id`: Associated recipe
-- `tag_category`: Type of tag (cuisine, diet, ingredient, etc.)
-- `tag_name`: Specific tag value
-
-### Seeded Data
-
-The application includes comprehensive seeded data for testing and demonstration:
-
-#### Recipe Data
-- **Images**: 40+ recipe images stored in `backend/images/` including various cuisines:
-  - Italian: Carbonara, Pasta, Risotto
-  - Indian: Channa Masala, Saag Paneer, Tandoori, Veg Rogan Josh
-  - Asian: Sushi, Thai Green Curry, Stir Fry, Miso Glazed Aubergine
-  - American: BBQ Ribs, Pancakes, Brownie, Lava Cake
-  - Other: Fish Tacos, Buddha Bowl, Salad, Sausage Rolls, etc.
-
-#### ML Training Data
-- **Ratings**: 40+ ratings across different users and recipes
-- **User Interactions**: 30+ interactions including views, likes, saves, and cooks
-- **Recipe Tags**: Comprehensive tagging for occasions, allergies, and cuisines
-- **Test Users**: Pre-created user accounts for testing (credentials in TEST_USER_CREDENTIALS.txt)
-
-### Data Seeding Scripts
-
-- `backend/seeders/mlDataSeeder.js`: Seeds ML training data
-- `backend/seeders/testUserSeeder.js`: Creates test user accounts
-- `npm run seed:ml`: Command to seed ML data
-
-### Data Quality and Enhancement
-
-- **Rich Metadata**: Recipes include detailed information for better ML performance
-- **Tag System**: Multi-category tagging for precise content-based filtering
-- **Interaction Diversity**: Various interaction types provide comprehensive user behavior data
-- **Scalability**: Database design supports large-scale user and recipe growth
-
-## Future Enhancements
-
-### Planned Features
-- Video recipe tutorials
-- Advanced leaderboard system
-- Social sharing and following
-- Grocery list generation
-- Meal planning functionality
-
-### ML Improvements
-- Deep learning integration
-- Real-time model updates
-- A/B testing framework
-- Advanced cold start solutions
-- Ingredient-based recommendations
-
-### Performance Optimizations
-- Caching layer for recommendations
-- Batch processing for ML updates
-- Database query optimization
-- CDN for image delivery
-
-This comprehensive ML-powered recipe platform provides users with intelligent, personalized cooking recommendations while maintaining an intuitive and engaging user experience.
+This refactor has resulted in a more performant, maintainable, and scalable application, ready for future feature development and deployment.

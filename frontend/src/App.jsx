@@ -41,6 +41,7 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    window.location.href = '/';
   };
 
   const getNavLinkClass = ({ isActive }) =>
@@ -56,6 +57,8 @@ function App() {
         ? 'pb-[8px] after:content-[""] after:absolute after:left-0 after:bottom-0 after:h-[3px] after:w-full after:bg-[#ff6600] after:rounded-[4px] after:transition-all after:duration-300'
         : 'after:content-[""] after:absolute after:left-0 after:bottom-0 after:h-[3px] after:w-0 after:bg-[#ff6600] after:rounded-[4px] after:transition-all after:duration-300'
     }`;
+
+  const dropdownItemClass = ({ isActive }) => `block px-[20px] py-[12px] font-medium transition-colors duration-200 border-b border-gray-100 last:border-none no-underline ${isActive ? 'bg-[#fff5f0] text-[#ff6600]' : 'text-[#555] hover:bg-[#fff5f0] hover:text-[#ff6600]'}`;
 
   const authBtnClasses = "bg-transparent text-[#ff6600] border-2 border-[#ff6600] py-[8px] px-[18px] rounded-[4px] cursor-pointer font-semibold transition-all duration-300 no-underline inline-block font-['Poppins',_sans-serif] hover:bg-[#ff6600] hover:text-white hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(255,102,0,0.3)] text-center";
   
@@ -77,9 +80,16 @@ function App() {
             {user && <NavLink to="/" className={getNavLinkClass}>Home</NavLink>}
             {user && <NavLink to="/addrecipe" className={getNavLinkClass}>Add Recipe</NavLink>}
             {user && <NavLink to="/recommendations" className={getNavLinkClass}>Recommendations</NavLink>}
-            {user && <NavLink to="/chef-certified-recipes" className={getNavLinkClass}>Chef Certified Recipes</NavLink>}
-            {user && <NavLink to="/global-rankings" className={getNavLinkClass}>Global Rankings</NavLink>}
-            {user && <NavLink to="/popular-recipes" className={getNavLinkClass}>Popular Recipes</NavLink>}
+            {user && (
+              <div className="relative group py-[10px]">
+                <span className="text-[#ff6600] no-underline font-semibold px-[18px] py-[10px] cursor-pointer flex items-center gap-[5px]">Discover ▾</span>
+                <div className="absolute left-0 top-[100%] mt-[-5px] w-[220px] bg-white rounded-[12px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] flex flex-col overflow-hidden border border-[#f0f0f0] transform translate-y-[10px] group-hover:translate-y-0">
+                  <NavLink to="/chef-certified-recipes" className={dropdownItemClass}>Chef Certified</NavLink>
+                  <NavLink to="/global-rankings" className={dropdownItemClass}>Global Rankings</NavLink>
+                  <NavLink to="/popular-recipes" className={dropdownItemClass}>Popular Recipes</NavLink>
+                </div>
+              </div>
+            )}
             {isChef && <NavLink to="/chef-insights" className={getNavLinkClass}>Chef Insights</NavLink>}
           </nav>
           <nav className="flex flex-wrap order-2 items-center gap-[10px] md:gap-[15px]">
@@ -100,15 +110,16 @@ function App() {
         </div>
         {isSidebarOpen && (
           <div className="fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] flex justify-start md:hidden">
-            <div className="bg-white w-[250px] h-full p-[20px] flex flex-col gap-[15px] shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
+            <div className="bg-white w-[250px] h-full p-[20px] flex flex-col gap-[15px] shadow-[2px_0_5px_rgba(0,0,0,0.3)] overflow-y-auto">
               {user && (
                 <>
                   <NavLink to="/" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Home</NavLink>
                   <NavLink to="/addrecipe" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Add Recipe</NavLink>
                   <NavLink to="/recommendations" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Recommendations</NavLink>
-                  <NavLink to="/chef-certified-recipes" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Chef Certified Recipes</NavLink>
-                  <NavLink to="/global-rankings" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Global Rankings</NavLink>
-                  <NavLink to="/popular-recipes" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Popular Recipes</NavLink>
+                  <div className="text-[#ff6600] font-bold text-[1.1rem] mt-[10px] border-b-2 border-[#ff6600]/20 pb-[5px]">Discover</div>
+                  <NavLink to="/chef-certified-recipes" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Chef Certified</NavLink>
+                  <NavLink to="/global-rankings" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Global Rankings</NavLink>
+                  <NavLink to="/popular-recipes" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Popular Recipes</NavLink>
                   {isChef && <NavLink to="/chef-insights" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Chef Insights</NavLink>}
                 </>
               )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Star, ChefHat, Trophy, TrendingUp, Leaf, Eye, Heart, Save, Lightbulb } from 'lucide-react';
 import ReviewSlideshow from '../components/ReviewSlideshow';
 
 const ChefInsightsPage = ({ user }) => {
@@ -10,14 +11,6 @@ const ChefInsightsPage = ({ user }) => {
   const [error, setError] = useState(null);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const navigate = useNavigate();
-
-  const tipsAndTricks = [
-    "Keep adding diverse recipes to improve your ranking!",
-    "Focus on quality to increase your average rating.",
-    "Engage with reviewers to get more feedback.",
-    "Use the app's features to promote your recipes.",
-    "Regularly update your recipes to keep them fresh."
-  ];
 
   const fetchUserStats = useCallback(async () => {
     try {
@@ -98,6 +91,23 @@ const ChefInsightsPage = ({ user }) => {
     navigate(`/recipes/${recipeId}`);
   };
 
+  // Generate personalized tips based on the chef's actual statistics
+  const generateDynamicTips = (stats) => {
+    if (!stats) return [];
+    const tips = [];
+    if (stats.totalRecipes < 5) tips.push("Keep publishing! Aim for at least 5 recipes to build a strong profile and attract more viewers.");
+    if (parseFloat(stats.averageRating) < 4.0) tips.push("Focus on recipe clarity and detailed instructions to boost your average ratings.");
+    if (stats.healthRecipes === 0) tips.push("Try adding vegetarian, vegan, or keto recipes! Health-conscious tags boost ML recommendations.");
+    if (stats.recipesInTop10 === 0) tips.push("Engage with reviews and share your recipes to climb into the Global Rankings.");
+    if (stats.engagementMetrics?.save > (stats.engagementMetrics?.like || 0) * 2) tips.push("Users are saving your recipes for later! Beautiful cover photos help convert saves into cooks.");
+    
+    if (tips.length < 3) {
+      tips.push("Consistently engaging with your reviewers builds a loyal following.");
+      tips.push("High-quality, well-lit cover photos drastically improve your recipe interaction rates.");
+    }
+    return tips.slice(0, 4);
+  };
+
   const statCardClasses = "bg-[#f9f0e0] border border-dashed border-[#A0522D] rounded-lg p-5 md:p-[15px] text-center shadow-[0_2px_8px_rgba(139,69,19,0.2),inset_0_1px_0_rgba(218,165,32,0.1)] md:shadow-[0_2px_6px_rgba(139,69,19,0.2)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(218,165,32,0.2)]";
   const statValueClasses = "text-[2rem] md:text-[1.5rem] font-bold text-[#DAA520] mb-[8px] drop-shadow-[1px_1px_1px_rgba(139,69,19,0.2)]";
   const engagementValueClasses = "text-[2rem] md:text-[1.5rem] font-bold text-[#DAA520] leading-[1.2] drop-shadow-[1px_1px_1px_rgba(139,69,19,0.2)]";
@@ -136,26 +146,32 @@ const ChefInsightsPage = ({ user }) => {
             {userStats ? (
               <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5 md:gap-[15px]">
                 <div className={statCardClasses}>
+                  <Star className="w-[32px] h-[32px] mb-[8px] text-[#DAA520] mx-auto fill-current" />
                   <div className={statValueClasses}>{userStats.averageRating || 'N/A'}</div>
                   <div className={statLabelClasses}>Average Rating</div>
                 </div>
                 <div className={statCardClasses}>
+                  <ChefHat className="w-[32px] h-[32px] mb-[8px] text-[#8B4513] mx-auto" />
                   <div className={statValueClasses}>{userStats.totalRecipes}</div>
                   <div className={statLabelClasses}>Total Recipes</div>
                 </div>
                 <div className={statCardClasses}>
+                  <Trophy className="w-[32px] h-[32px] mb-[8px] text-[#DAA520] mx-auto" />
                   <div className={statValueClasses}>{userStats.recipesInTop10}</div>
                   <div className={statLabelClasses}>Recipes in Top 10</div>
                 </div>
                 <div className={statCardClasses}>
+                  <TrendingUp className="w-[32px] h-[32px] mb-[8px] text-[#8B4513] mx-auto" />
                   <div className={statValueClasses}>{userStats.successScore}/100</div>
                   <div className={statLabelClasses}>Success Score</div>
                 </div>
                 <div className={statCardClasses}>
+                  <Leaf className="w-[32px] h-[32px] mb-[8px] text-[#4caf50] mx-auto" />
                   <div className={statValueClasses}>{userStats.healthRecipes}</div>
                   <div className={statLabelClasses}>Health Recipes</div>
                 </div>
                 <div className={statCardClasses}>
+                  <Eye className="w-[32px] h-[32px] mb-[8px] text-[#5D4037] mx-auto" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['view'] !== undefined
                       ? userStats.engagementMetrics['view']
@@ -164,6 +180,7 @@ const ChefInsightsPage = ({ user }) => {
                   <div className={statLabelClasses}>Views</div>
                 </div>
                 <div className={statCardClasses}>
+                  <Heart className="w-[32px] h-[32px] mb-[8px] text-[#e74c3c] mx-auto fill-current" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['like'] !== undefined
                       ? userStats.engagementMetrics['like']
@@ -172,6 +189,7 @@ const ChefInsightsPage = ({ user }) => {
                   <div className={statLabelClasses}>Likes</div>
                 </div>
                 <div className={statCardClasses}>
+                  <Save className="w-[32px] h-[32px] mb-[8px] text-[#2196f3] mx-auto" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['save'] !== undefined
                       ? userStats.engagementMetrics['save']
@@ -182,6 +200,29 @@ const ChefInsightsPage = ({ user }) => {
               </div>
             ) : (
               <p>Loading performance data...</p>
+            )}
+          </section>
+
+          {/* Rating Trends Section */}
+          <section className={sectionClasses}>
+            <h2 className={sectionTitleClasses}>Rating Trends - last six months </h2>
+            {userStats && userStats.ratingTrends && userStats.ratingTrends.length > 0 ? (
+              <div className="flex items-end justify-center h-[220px] mt-[30px] gap-[15px] sm:gap-[5px] max-w-[800px] mx-auto">
+                {[...userStats.ratingTrends].reverse().map((trend, index) => {
+                  const heightPercentage = (parseFloat(trend.avgRating) / 5) * 100;
+                  return (
+                    <div key={index} className="flex flex-col items-center flex-1 group">
+                      <span className="text-[#DAA520] font-bold text-[1rem] sm:text-[0.8rem] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-[5px] group-hover:translate-y-0 flex items-center justify-center gap-[4px]"><Star className="w-[14px] h-[14px] fill-current" /> {trend.avgRating}</span>
+                      <div className="w-full max-w-[60px] sm:max-w-[30px] bg-[#f0e6d6] rounded-t-md relative h-full flex flex-col justify-end">
+                        <div className="w-full bg-gradient-to-t from-[#8B4513] to-[#D2691E] rounded-t-md transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(210,105,30,0.3)]" style={{ height: `${heightPercentage}%` }}></div>
+                      </div>
+                      <span className="text-[#5D4037] text-[0.9rem] sm:text-[0.7rem] mt-3 font-semibold uppercase tracking-wider">{new Date(trend.month + '-01').toLocaleDateString('en-US', { month: 'short' })}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center text-[#5D4037] italic">Not enough historical data to show trends yet.</p>
             )}
           </section>
 
@@ -199,13 +240,13 @@ const ChefInsightsPage = ({ user }) => {
                     onClick={() => handleRecipeClick(recipe.recipe_id)}
                   >
                     <img
-                      src={`http://localhost:5000/images/${recipe.image_url}`}
+                      src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                       alt={recipe.title}
                       className="w-full h-[180px] object-cover border-b border-b-[#A0522D]"
                     />
                     <div className="p-[15px] text-center">
                       <h3 className="m-0 mb-[8px] text-[1.2rem] font-semibold text-[#5D4037] leading-[1.3] font-['Georgia',_serif]">{recipe.title}</h3>
-                      <p className="m-0 text-[1.1rem] text-[#DAA520] font-medium">⭐ {parseFloat(recipe.avg_rating).toFixed(1)}</p>
+                      <p className="m-0 text-[1.1rem] text-[#DAA520] font-medium flex items-center justify-center gap-[4px]"><Star className="w-[18px] h-[18px] fill-current" /> {parseFloat(recipe.avg_rating).toFixed(1)}</p>
                     </div>
                   </div>
                 ))}
@@ -221,10 +262,10 @@ const ChefInsightsPage = ({ user }) => {
             ) : (
               <div className="flex flex-col items-center gap-5">
                 <div className="w-full max-w-[800px]">
-                  <div className="bg-[#f0e6d6] border-2 border-[#A0522D] rounded-[12px] p-[30px] border-l-[4px] border-l-[#8B4513] shadow-[0_4px_12px_rgba(139,69,19,0.2)] min-h-[200px] flex items-center justify-center">
-                    <div className="text-center w-full">
+                  <div className="bg-[#f0e6d6] border-2 border-[#A0522D] rounded-[12px] p-[30px] border-l-[4px] border-l-[#8B4513] shadow-[0_4px_12px_rgba(139,69,19,0.2)] min-h-[200px] flex items-center justify-center overflow-hidden">
+                    <div key={currentReviewIndex} className="text-center w-full animate-[fadeIn_0.5s_ease-in-out]">
                       <h4 className="text-[1.4rem] font-semibold text-[#5D4037] mb-[15px] font-['Georgia',_serif]">Review for: {reviews[currentReviewIndex].recipe_title}</h4>
-                      <p className="text-[1.2rem] text-[#DAA520] mb-[15px] font-medium">⭐ {reviews[currentReviewIndex].rating}/5</p>
+                      <div className="flex items-center justify-center gap-[6px] text-[1.2rem] text-[#DAA520] mb-[15px] font-medium"><Star className="w-[22px] h-[22px] fill-current" /> {reviews[currentReviewIndex].rating}/5</div>
                       <p className="italic text-[#5D4037] mb-[15px] leading-[1.6] text-[1.1rem] font-['Georgia',_serif]">"{reviews[currentReviewIndex].review_text}"</p>
                       <p className="text-[#8B4513] font-semibold text-[1rem] font-['Georgia',_serif]">- {reviews[currentReviewIndex].reviewer_name}</p>
                     </div>
@@ -267,11 +308,11 @@ const ChefInsightsPage = ({ user }) => {
 
           {/* Tips & Tricks Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Tips & Tricks</h2>
+            <h2 className={sectionTitleClasses}>Smart AI Tips</h2>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] md:grid-cols-1 gap-5 md:gap-[15px]">
-              {tipsAndTricks.map((tip, index) => (
+              {generateDynamicTips(userStats).map((tip, index) => (
                 <div key={index} className="bg-gradient-to-br from-[#e8d8b9] to-[#d7c4a3] border border-[#A0522D] rounded-lg p-5 md:p-[15px] flex items-start gap-[15px] shadow-[0_2px_8px_rgba(139,69,19,0.2),inset_0_1px_0_rgba(218,165,32,0.1)] md:shadow-[0_2px_6px_rgba(139,69,19,0.2)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(218,165,32,0.2)]">
-                  <div className="text-[1.5rem] shrink-0 text-[#8B4513]">💡</div>
+                  <Lightbulb className="w-[28px] h-[28px] shrink-0 text-[#8B4513] mt-[2px]" />
                   <p className="m-0 text-[#5D4037] leading-[1.5] text-[1rem] font-['Georgia',_serif]">{tip}</p>
                 </div>
               ))}

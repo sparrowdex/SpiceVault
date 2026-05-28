@@ -242,7 +242,7 @@ const Recommendations = ({ user }) => {
             >
               {recipe.image_url && (
                 <img
-                  src={`http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="w-full h-[200px] object-cover rounded-t-[8px]"
                   onLoad={() => handleRecordInteraction(recipe.recipe_id, 'view')}
@@ -250,8 +250,7 @@ const Recommendations = ({ user }) => {
               )}
 
               <div className="p-[15px] flex flex-col grow">
-                <h3 className="font-['TrovicalCalmFree',_serif] text-[1.3rem] font-semibold mb-[10px] tracking-[0.05em] text-[#333]">{recipe.title}</h3>
-                <p className="text-[0.95rem] text-[#555] mb-[10px] line-clamp-3 leading-relaxed">{recipe.description}</p>
+                <h3 className="font-['TrovicalCalmFree',_serif] text-[1.3rem] font-semibold mb-[10px] tracking-[0.05em] text-[#333] truncate" title={recipe.title}>{recipe.title}</h3>
 
                 {/* ML Score and Reason */}
                 <div className="mt-[10px] text-[0.9rem] text-[#666] flex flex-col gap-[5px]">

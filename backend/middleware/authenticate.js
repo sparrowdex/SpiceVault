@@ -20,7 +20,7 @@ module.exports = function authenticate(req, res, next) {
       console.log('Auth middleware - Token verification failed:', err.message);
       return res.status(401).json({ success: false, error: 'Invalid token' });
     }
-    console.log('Auth middleware - Token verified successfully for user:', decoded.user_id);
+    console.log('Auth middleware - Token verified successfully for user:', decoded.userId);
     req.user = decoded;
     next();
   });

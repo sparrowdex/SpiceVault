@@ -2,6 +2,8 @@
 
 //fixing the useEffect warning and a search input and sorting dropdown
 import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 const Home = () => {
   const [recipes, setRecipes] = useState([]);
   const [popularRecipes, setPopularRecipes] = useState([]);
@@ -15,6 +17,8 @@ const Home = () => {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [popularCarouselIndex, setPopularCarouselIndex] = useState(0);
+  const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
+  const [isTransitionEnabled, setIsTransitionEnabled] = useState(true);
 
   // Filter sections data
   const filterSections = [
@@ -143,9 +147,46 @@ const Home = () => {
     fetchPopularRecipes();
   }, [fetchPopularRecipes]);
 
+  // Setup initial position in the middle of the cloned array
+  useEffect(() => {
+    if (popularRecipes.length > 0) {
+      setIsTransitionEnabled(false);
+      setPopularCarouselIndex(popularRecipes.length * 5); 
+    }
+  }, [popularRecipes.length]);
+
+  // Auto-swipe popular recipes every 5 seconds if the user is not hovering
+  useEffect(() => {
+    if (popularRecipes.length > 0 && !isHoveringCarousel) {
+      const interval = setInterval(() => {
+        setIsTransitionEnabled(true);
+        setPopularCarouselIndex((prev) => prev + 4);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [popularRecipes.length, isHoveringCarousel]);
+
+  const handleTransitionEnd = () => {
+    if (popularRecipes.length === 0) return;
+    
+    // Seamless loop jump
+    if (popularCarouselIndex >= popularRecipes.length * 7) {
+      setIsTransitionEnabled(false);
+      setPopularCarouselIndex((prev) => prev - popularRecipes.length * 2);
+    } else if (popularCarouselIndex <= popularRecipes.length * 3) {
+      setIsTransitionEnabled(false);
+      setPopularCarouselIndex((prev) => prev + popularRecipes.length * 2);
+    }
+  };
+
+  // Duplicate the array 10 times to create a massive seamless loop buffer
+  const displayRecipes = popularRecipes.length > 0 
+    ? Array(10).fill(popularRecipes).flat() 
+    : [];
+
   const cardClasses = "w-[250px] h-[320px] bg-gradient-to-b from-[#e99f6e] to-[#ffcc80] border border-[#ddd] rounded-[12px] p-[16px] shadow-[0_2px_6px_rgba(0,0,0,0.12)] flex flex-col items-center relative transition-all duration-300 cursor-pointer group shrink-0 hover:from-[#ff6600] hover:to-[#ff6600] hover:-translate-y-[8px] hover:shadow-[0_14px_40px_rgba(255,102,0,0.35)]";
   const tagClasses = "inline-block py-[4px] px-[10px] rounded-[20px] text-[10px] font-bold uppercase tracking-[0.5px] whitespace-nowrap max-w-full overflow-hidden text-ellipsis shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-colors duration-300 group-hover:bg-white/20 group-hover:text-white group-hover:shadow-none cursor-default";
-  const carouselArrowClasses = "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white border-none w-[40px] h-[40px] rounded-full text-[20px] font-bold cursor-pointer flex items-center justify-center transition-all duration-300 shadow-[0_4px_12px_rgba(255,102,0,0.3)] z-[2] shrink-0 hover:from-[#e55a00] hover:to-[#ff6600] hover:scale-110 hover:shadow-[0_6px_16px_rgba(255,102,0,0.4)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed md:w-[35px] md:h-[35px] md:text-[18px] sm:w-[30px] sm:h-[30px] sm:text-[16px]";
+  const carouselArrowClasses = "bg-transparent text-[#ff6600] border-none flex items-center justify-center cursor-pointer transition-transform duration-300 z-[2] shrink-0 hover:text-[#d65a00] hover:scale-125 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed p-[5px]";
 
   const getDifficultyClass = (diff) => {
     switch(diff?.toLowerCase()) {
@@ -169,21 +210,32 @@ const Home = () => {
     <div>
       <div className="p-[20px]">
         <h2 className="font-bold text-[2.5rem] bg-gradient-to-r from-orange-500 to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center uppercase tracking-[2px]">Popular Recipes</h2>
-        <div className="flex items-center justify-center my-[30px] relative max-w-[1200px] mx-auto md:max-w-full md:my-[15px] sm:my-[10px]">
+        <div 
+          className="flex items-center justify-center my-[30px] relative max-w-[1200px] mx-auto md:max-w-full md:my-[15px] sm:my-[10px]"
+          onMouseEnter={() => setIsHoveringCarousel(true)}
+          onMouseLeave={() => setIsHoveringCarousel(false)}
+        >
           <button
             className={carouselArrowClasses}
-            onClick={() => setPopularCarouselIndex((prev) => (prev - 4 + popularRecipes.length) % popularRecipes.length)}
+            onClick={() => { setIsTransitionEnabled(true); setPopularCarouselIndex((prev) => prev - 4); }}
             disabled={popularRecipes.length === 0}
           >
-            ‹
+            <ChevronLeft size={36} strokeWidth={2.5} />
           </button>
-        <div className="flex gap-[20px] justify-center flex-nowrap max-w-full overflow-hidden relative">
-          {popularRecipes.length > 0 ? (
-            popularRecipes.slice(popularCarouselIndex, popularCarouselIndex + 4).map((recipe, index) => (
-              <div key={recipe.recipe_id} className={cardClasses} onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
-                <div className="absolute top-[8px] left-[8px] w-[28px] h-[28px] rounded-full bg-gradient-to-br from-[#ff6600] to-[#888] text-white font-bold text-[14px] flex items-center justify-center select-none shadow-[0_2px_6px_rgba(0,0,0,0.2)] z-10">{popularCarouselIndex + index + 1}</div>
+        <div className="overflow-hidden w-full max-w-[1060px] mx-[10px] py-[15px]">
+          <div 
+            className={"flex gap-[20px] ease-in-out w-max " + (isTransitionEnabled ? "transition-transform duration-[800ms]" : "transition-none duration-0")}
+            style={{ transform: `translateX(calc(-${popularCarouselIndex} * (250px + 20px)))` }}
+            onTransitionEnd={handleTransitionEnd}
+          >
+          {displayRecipes.length > 0 ? (
+            displayRecipes.map((recipe, index) => (
+              <div key={`${recipe.recipe_id}-${index}`} className={cardClasses} onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
+                <div className="absolute top-[8px] left-[8px] w-[28px] h-[28px] rounded-full bg-gradient-to-br from-[#ff6600] to-[#888] text-white font-bold text-[14px] flex items-center justify-center select-none shadow-[0_2px_6px_rgba(0,0,0,0.2)] z-10">
+                  {(index % popularRecipes.length) + 1}
+                </div>
                 <img
-                  src={`http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="w-[202px] h-[113px] object-cover rounded-[8px]"
                 />
@@ -203,15 +255,16 @@ const Home = () => {
               </div>
             ))
           ) : (
-            <p>No popular recipes available at the moment.</p>
+            <p className="w-full text-center text-[#666]">No popular recipes available at the moment.</p>
           )}
+          </div>
         </div>
           <button
             className={carouselArrowClasses}
-            onClick={() => setPopularCarouselIndex((prev) => (prev + 4) % popularRecipes.length)}
+            onClick={() => { setIsTransitionEnabled(true); setPopularCarouselIndex((prev) => prev + 4); }}
             disabled={popularRecipes.length === 0}
           >
-            ›
+            <ChevronRight size={36} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -219,16 +272,26 @@ const Home = () => {
 
         <div className="bg-transparent py-[30px] px-[20px] rounded-b-[20px] -mt-[20px]">
           <div className="flex flex-col gap-[10px] mb-[20px]">
-            <input
-              type="text"
-              placeholder="Search by title..."
-              value={search}
-              className="p-[12px_20px] text-[16px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 w-full box-border bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)]"
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
+            <div className="flex gap-[10px] max-w-[800px] w-full mx-auto">
+              <input
+                type="text"
+                placeholder="Search by title..."
+                value={search}
+                className="p-[12px_20px] text-[16px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 flex-1 box-border bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)]"
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+              {(search || difficulty || foodCategory || dietType) && (
+                <button
+                  onClick={() => { setSearch(''); setDifficulty(''); setFoodCategory(''); setDietType(''); setPage(1); }}
+                  className="shrink-0 bg-transparent text-[#e74c3c] border-2 border-[#e74c3c] rounded-[30px] px-[20px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e74c3c] hover:text-white"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
 
             <div 
               className="flex items-center justify-center my-[20px] relative max-w-[600px] mx-auto md:my-[15px] md:max-w-full sm:my-[10px]"
@@ -237,11 +300,11 @@ const Home = () => {
               onTouchEnd={handleTouchEnd}
             >
               <button className={carouselArrowClasses} onClick={prevFilterSection}>
-                ‹
+                <ChevronLeft size={32} strokeWidth={2.5} />
               </button>
               
               <div className="flex-1 text-center px-[20px] min-h-[120px] flex flex-col justify-center md:px-[15px] md:min-h-[100px] sm:px-[10px] sm:min-h-[80px]">
-                <h3 className={`m-[0_0_15px_0] text-[#333] text-[18px] font-semibold md:text-[16px] md:mb-[12px] sm:text-[14px] sm:mb-[10px] ${filterSections[currentFilterSection].id === 'difficulty' ? 'font-[\'SweetHipster\',_cursive] text-[8rem] font-normal tracking-[0.1em] text-black drop-shadow-[2px_2px_4px_rgba(0,0,0,0.15)] relative block text-center px-[1rem]' : ''}`}>
+                <h3 className={`m-[0_0_15px_0] text-[#333] text-[18px] font-semibold md:text-[16px] md:mb-[12px] sm:text-[14px] sm:mb-[10px] ${filterSections[currentFilterSection].id === 'difficulty' ? "font-['SweetHipster',_cursive] text-[8rem] font-normal tracking-[0.1em] text-black drop-shadow-[2px_2px_4px_rgba(0,0,0,0.15)] relative block text-center px-[1rem]" : ""}`}>
                   {filterSections[currentFilterSection].id === 'difficulty' ? 'Filter Your Choice' : filterSections[currentFilterSection].title}
                 </h3>
                 <div className="flex gap-[8px] justify-center flex-wrap max-w-full md:gap-[6px] sm:gap-[4px]">
@@ -261,7 +324,7 @@ const Home = () => {
               </div>
               
               <button className={carouselArrowClasses} onClick={nextFilterSection}>
-                ›
+                <ChevronRight size={32} strokeWidth={2.5} />
               </button>
             </div>
             
@@ -281,7 +344,7 @@ const Home = () => {
               recipes.map((recipe) => (
               <div key={recipe.recipe_id} className={cardClasses} onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
                 <img
-                  src={`http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="w-[202px] h-[113px] object-cover rounded-[8px]"
                 />
