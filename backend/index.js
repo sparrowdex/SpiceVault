@@ -34,6 +34,23 @@ const cron = require('node-cron');
 
 const app = express();
 
+// Enable JSON parsing for incoming requests BEFORE UploadThing
+app.use(bodyParser.json({ limit: '10mb' })); 
+app.use(express.json({ limit: '10mb' }));
+
+app.use(
+  "/api/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+    config: {
+      token: process.env.UPLOADTHING_TOKEN,
+      callbackUrl: "https://sparrowdex-spicevault-backend.hf.space/api/uploadthing",
+      isDev: true,
+      logLevel: "debug"
+    }
+  })
+);
+
 // ✅ FIX 1: Trust Hugging Face's reverse proxy headers for express-rate-limit
 app.set('trust proxy', 1);
 
@@ -58,8 +75,6 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
-app.use(bodyParser.json({ limit: '10mb' })); // Limit payload size
-app.use(express.json({ limit: '10mb' })); // Enables JSON parsing for incoming requests
 
 // Test Prisma DB connection
 prisma.$connect()
@@ -71,16 +86,6 @@ prisma.$connect()
   });
 
 // Routes
-app.use(
-  "/api/uploadthing",
-  createRouteHandler({
-    router: uploadRouter,
-    config: {
-      callbackUrl: "https://sparrowdex-spicevault-backend.hf.space/api/uploadthing"
-    }
-  })
-);
-
 const userRoutes = require('./routes/user.routes');
 app.use('/api/users', userRoutes);
 const recipeRoutes = require('./routes/recipe.routes');

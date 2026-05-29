@@ -17,24 +17,21 @@ import BackgroundGradient from './components/BackgroundGradient';
 import { Menu, X } from 'lucide-react';
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in
+  const [user, setUser] = useState(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        return JSON.parse(userData);
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
-  }, []);
+    return null;
+  });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogin = (userData) => {
     setUser(userData);
