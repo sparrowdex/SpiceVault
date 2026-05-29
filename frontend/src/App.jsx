@@ -141,7 +141,7 @@ function App() {
         )}
 
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home user={user} />} />
           <Route path="/addrecipe" element={user ? <AddRecipe /> : <Navigate to="/login" replace />} />
           <Route path="/recommendations" element={user ? <Recommendations user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/chef-certified-recipes" element={<ChefCertifiedRecipesPage />} />

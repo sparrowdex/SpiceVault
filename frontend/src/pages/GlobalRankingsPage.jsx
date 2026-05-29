@@ -47,8 +47,6 @@ const GlobalRankingsPage = ({ user }) => {
   const topThree = rankings.slice(0, 3);
   const remainingRankings = rankings.slice(3);
 
-  const hasNoDailyChanges = period === 'daily' && (rankings.length === 0 || rankings.every(recipe => recipe.rankChange === 0));
-
   return (
     <div className="max-w-[1200px] mx-auto p-5 font-['Poppins',_sans-serif]">
       <h1 className="text-center text-[2.5rem] md:text-[2rem] mb-[30px] font-['ElegantWomanDemo',_cursive] bg-gradient-to-r from-[#8B4513] to-[#D2691E] bg-clip-text text-transparent font-bold">Global Recipe Rankings</h1>
@@ -101,10 +99,6 @@ const GlobalRankingsPage = ({ user }) => {
         <p className="text-center text-[1.2rem] my-[50px]">Loading rankings...</p>
       ) : error ? (
         <p className="text-center text-[1.2rem] my-[50px] text-[#e74c3c]">{error}</p>
-      ) : hasNoDailyChanges ? (
-        <div className="text-center text-[1.5rem] md:text-[1.2rem] text-[#ff6600] p-[40px] md:p-[30px_20px] bg-[#fff8f0] rounded-[10px] my-[40px] mx-auto md:m-[20px] max-w-[600px] font-semibold border-2 border-dashed border-[#ff6600] leading-[1.4]">
-          No changes in rankings today. Make a rating on a recipe to see daily rankings!
-        </div>
       ) : (
         <>
           {/* Podium Section */}

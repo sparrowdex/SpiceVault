@@ -376,11 +376,19 @@ const UserProfile = ({ user, onLogout }) => {
         >
           ⭐ Rated ({ratedRecipes.length})
         </button>
+        {user.user_type === 'chef' && (
+          <button 
+            className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'added' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
+            onClick={() => setActiveTab('added')}
+          >
+            👨‍🍳 Added ({addedRecipes.length})
+          </button>
+        )}
         <button 
-          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'added' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-          onClick={() => setActiveTab('added')}
+          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'journal' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
+          onClick={() => setActiveTab('journal')}
         >
-          ➕ Added ({addedRecipes.length})
+          📓 {user.user_type === 'chef' ? 'Chef Stories' : 'Journal'}
         </button>
       </div>
 
@@ -443,6 +451,25 @@ const UserProfile = ({ user, onLogout }) => {
                 {addedRecipes.map(recipe => renderAddedRecipeCard(recipe))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'journal' && (
+          <div>
+            <div className="flex justify-between items-center mb-[20px]">
+              <h2 className="text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">
+                {user.user_type === 'chef' ? 'Your Chef Stories' : 'Your Cooking Journal'}
+              </h2>
+              <button 
+                className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white px-[20px] py-[10px] border-none rounded-[30px] font-semibold text-[14px] shadow-[0_4px_12px_rgba(255,102,0,0.3)] transition-transform cursor-pointer hover:-translate-y-[2px]"
+                onClick={() => showNotification('Article publishing coming soon!', 'info')}
+              >
+                + Create New Entry
+              </button>
+            </div>
+            <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
+              <p className="text-[16px] m-0">No entries yet. Share your culinary journey and connect with others!</p>
+            </div>
           </div>
         )}
       </div>

@@ -383,27 +383,27 @@ exports.getGlobalRankings = async (req, res) => {
     if (period === 'daily') {
       currentRankings = await prisma.$queryRaw`
         SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
-        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+        WHERE r.chef_id IS NOT NULL
+        GROUP BY r.recipe_id ORDER BY avg_rating DESC, rating_count DESC LIMIT 50`;
     } else if (period === 'weekly') {
       currentRankings = await prisma.$queryRaw`
         SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
-        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        WHERE r.chef_id IS NOT NULL
+        GROUP BY r.recipe_id ORDER BY avg_rating DESC, rating_count DESC LIMIT 50`;
     } else if (period === 'monthly') {
       currentRankings = await prisma.$queryRaw`
         SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
-        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
-        WHERE r.chef_id IS NOT NULL AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
+        FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id AND rg.datestamp >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        WHERE r.chef_id IS NOT NULL
+        GROUP BY r.recipe_id ORDER BY avg_rating DESC, rating_count DESC LIMIT 50`;
     } else {
       currentRankings = await prisma.$queryRaw`
         SELECT r.recipe_id, r.title, r.image_url, r.chef_id, AVG(rg.rating) as avg_rating, COUNT(rg.rating) as rating_count
         FROM recipe r LEFT JOIN reviews_given rg ON r.recipe_id = rg.recipe_id
         WHERE r.chef_id IS NOT NULL
-        GROUP BY r.recipe_id HAVING COUNT(rg.rating) > 0 ORDER BY AVG(rg.rating) DESC, COUNT(rg.rating) DESC LIMIT 50`;
+        GROUP BY r.recipe_id ORDER BY avg_rating DESC, rating_count DESC LIMIT 50`;
     }
 
     const rankingsWithChange = currentRankings.map((recipe, index) => ({

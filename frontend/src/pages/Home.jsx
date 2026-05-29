@@ -2,9 +2,10 @@
 
 //fixing the useEffect warning and a search input and sorting dropdown
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import FeaturedArticles from '../components/FeaturedArticles';
 
-const Home = () => {
+const Home = ({ user }) => {
   const [recipes, setRecipes] = useState([]);
   const [popularRecipes, setPopularRecipes] = useState([]);
   const [difficulty, setDifficulty] = useState('');
@@ -13,12 +14,11 @@ const Home = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [currentFilterSection, setCurrentFilterSection] = useState(0);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
   const [popularCarouselIndex, setPopularCarouselIndex] = useState(0);
   const [isHoveringCarousel, setIsHoveringCarousel] = useState(false);
   const [isTransitionEnabled, setIsTransitionEnabled] = useState(true);
+  const [allRecipesTouchStart, setAllRecipesTouchStart] = useState(null);
+  const [allRecipesTouchEnd, setAllRecipesTouchEnd] = useState(null);
 
   // Filter sections data
   const filterSections = [
@@ -67,42 +67,10 @@ const Home = () => {
     }
   ];
 
-  const nextFilterSection = () => {
-    setCurrentFilterSection((prev) => (prev + 1) % filterSections.length);
-  };
-
-  const prevFilterSection = () => {
-    setCurrentFilterSection((prev) => (prev - 1 + filterSections.length) % filterSections.length);
-  };
-
-  // Touch/swipe handlers for mobile
-  const handleTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      nextFilterSection();
-    } else if (isRightSwipe) {
-      prevFilterSection();
-    }
-  };
-
   const fetchRecipes = useCallback(async () => {
     try {
       // Only append parameters if they actually have a value
-      const queryParams = { page, limit: 9 };
+      const queryParams = { page, limit: 10 };
       if (difficulty) queryParams.difficulty = difficulty;
       if (foodCategory) queryParams.food_category = foodCategory;
       if (dietType) queryParams.diet_type = dietType;
@@ -179,6 +147,25 @@ const Home = () => {
     }
   };
 
+  // Touch/swipe handlers for the "All Recipes" grid pagination
+  const handleAllRecipesTouchStart = (e) => {
+    setAllRecipesTouchEnd(null);
+    setAllRecipesTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+  const handleAllRecipesTouchMove = (e) => {
+    setAllRecipesTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+  const handleAllRecipesTouchEnd = () => {
+    if (!allRecipesTouchStart || !allRecipesTouchEnd) return;
+    const distanceX = allRecipesTouchStart.x - allRecipesTouchEnd.x;
+    const distanceY = Math.abs(allRecipesTouchStart.y - allRecipesTouchEnd.y);
+    // Ensure it's a horizontal swipe, not just the user scrolling down the page
+    if (distanceY < 50) {
+      if (distanceX > 50 && page < totalPages) setPage((prev) => prev + 1);
+      else if (distanceX < -50 && page > 1) setPage((prev) => prev - 1);
+    }
+  };
+
   // Duplicate the array 10 times to create a massive seamless loop buffer
   const displayRecipes = popularRecipes.length > 0 
     ? Array(10).fill(popularRecipes).flat() 
@@ -208,6 +195,40 @@ const Home = () => {
 
   return (
     <div>
+      {/* Chef Updates / Stories Section (Logged in users only) */}
+      {user && (
+        <div className="w-full bg-transparent py-[15px] overflow-hidden mb-[10px]">
+          <div className="max-w-[1200px] mx-auto px-[20px]">
+            <h2 className="font-bold text-[1.2rem] text-[#5C4033] mb-[10px] font-['Nostalgia',_serif] pl-[5px]">Chef Updates</h2>
+            <div className="flex gap-[15px] overflow-x-auto pb-[5px] snap-x scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex flex-col items-center gap-[6px] shrink-0 snap-start cursor-pointer group" onClick={() => window.location.href = '/profile'}>
+                 <div className="w-[60px] h-[60px] rounded-full border-[2px] border-dashed border-[#ff6600] flex items-center justify-center bg-[#fff5f0] transition-colors group-hover:bg-[#ffe6d6]">
+                    <span className="text-[#ff6600] text-[20px] font-light">+</span>
+                 </div>
+                 <span className="text-[11px] font-semibold text-[#555]">Add Update</span>
+              </div>
+              {[
+                { id: 1, author: 'Chef Maria', img: 'https://images.unsplash.com/photo-1583338917451-face2751d8d5?w=150&h=150&fit=crop', isChef: true },
+                { id: 2, author: 'Rajesh K.', img: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=150&h=150&fit=crop', isChef: false },
+                { id: 3, author: 'Chef Sarah', img: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=150&h=150&fit=crop', isChef: true },
+                { id: 4, author: 'Emily R.', img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=150&h=150&fit=crop', isChef: false },
+                { id: 5, author: 'Chef Mike', img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=150&h=150&fit=crop', isChef: true },
+                { id: 6, author: 'David L.', img: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=150&h=150&fit=crop', isChef: false },
+              ].map(story => (
+                <div key={story.id} className="flex flex-col items-center gap-[6px] shrink-0 snap-start cursor-pointer group" onClick={() => alert('Article viewing coming soon!')}>
+                  <div className={`w-[60px] h-[60px] rounded-full p-[2px] ${story.isChef ? 'bg-gradient-to-tr from-[#ff6600] to-[#ffcc80]' : 'bg-gradient-to-tr from-[#4caf50] to-[#a8e063]'}`}>
+                    <img src={story.img} alt={story.author} className="w-full h-full rounded-full object-cover border-[2px] border-white transition-transform duration-300 group-hover:scale-105" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#555] max-w-[65px] truncate">{story.author}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <FeaturedArticles />
+
       <div className="p-[20px]">
         <h2 className="font-bold text-[2.5rem] bg-gradient-to-r from-orange-500 to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center uppercase tracking-[2px]">Popular Recipes</h2>
         <div 
@@ -271,75 +292,56 @@ const Home = () => {
         <h2 className="font-bold text-[2.5rem] bg-gradient-to-r from-orange-500 to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center uppercase tracking-[2px]">All Recipes</h2>
 
         <div className="bg-transparent py-[30px] px-[20px] rounded-b-[20px] -mt-[20px]">
-          <div className="flex flex-col gap-[10px] mb-[20px]">
-            <div className="flex gap-[10px] max-w-[800px] w-full mx-auto">
-              <input
-                type="text"
-                placeholder="Search by title..."
-                value={search}
-                className="p-[12px_20px] text-[16px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 flex-1 box-border bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)]"
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-              />
-              {(search || difficulty || foodCategory || dietType) && (
-                <button
-                  onClick={() => { setSearch(''); setDifficulty(''); setFoodCategory(''); setDietType(''); setPage(1); }}
-                  className="shrink-0 bg-transparent text-[#e74c3c] border-2 border-[#e74c3c] rounded-[30px] px-[20px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e74c3c] hover:text-white"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </div>
+          <div className="flex flex-wrap gap-[15px] mb-[40px] max-w-[1200px] w-full mx-auto justify-center items-center">
+            <input
+              type="text"
+              placeholder="Search by title..."
+              value={search}
+              className="p-[12px_20px] text-[16px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 flex-[1_1_250px] bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)] box-border"
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
 
-            <div 
-              className="flex items-center justify-center my-[20px] relative max-w-[600px] mx-auto md:my-[15px] md:max-w-full sm:my-[10px]"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <button className={carouselArrowClasses} onClick={prevFilterSection}>
-                <ChevronLeft size={32} strokeWidth={2.5} />
-              </button>
-              
-              <div className="flex-1 text-center px-[20px] min-h-[120px] flex flex-col justify-center md:px-[15px] md:min-h-[100px] sm:px-[10px] sm:min-h-[80px]">
-                <h3 className={`m-[0_0_15px_0] text-[#333] text-[18px] font-semibold md:text-[16px] md:mb-[12px] sm:text-[14px] sm:mb-[10px] ${filterSections[currentFilterSection].id === 'difficulty' ? "font-['SweetHipster',_cursive] text-[8rem] font-normal tracking-[0.1em] text-black drop-shadow-[2px_2px_4px_rgba(0,0,0,0.15)] relative block text-center px-[1rem]" : ""}`}>
-                  {filterSections[currentFilterSection].id === 'difficulty' ? 'Filter Your Choice' : filterSections[currentFilterSection].title}
-                </h3>
-                <div className="flex gap-[8px] justify-center flex-wrap max-w-full md:gap-[6px] sm:gap-[4px]">
-                  {filterSections[currentFilterSection].options.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        filterSections[currentFilterSection].setValue(option.value);
-                        setPage(1);
-                      }}
-                      className={`py-[8px] px-[16px] border-2 rounded-[25px] cursor-pointer text-[14px] font-medium transition-all duration-300 whitespace-nowrap hover:-translate-y-[2px] md:py-[6px] md:px-[12px] md:text-[13px] sm:py-[5px] sm:px-[10px] sm:text-[12px] ${filterSections[currentFilterSection].currentValue === option.value ? 'bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white border-[#ff6600] shadow-[0_4px_12px_rgba(255,102,0,0.3)]' : 'bg-white text-[#666] border-[#e0e0e0] hover:border-[#ff6600] hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-                    >
-                      {option.label}
-                    </button>
+            {filterSections.map((section) => (
+              <div key={section.id} className="relative flex-shrink-0">
+                <select
+                  value={section.currentValue}
+                  onChange={(e) => {
+                    section.setValue(e.target.value);
+                    setPage(1);
+                  }}
+                  className="p-[12px_40px_12px_20px] text-[15px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 bg-[#f9f9f9] focus:border-[#ff6600] cursor-pointer text-[#555] font-medium appearance-none shadow-sm hover:border-[#ff6600]/50"
+                >
+                  {section.options.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label === 'All' ? `${section.title}: All` : opt.label}
+                    </option>
                   ))}
+                </select>
+                <div className="absolute right-[15px] top-1/2 -translate-y-1/2 pointer-events-none text-[#ff6600]">
+                  <ChevronDown size={20} strokeWidth={2.5} />
                 </div>
               </div>
-              
-              <button className={carouselArrowClasses} onClick={nextFilterSection}>
-                <ChevronRight size={32} strokeWidth={2.5} />
+            ))}
+
+            {(search || difficulty || foodCategory || dietType) && (
+              <button
+                onClick={() => { setSearch(''); setDifficulty(''); setFoodCategory(''); setDietType(''); setPage(1); }}
+                className="shrink-0 bg-transparent text-[#e74c3c] border-2 border-[#e74c3c] rounded-[30px] p-[10px_20px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e74c3c] hover:text-white shadow-sm"
+              >
+                Clear Filters
               </button>
-            </div>
-            
-            <div className="flex justify-center gap-[8px] mt-[15px] md:mt-[12px] md:gap-[6px]">
-              {filterSections.map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-[12px] h-[12px] rounded-full border-none cursor-pointer transition-all duration-300 md:w-[10px] md:h-[10px] ${index === currentFilterSection ? 'bg-[#ff6600] scale-125' : 'bg-[#ddd] hover:bg-[#ff6600] hover:scale-[1.2]'}`}
-                  onClick={() => setCurrentFilterSection(index)}
-                />
-              ))}
-            </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-[20px] justify-center items-stretch content-start">
+          <div 
+            className="flex flex-wrap gap-[20px] justify-center items-stretch content-start"
+            onTouchStart={handleAllRecipesTouchStart}
+            onTouchMove={handleAllRecipesTouchMove}
+            onTouchEnd={handleAllRecipesTouchEnd}
+          >
             {recipes.length > 0 ? (
               recipes.map((recipe) => (
               <div key={recipe.recipe_id} className={cardClasses} onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
@@ -370,17 +372,35 @@ const Home = () => {
             )}
           </div>
 
-          <div className="mt-[20px] flex items-center gap-[10px] justify-center flex-wrap">
-            {Array.from({ length: totalPages }, (_, i) => (
+          {totalPages > 1 && (
+            <div className="mt-[40px] flex items-center gap-[15px] justify-center w-full">
               <button
-                key={i + 1}
-                onClick={() => setPage(i + 1)}
-                className={`py-[8px] px-[12px] cursor-pointer text-white border-none rounded-[5px] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${page === i + 1 ? 'bg-[#d62828]' : 'bg-[#ff6600] hover:bg-[#e55a00]'}`}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="w-[40px] h-[40px] rounded-full flex items-center justify-center bg-transparent text-[#ff6600] border-none transition-all duration-300 hover:text-[#d65a00] hover:scale-125 disabled:opacity-30 disabled:hover:scale-100 cursor-pointer"
               >
-                {i + 1}
+                <ChevronLeft size={32} strokeWidth={2.5} />
               </button>
-            ))}
-          </div>
+              
+              <div className="flex gap-[8px] items-center">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-[12px] h-[12px] rounded-full border-none cursor-pointer transition-all duration-300 ${page === i + 1 ? 'bg-gradient-to-br from-[#ff6600] to-[#ff8533] scale-125 shadow-[0_2px_6px_rgba(255,102,0,0.4)]' : 'bg-[#ddd] hover:bg-[#ff6600]/60 hover:scale-110'}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="w-[40px] h-[40px] rounded-full flex items-center justify-center bg-transparent text-[#ff6600] border-none transition-all duration-300 hover:text-[#d65a00] hover:scale-125 disabled:opacity-30 disabled:hover:scale-100 cursor-pointer"
+              >
+                <ChevronRight size={32} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

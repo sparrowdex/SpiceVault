@@ -19,6 +19,10 @@ model User {
   reviews       Review[]
   replies       Reply[]
   interactions  Interaction[]
+  followers     Follow[]      @relation("Followers")
+  following     Follow[]      @relation("Following")
+  stories       Story[]
+  articles      Article[]
 
   @@map("user")
 }
@@ -88,4 +92,42 @@ model Interaction {
   user             User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@map("user_interactions")
+}
+
+model Follow {
+  follower_id  Int
+  following_id Int
+  createdAt    DateTime @default(now())
+
+  follower     User @relation("Following", fields: [follower_id], references: [user_id], onDelete: Cascade)
+  following    User @relation("Followers", fields: [following_id], references: [user_id], onDelete: Cascade)
+
+  @@id([follower_id, following_id])
+  @@map("follows")
+}
+
+model Story {
+  story_id   Int      @id @default(autoincrement())
+  image_url  String?
+  content    String?  @db.Text
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime 
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("stories")
+}
+
+model Article {
+  article_id Int      @id @default(autoincrement())
+  title      String
+  category   String
+  image_url  String?
+  content    String   @db.Text
+  read_time  String?  @default("5 min read")
+  createdAt  DateTime @default(now())
+  author_id  Int
+  author     User     @relation(fields: [author_id], references: [user_id], onDelete: Cascade)
+
+  @@map("articles")
 }
