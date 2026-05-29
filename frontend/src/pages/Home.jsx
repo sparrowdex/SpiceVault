@@ -287,7 +287,7 @@ const Home = ({ user }) => {
       {/* Chef Updates / Stories Section (Logged in users only) */}
       {user && (
         <div className="w-full bg-transparent py-[15px] overflow-hidden mb-[10px]">
-          <div className="max-w-[1200px] mx-auto px-[20px]">
+          <div className="max-w-[1400px] mx-auto px-[20px]">
             <h2 className="font-bold text-[1.2rem] text-[#5C4033] mb-[10px] font-['Nostalgia',_serif] pl-[5px]">Chef Updates</h2>
             <div className="flex gap-[15px] overflow-x-auto pb-[5px] snap-x scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex flex-col items-center gap-[6px] shrink-0 snap-start cursor-pointer group" onClick={() => window.location.href = '/profile'}>
@@ -423,7 +423,7 @@ const Home = ({ user }) => {
             />
 
             {filterSections.map((section) => (
-              <div key={section.id} className="relative flex-1 min-w-[100px] md:flex-shrink-0 md:flex-grow-0">
+              <div key={section.id} className="relative flex-1 min-w-[100px] md:flex-none">
                 <select
                   value={section.currentValue}
                   onChange={(e) => {
@@ -537,7 +537,7 @@ const Home = ({ user }) => {
               ) : (
                 <UploadButton
                   endpoint="imageUploader"
-                  onClientUploadComplete={(res) => setStoryFile(res[0].url)}
+                  onClientUploadComplete={(res) => setStoryFile(res[0].ufsUrl || res[0].url)}
                   appearance={{ button: "bg-[#fff5f0] text-[#ff6600] border border-[#ffcc80] rounded-[15px] w-full py-[20px] font-semibold text-[16px] outline-none hover:bg-[#ffe6d6] transition-colors" }}
                   content={{ button: "Upload Photo" }}
                 />

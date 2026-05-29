@@ -11,8 +11,8 @@ const uploadRouter = {
     console.log("Upload complete! File URL:", file.url);
   }),
   mediaUploader: f({
-    image: { maxFileSize: "8MB", maxFileCount: 1 },
-    video: { maxFileSize: "32MB", maxFileCount: 1 },
+    image: { maxFileSize: "8MB", maxFileCount: 5 },
+    video: { maxFileSize: "32MB", maxFileCount: 5 },
   }).onUploadComplete(({ metadata, file }) => {
     console.log("Media Upload complete! File URL:", file.url);
   }),

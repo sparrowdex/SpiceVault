@@ -4,6 +4,7 @@ const Signup = ({ onLogin, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     f_name: '',
     l_name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -47,6 +48,7 @@ const Signup = ({ onLogin, onSwitchToLogin }) => {
         body: JSON.stringify({
           f_name: formData.f_name,
           l_name: formData.l_name,
+          username: formData.username,
           email: formData.email,
           password: formData.password,
           user_type: formData.user_type
@@ -148,6 +150,19 @@ const Signup = ({ onLogin, onSwitchToLogin }) => {
             </div>
           </div>
           
+          <div className={groupClasses}>
+            <label htmlFor="username" className={labelClasses}>Username (Optional)</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="e.g. masterchef99"
+              className={inputClasses}
+            />
+          </div>
+
           <div className={groupClasses}>
             <label htmlFor="email" className={labelClasses}>Email</label>
             <input

@@ -11,6 +11,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import UserProfile from './components/UserProfile';
 import CulinaryFeed from './pages/CulinaryFeed';
+import PublicProfile from './pages/PublicProfile';
 import Settings from './pages/Settings';
 import BackgroundGradient from './components/BackgroundGradient';
 import { Menu, X } from 'lucide-react';
@@ -194,6 +195,7 @@ function App() {
           <Route path="/global-rankings" element={user ? <GlobalRankingsPage user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/popular-recipes" element={<PopularRecipesPage />} />
           <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
+          <Route path="/user/:id" element={<PublicProfile currentUser={user} />} />
           <Route path="/settings" element={user ? <Settings user={user} onUpdate={handleUserUpdate} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
           {/* The route below is likely obsolete as /recipes/:id handles viewing recipes. */}
           {/* <Route path="/viewrecipe" element={<ViewRecipe user={user} />} /> */}

@@ -301,7 +301,7 @@ const AddRecipe = () => {
             <UploadDropzone
               endpoint="imageUploader"
               onClientUploadComplete={(res) => {
-                setFormData({ ...formData, image_url: res[0].url });
+                setFormData({ ...formData, image_url: res[0].ufsUrl || res[0].url });
               }}
               onUploadError={(error) => {
                 alert(`Upload failed: ${error.message}`);

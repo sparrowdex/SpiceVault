@@ -38,6 +38,30 @@ exports.unfollowUser = async (req, res) => {
   }
 };
 
+exports.getRecommendedUsers = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const following = await prisma.follow.findMany({
+      where: { follower_id: userId },
+      select: { following_id: true }
+    });
+    const followingIds = following.map(f => f.following_id);
+    followingIds.push(userId); // Exclude self
+
+    const recommended = await prisma.user.findMany({
+      where: {
+        user_id: { notIn: followingIds },
+        user_type: 'chef' // Highly recommend chefs
+      },
+      take: 10,
+      select: { user_id: true, f_name: true, l_name: true, username: true, user_type: true, profile_picture: true }
+    });
+    res.status(200).json({ success: true, users: recommended });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.getFollowingStatus = async (req, res) => {
   try {
     const follower_id = req.user.userId;
@@ -47,6 +71,61 @@ exports.getFollowingStatus = async (req, res) => {
       where: { follower_id_following_id: { follower_id, following_id } }
     });
     res.status(200).json({ success: true, isFollowing: !!follow });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.getPublicProfile = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId },
+      select: {
+        user_id: true, f_name: true, l_name: true, username: true, user_type: true, profile_picture: true, bio: true, show_stats: true, show_articles: true, show_recipes: true,
+        _count: { select: { followers: true, following: true, recipes: true, feed_posts: true } }
+      }
+    });
+
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+
+    let recipes = [];
+    let articles = [];
+    let stats = null;
+
+    if (user.show_recipes) {
+      recipes = await prisma.recipe.findMany({ where: { user_id: userId }, take: 6, orderBy: { createdAt: 'desc' } });
+    }
+    if (user.show_articles) {
+      articles = await prisma.article.findMany({ where: { author_id: userId }, take: 4, orderBy: { createdAt: 'desc' } });
+    }
+    if (user.show_stats) {
+      const postLikes = await prisma.feedPostLike.count({ where: { post: { user_id: userId } } });
+      const recipeSaves = await prisma.interaction.count({ where: { recipe: { user_id: userId }, interaction_type: 'save' } });
+      stats = { totalPostLikes: postLikes, totalRecipeSaves: recipeSaves };
+    }
+
+    const feed_posts = await prisma.feedPost.findMany({
+      where: { user_id: userId, is_public: true },
+      include: {
+        user: { select: { f_name: true, l_name: true, username: true, profile_picture: true } },
+        recipe: { select: { title: true, image_url: true } },
+        review: { select: { rating: true, review_text: true, recipe: { select: { title: true, image_url: true } } } },
+        likes: true,
+        replies: { include: { user: { select: { f_name: true, l_name: true, username: true, profile_picture: true } } }, orderBy: { createdAt: 'asc' } }
+      },
+      take: 10,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    let isFollowing = false;
+    if (req.query.requesterId) {
+      const follow = await prisma.follow.findUnique({
+        where: { follower_id_following_id: { follower_id: parseInt(req.query.requesterId), following_id: userId } }
+      });
+      isFollowing = !!follow;
+    }
+    res.json({ success: true, profile: user, recipes, articles, stats, feed_posts, isFollowing });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -123,18 +202,51 @@ exports.deleteStory = async (req, res) => {
 
 exports.createFeedPost = async (req, res) => {
   try {
-    const { content, media_url, media_type, recipe_id, review_id } = req.body;
+    const { content, media, is_public, allow_comments, recipe_id, review_id } = req.body;
     const post = await prisma.feedPost.create({
       data: {
         content,
-        media_url,
-        media_type,
+        is_public: is_public !== undefined ? is_public : true,
+        allow_comments: allow_comments !== undefined ? allow_comments : true,
+        media_url: media && media.length > 0 ? JSON.stringify(media) : null,
+        media_type: null,
         recipe_id,
         review_id,
         user_id: req.user.userId
       }
     });
     res.status(201).json({ success: true, post });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.deleteFeedPost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const post = await prisma.feedPost.findUnique({ where: { post_id: postId } });
+    
+    if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+    if (post.user_id !== req.user.userId) return res.status(403).json({ success: false, error: 'Not authorized to delete this post' });
+
+    await prisma.feedPost.delete({ where: { post_id: postId } });
+    res.status(200).json({ success: true, message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.updateFeedPost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const { content, allow_comments } = req.body;
+    const post = await prisma.feedPost.findUnique({ where: { post_id: postId } });
+    
+    if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+    if (post.user_id !== req.user.userId) return res.status(403).json({ success: false, error: 'Not authorized to edit this post' });
+
+    const updatedPost = await prisma.feedPost.update({ where: { post_id: postId }, data: { content, allow_comments: allow_comments !== undefined ? allow_comments : true } });
+    res.status(200).json({ success: true, message: 'Post updated successfully', post: updatedPost });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -151,17 +263,55 @@ exports.getFeed = async (req, res) => {
     followingIds.push(userId); // include own posts
 
     const posts = await prisma.feedPost.findMany({
-      where: { user_id: { in: followingIds } },
+      where: {
+        OR: [
+          { user_id: { in: followingIds } },
+          { is_public: true }
+        ]
+      },
       include: {
-        user: { select: { f_name: true, l_name: true, user_type: true, profile_picture: true } },
+        user: { select: { f_name: true, l_name: true, username: true, user_type: true, profile_picture: true } },
         recipe: { select: { title: true, image_url: true } },
-        review: { select: { rating: true, review_text: true, recipe: { select: { title: true, image_url: true } } } }
+        review: { select: { rating: true, review_text: true, recipe: { select: { title: true, image_url: true } } } },
+        likes: true,
+        replies: { include: { user: { select: { f_name: true, l_name: true, username: true, profile_picture: true } } }, orderBy: { createdAt: 'asc' } }
       },
       orderBy: { createdAt: 'desc' },
       take: 20
     });
 
     res.status(200).json({ success: true, posts });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.toggleLikePost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const userId = req.user.userId;
+    const existingLike = await prisma.feedPostLike.findUnique({ where: { user_id_post_id: { user_id: userId, post_id: postId } } });
+    if (existingLike) {
+      await prisma.feedPostLike.delete({ where: { id: existingLike.id } });
+      return res.status(200).json({ success: true, message: 'Unliked post' });
+    } else {
+      await prisma.feedPostLike.create({ data: { user_id: userId, post_id: postId } });
+      return res.status(201).json({ success: true, message: 'Liked post' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.replyToPost = async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const { content, parent_id } = req.body;
+    const reply = await prisma.feedPostReply.create({
+      data: { content, post_id: postId, user_id: req.user.userId, parent_id: parent_id || null },
+      include: { user: { select: { f_name: true, l_name: true, username: true, profile_picture: true } } }
+    });
+    res.status(201).json({ success: true, reply });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

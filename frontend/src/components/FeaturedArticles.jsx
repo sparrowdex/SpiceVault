@@ -63,7 +63,7 @@ const FeaturedArticles = () => {
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length);
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto mb-[40px] px-[20px] relative group">
+    <div className="w-full max-w-[1400px] mx-auto mb-[40px] px-[20px] relative group">
       <div className="overflow-hidden rounded-[20px] relative h-[600px] md:h-[430px] shadow-[0_8px_30px_rgba(0,0,0,0.15)] bg-[#333]">
         {articles.map((article, index) => (
           <div
