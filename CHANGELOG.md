@@ -2,6 +2,22 @@
 
 All notable changes to the SpiceVault project will be documented in this file.
 
+## [3.0.0] - 2026-05-29: The Social Ecosystem & Mobile Overhaul
+
+### 🌐 Social Ecosystem & Feed
+- **The Culinary Feed:** Built a "Threads-like" social timeline (`/feed`) where users can scroll through updates from chefs they follow.
+- **Rich Media Posts:** Extended the `UploadThing` router to support uploading videos (up to 32MB) alongside images for feed posts.
+- **Automated System Posts:** Injected hooks into the ML and Recipe controllers. The system now automatically generates a post on the Feed whenever a chef publishes a new recipe or a user leaves a 5-star rating, complete with clickable "View Recipe" link cards.
+- **Stories & Articles:** Implemented a horizontal "Chef Updates" (Stories) row for temporary updates, and a gorgeous, massive "Featured Articles" hero slideshow for deep-dive culinary content on the Homepage.
+- **Social Data Layer:** Extended the Prisma Schema with `Follow`, `Story`, `Article`, and `FeedPost` models. Created a dedicated `social.controller.js` to handle following logic, feed fetching, and media uploads.
+
+### 📱 Mobile Responsiveness & UI/UX
+- **Mobile Responsiveness:** Completed a massive overhaul of the app for smartphone viewports. Implemented a sleek, sliding glass-morphism sidebar drawer for mobile navigation. Dynamically scaled down recipe cards, filter buttons, and the "Add Recipe" form for smaller screens.
+- **User Profile & Settings:** Completely modernized the UI. Embedded the **Chef Insights Dashboard** directly into the `UserProfile` as an exclusive tab. Extracted destructive actions (like Account Deletion) out of profile modals and into a brand new, dedicated **Settings** page.
+- **Profile Customization:** Added a new `profile_picture` attribute to users, complete with a drag-and-drop `UploadThing` image uploader in the new Settings page.
+- **User Profile Tab Bar:** Redesigned the layout to use a horizontal scrollable tab bar. Implemented CSS `snap-x` and hidden scrollbars to make the tabs feel like a native mobile swiping experience.
+- **Dynamic Categories:** Replaced hardcoded meal categories with a dynamic database extraction system. The homepage dropdowns and Add Recipe form now automatically populate based on user-created categories, and chefs can type custom categories on the fly with real-time duplication warnings.
+
 ## [2.0.0] - 2026-05-27: The Great Modernization Refactor
 
 This major release focused on modernizing the entire stack, drastically improving developer experience (DX), performance, and maintainability.
@@ -28,15 +44,18 @@ This major release focused on modernizing the entire stack, drastically improvin
   - **Resolution:** Corrected Tailwind responsive classes (swapped `md:flex-col` for `md:flex-row` on the podium container) to ensure a sleek horizontal layout on larger screens.
 - **Problem:** Vite development server crashed with `[PARSE_ERROR] Unterminated regular expression`.
   - **Resolution:** Fixed an edge-case bug in Vite's new blazing-fast OXC parser by swapping escaped single quotes (`\'`) for double quotes (`"`) inside JSX template literals in `Home.jsx`.
+- **Problem:** `GlobalRankingsPage` hid the complete rankings list for Daily/Weekly/Monthly tabs if no rating changes occurred.
+  - **Resolution:** Removed the restrictive frontend conditional rendering, allowing the `LEFT JOIN` backend queries to properly display the current state of the leaderboard regardless of daily activity.
+- **Problem:** Widescreen navbar broke when trying to implement the mobile hamburger menu.
+  - **Resolution:** Decoupled the mobile and desktop navbars into completely separate DOM nodes. Used raw CSS media queries to guarantee the pristine widescreen layout renders flawlessly on desktop without interference from Tailwind's JIT compiler caching.
 
 ### 🎨 UI/UX & Feature Enhancements
 - **Home Page:** Transformed the Popular Recipes section into a seamless, endless auto-sliding carousel. Replaced bulky arrows with sleek `lucide-react` Chevrons, added a "Clear Filters" button, and adjusted grid pagination to 10 items per page for better alignment.
+- **Home Page Filtering:** Replaced the horizontal filter carousel with clean, intuitive dropdowns placed directly next to the search bar for immediate accessibility.
 - **Navigation:** Grouped "Chef Certified", "Global Rankings", and "Popular Recipes" under a sleek new "Discover" dropdown.
 - **Authentication UX:** Added a hard redirect to the homepage upon logout to ensure protected session data is completely cleared from the view.
-- **Chef Insights Dashboard:** Replaced static tips with dynamic "Smart AI Tips" based on actual user metrics, added a visual bar chart for 6-month rating trends, and swapped inconsistent standard emojis for `lucide-react` vector icons.
 - **Recipe Auto-Formatting:** Added a smart text formatter that automatically converts line-broken text in Ingredients and Instructions into beautiful bulleted/numbered lists. Added helpful 'i' tooltips to the Add Recipe form explaining this feature.
 - **View Recipe:** Added client-side pagination (5 per page) and human-readable timestamps to the reviews section. Upgraded the Nutrition block to use stylish, wrapped pill-tags instead of raw stacked text.
-- **User Profile:** Redesigned the layout to use a horizontal scrollable tab bar instead of a vertical stack. Scaled down recipe cards for better grid density.
 - **Add Recipe Form:** Streamlined macronutrient inputs into a single compact horizontal row. Customized the UploadThing dropzone to visually match the SpiceVault branding and recommend a 4:3 aspect ratio. Added an automatic form reset on successful submission.
 - **Recommendations Grid:** Removed descriptions from recommendation cards and truncated long titles to ensure perfectly aligned grid heights, keeping the focus on the Machine Learning insights.
 - **Image Rendering:** Implemented smart image URL parsing across all recipe cards to gracefully render both legacy local files and new UploadThing cloud URLs without broken image tags.

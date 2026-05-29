@@ -26,6 +26,16 @@ exports.createRecipe = async (req, res) => {
     };
 
     const recipe = await prisma.recipe.create({ data: recipeData });
+
+    // Auto-post to the Culinary Feed!
+    await prisma.feedPost.create({
+      data: {
+        user_id: req.user.userId,
+        recipe_id: recipe.recipe_id,
+        content: `I just published a new recipe: ${recipe.title}! Let me know what you think. 👨‍🍳`
+      }
+    });
+
     res.status(201).json({ success: true, recipe, message: 'Recipe created successfully' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -35,6 +45,22 @@ exports.createRecipe = async (req, res) => {
 // Get all recipes
 exports.getAllRecipes = async (req, res) => {
   try {
+    // Dynamic Categories Intercept
+    if (req.query.fetchCategories === 'true') {
+      const categories = await prisma.recipe.findMany({
+        select: { food_category: true },
+        distinct: ['food_category'],
+      });
+      const formattedCategories = categories
+        .map(c => c.food_category)
+        .filter(c => c)
+        .map(c => ({
+          value: c,
+          label: c.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        }));
+      return res.json({ success: true, categories: formattedCategories });
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;

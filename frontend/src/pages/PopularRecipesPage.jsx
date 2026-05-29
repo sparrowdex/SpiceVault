@@ -55,29 +55,29 @@ const PopularRecipesPage = () => {
       ) : recipes.length === 0 ? (
         <div className="text-[#996600] text-[1.2rem] text-center my-[80px] font-['Poppins',_sans-serif]">No popular recipes found.</div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(330px,1fr))] gap-[34px] w-full max-w-[1260px] justify-items-center px-[20px]">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(330px,1fr))] gap-[24px] md:gap-[34px] w-full max-w-[1260px] justify-items-center px-[20px]">
           {recipes.map((recipe) => (
             <div 
               key={recipe.recipe_id} 
-              className="bg-white rounded-[18px] shadow-[0_8px_28px_rgba(255,140,0,0.13)] overflow-hidden w-full max-w-[370px] min-h-[430px] flex flex-col transition-all duration-200 hover:shadow-[0_20px_48px_rgba(255,140,0,0.23)] hover:-translate-y-[7px] hover:scale-[1.014] cursor-pointer"
+              className="bg-white rounded-[18px] shadow-[0_8px_28px_rgba(255,140,0,0.13)] overflow-hidden w-full max-w-full sm:max-w-[370px] min-h-[380px] md:min-h-[430px] flex flex-col transition-all duration-200 hover:shadow-[0_20px_48px_rgba(255,140,0,0.23)] hover:-translate-y-[7px] hover:scale-[1.014] cursor-pointer"
               onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
             >
               <div 
-                className="w-full h-[225px] bg-cover bg-center rounded-t-[18px] relative flex flex-col justify-end"
+                className="w-full h-[180px] md:h-[225px] bg-cover bg-center rounded-t-[18px] relative flex flex-col justify-end"
                 style={{ backgroundImage: `url(${recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`})` }}
               >
                 {getBadge(recipe.avg_rating)}
                 <div className="bg-gradient-to-t from-[rgba(0,0,0,0.6)] to-transparent w-full pt-[21px] px-[20px] pb-[14px] absolute left-0 bottom-0 z-[1] flex flex-col gap-[8px]">
-                  <h3 className="font-['SweetHipster',_cursive] text-[1.6rem] text-[#ffd481] drop-shadow-[0_0_12px_rgba(0,0,0,0.38)] font-semibold m-0 text-left z-[2] overflow-hidden text-ellipsis whitespace-nowrap">
+                  <h3 className="font-['SweetHipster',_cursive] text-[1.4rem] md:text-[1.6rem] text-[#ffd481] drop-shadow-[0_0_12px_rgba(0,0,0,0.38)] font-semibold m-0 text-left z-[2] overflow-hidden text-ellipsis whitespace-nowrap">
                     {recipe.title}
                   </h3>
                 </div>
               </div>
               <div className="p-[20px_26px_10px_26px] m-0 flex flex-col items-start rounded-b-[18px] grow bg-white">
-                <p className="font-['TropicalCalm',_serif] text-[1.13rem] font-medium text-[#b07724] text-left m-0">
+                <p className="font-['TropicalCalm',_serif] text-[1rem] md:text-[1.13rem] font-medium text-[#b07724] text-left m-0">
                   {recipe.chef_name ? `By ${recipe.chef_name}` : 'Community Recipe'}
                 </p>
-                <p className="text-[#555] text-[0.9rem] mt-[10px] line-clamp-3">
+                <p className="text-[#555] text-[0.85rem] md:text-[0.9rem] mt-[10px] line-clamp-3">
                   {recipe.description}
                 </p>
               </div>

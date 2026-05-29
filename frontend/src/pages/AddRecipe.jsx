@@ -26,6 +26,9 @@ const AddRecipe = () => {
 
   const [user, setUser] = useState(null);
   const [isChef, setIsChef] = useState(false);
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -39,10 +42,44 @@ const AddRecipe = () => {
       }));
       setIsChef(parsedUser.user_type === 'chef');
     }
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/recipes?fetchCategories=true');
+      const data = await res.json();
+      if (data.success && data.categories.length > 0) {
+        setDynamicCategories(data.categories);
+      } else {
+        setDynamicCategories([
+          { value: 'main_course', label: 'Main Course' },
+          { value: 'dessert', label: 'Dessert' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCategoryChange = (e) => {
+    if (e.target.value === 'ADD_NEW') {
+      setIsAddingNewCategory(true);
+      setFormData({ ...formData, food_category: '' });
+    } else {
+      setIsAddingNewCategory(false);
+      setFormData({ ...formData, food_category: e.target.value });
+    }
+  };
+
+  const handleNewCategoryChange = (e) => {
+    const val = e.target.value;
+    setNewCategory(val);
+    setFormData({ ...formData, food_category: val.toLowerCase().replace(/\s+/g, '_') });
   };
 
   const handleSubmit = async (e) => {
@@ -109,15 +146,15 @@ const AddRecipe = () => {
     return <p>Please log in to add a recipe.</p>;
   }
 
-  const inputClasses = "px-[15px] py-[12px] border-2 border-[#e0e0e0] rounded-[10px] text-[15px] transition-all duration-300 bg-white font-['Poppins',_sans-serif] text-[#333] focus:outline-none focus:border-[#ff6600] focus:shadow-[0_0_0_3px_rgba(255,102,0,0.1)] focus:-translate-y-[1px]";
-  const labelClasses = "m-0 mb-2 font-semibold text-[#ff6600] text-[1.15rem] font-['Nostalgia',_serif] tracking-[0.02em]";
-  const textareaClasses = `${inputClasses} resize-y h-[120px] leading-relaxed`;
+  const inputClasses = "px-[10px] py-[8px] md:px-[15px] md:py-[12px] border-2 border-[#e0e0e0] rounded-[8px] md:rounded-[10px] text-[13px] md:text-[15px] transition-all duration-300 bg-white font-['Poppins',_sans-serif] text-[#333] focus:outline-none focus:border-[#ff6600] focus:shadow-[0_0_0_3px_rgba(255,102,0,0.1)] focus:-translate-y-[1px]";
+  const labelClasses = "m-0 mb-1 md:mb-2 font-semibold text-[#ff6600] text-[0.95rem] md:text-[1.15rem] font-['Nostalgia',_serif] tracking-[0.02em]";
+  const textareaClasses = `${inputClasses} resize-y h-[80px] md:h-[120px] leading-relaxed`;
 
   if (!isChef) {
     return (
-      <div className="flex justify-center items-center min-h-[80vh] p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
-        <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-10 px-12 rounded-[20px] shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
-          <h2 className="text-center mb-[30px] text-[#ff6600] text-[2.2rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['ElegantWomanDemo',_cursive]">Add a New Recipe</h2>
+      <div className="flex justify-center items-center min-h-[70vh] md:min-h-[80vh] p-3 md:p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
+        <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-6 px-4 md:py-10 md:px-12 rounded-[15px] md:rounded-[20px] shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
+          <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[1.6rem] md:text-[2.2rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['ElegantWomanDemo',_cursive]">Add a New Recipe</h2>
           <p>You need to have a chef account to add a recipe. You can become a chef from your profile page.</p>
         </div>
       </div>
@@ -125,10 +162,10 @@ const AddRecipe = () => {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-[80vh] p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
-      <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-10 px-12 rounded-[20px] shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
-        <h2 className="text-center mb-[30px] text-[#ff6600] text-[2.2rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['ElegantWomanDemo',_cursive]">Add a New Recipe</h2>
-        <form className="flex flex-col gap-[15px]" onSubmit={handleSubmit}>
+    <div className="flex justify-center items-center min-h-[70vh] md:min-h-[80vh] p-3 md:p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
+      <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-6 px-4 md:py-10 md:px-12 rounded-[15px] md:rounded-[20px] shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
+        <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[1.6rem] md:text-[2.2rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['ElegantWomanDemo',_cursive]">Add a New Recipe</h2>
+        <form className="flex flex-col gap-[10px] md:gap-[15px]" onSubmit={handleSubmit}>
           <label className={labelClasses}>Recipe Title</label>
           <input className={inputClasses} type="text" name="title" value={formData.title} onChange={handleChange} required />
 
@@ -168,24 +205,45 @@ const AddRecipe = () => {
           </select>
 
           <label className={labelClasses}>Food Category</label>
-          <select className={inputClasses} name="food_category" value={formData.food_category} onChange={handleChange}>
-            <option value="main_course">Main Course</option>
-            <option value="appetizer">Appetizer</option>
-            <option value="dessert">Dessert</option>
-            <option value="breakfast">Breakfast</option>
-            <option value="italian">Italian</option>
-            <option value="asian">Asian</option>
-            <option value="mexican">Mexican</option>
-            <option value="healthy">Healthy</option>
-            <option value="comfort_food">Comfort Food</option>
-            <option value="lunch">Lunch</option>
-            <option value="dinner">Dinner</option>
-            <option value="snack">Snack</option>
-            <option value="beverage">Beverage</option>
-            <option value="soup">Soup</option>
-            <option value="salad">Salad</option>
-            <option value="side_dish">Side Dish</option>
-          </select>
+          {isAddingNewCategory ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input 
+                  className={`${inputClasses} flex-1`} 
+                  type="text" 
+                  placeholder="Enter new category name (e.g. Seafood)" 
+                  value={newCategory} 
+                  onChange={handleNewCategoryChange} 
+                  required 
+                />
+                <button 
+                  type="button" 
+                  className="bg-gray-200 text-gray-700 px-4 rounded-xl font-semibold hover:bg-gray-300 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setIsAddingNewCategory(false);
+                    setNewCategory('');
+                    setFormData({ ...formData, food_category: dynamicCategories[0]?.value || 'main_course' });
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+              {newCategory && dynamicCategories.find(c => c.value === formData.food_category || c.label.toLowerCase() === newCategory.toLowerCase()) && (
+                <span className="text-orange-500 text-sm mt-[-4px] ml-1">This category already exists in the list!</span>
+              )}
+            </div>
+          ) : (
+            <select className={inputClasses} name="food_category" value={formData.food_category} onChange={handleCategoryChange}>
+              {dynamicCategories.length > 0 ? (
+                dynamicCategories.map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))
+              ) : (
+                <option value="main_course">Main Course</option>
+              )}
+              <option value="ADD_NEW" className="font-bold text-[#ff6600]">+ Add New Category</option>
+            </select>
+          )}
 
           <label className={labelClasses}>Diet Type</label>
           <select className={inputClasses} name="diet_type" value={formData.diet_type} onChange={handleChange}>
@@ -203,7 +261,7 @@ const AddRecipe = () => {
 
           <div>
             <label className={labelClasses}>Nutrition Information</label>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-[10px] mt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-[10px] mt-1">
               <div className="flex flex-col">
                 <span className="text-[0.85rem] text-[#666] mb-[4px] ml-[5px] font-medium">Calories</span>
                 <input className={inputClasses} type="number" name="calories" value={formData.calories} onChange={handleChange} placeholder="kcal" />
@@ -229,7 +287,7 @@ const AddRecipe = () => {
 
           <label className={labelClasses}>Recipe Image</label>
           {formData.image_url ? (
-            <div className="relative w-full h-[200px] rounded-[10px] overflow-hidden border-2 border-[#ff6600]">
+            <div className="relative w-full h-[180px] md:h-[200px] rounded-[10px] overflow-hidden border-2 border-[#ff6600]">
               <img src={formData.image_url} alt="Recipe preview" className="w-full h-full object-cover" />
               <button 
                 type="button" 
@@ -252,16 +310,16 @@ const AddRecipe = () => {
                 allowedContent: "Image up to 4MB (4:3 aspect ratio recommended)"
               }}
               appearance={{
-                container: "border-2 border-dashed border-[#ff6600] bg-gradient-to-b from-[#fff5f0] to-white rounded-[12px] py-[20px] px-[15px] h-[220px] cursor-pointer transition-all duration-300 hover:border-[#e55a00] hover:bg-[#fff0e6]",
+                    container: "border-2 border-dashed border-[#ff6600] bg-gradient-to-b from-[#fff5f0] to-white rounded-[12px] py-[15px] px-[10px] md:py-[20px] md:px-[15px] h-[180px] md:h-[220px] cursor-pointer transition-all duration-300 hover:border-[#e55a00] hover:bg-[#fff0e6]",
                 uploadIcon: "text-[#ff6600] w-[45px] h-[45px] mb-[10px]",
                 label: "text-[#333] font-semibold text-[1.1rem] hover:text-[#ff6600] transition-colors",
                 allowedContent: "text-[#888] text-[0.85rem] mt-[5px]",
-                button: "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white text-[0.9rem] font-semibold py-[8px] px-[16px] rounded-[8px] mt-[15px] shadow-[0_2px_8px_rgba(255,102,0,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(255,102,0,0.4)]"
+                    button: "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white text-[0.8rem] md:text-[0.9rem] font-semibold py-[6px] px-[12px] md:py-[8px] md:px-[16px] rounded-[8px] mt-[10px] md:mt-[15px] shadow-[0_2px_8px_rgba(255,102,0,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(255,102,0,0.4)]"
               }}
             />
           )}
 
-          <button className="mt-[30px] bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white py-[15px] px-[30px] border-none rounded-[12px] cursor-pointer text-[18px] font-semibold transition-all duration-300 shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:bg-gradient-to-br hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] active:translate-y-0" type="submit">Add Recipe</button>
+          <button className="mt-[20px] md:mt-[30px] bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white py-[12px] md:py-[15px] px-[30px] border-none rounded-[12px] cursor-pointer text-[16px] md:text-[18px] font-semibold transition-all duration-300 shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:bg-gradient-to-br hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] active:translate-y-0" type="submit">Add Recipe</button>
         </form>
       </div>
     </div>

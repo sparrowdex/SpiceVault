@@ -4,14 +4,16 @@ import Home from './pages/Home';
 import AddRecipe from './pages/AddRecipe';
 import Recommendations from './pages/Recommendations';
 import ChefCertifiedRecipesPage from './pages/ChefCertifiedRecipes';
-import ChefInsightsPage from './pages/ChefInsightsPage';
 import GlobalRankingsPage from './pages/GlobalRankingsPage';
 import PopularRecipesPage from './pages/PopularRecipesPage';
 import ViewRecipe from './pages/ViewRecipe';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import UserProfile from './components/UserProfile';
+import CulinaryFeed from './pages/CulinaryFeed';
+import Settings from './pages/Settings';
 import BackgroundGradient from './components/BackgroundGradient';
+import { Menu, X } from 'lucide-react';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -37,6 +39,12 @@ function App() {
     setUser(userData);
   };
 
+  const handleUserUpdate = (updatedFields) => {
+    const newUser = { ...user, ...updatedFields };
+    setUser(newUser);
+    localStorage.setItem('user', JSON.stringify(newUser));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -52,10 +60,10 @@ function App() {
     }`;
 
   const getSidebarLinkClass = ({ isActive }) =>
-    `text-[#ff6600] no-underline font-semibold py-[10px] px-0 border-none bg-transparent text-left cursor-pointer relative transition-all duration-300 block w-max ${
+    `text-gray-700 no-underline font-semibold py-[12px] px-[15px] border border-transparent bg-transparent text-left cursor-pointer rounded-xl transition-all duration-300 block w-full text-[1.05rem] hover:bg-orange-50 hover:text-orange-500 hover:border-orange-100 ${
       isActive
-        ? 'pb-[8px] after:content-[""] after:absolute after:left-0 after:bottom-0 after:h-[3px] after:w-full after:bg-[#ff6600] after:rounded-[4px] after:transition-all after:duration-300'
-        : 'after:content-[""] after:absolute after:left-0 after:bottom-0 after:h-[3px] after:w-0 after:bg-[#ff6600] after:rounded-[4px] after:transition-all after:duration-300'
+        ? 'bg-orange-100 text-orange-600 border-orange-200 shadow-sm'
+        : ''
     }`;
 
   const dropdownItemClass = ({ isActive }) => `block px-[20px] py-[12px] font-medium transition-colors duration-200 border-b border-gray-100 last:border-none no-underline ${isActive ? 'bg-[#fff5f0] text-[#ff6600]' : 'text-[#555] hover:bg-[#fff5f0] hover:text-[#ff6600]'}`;
@@ -69,15 +77,26 @@ function App() {
   return (
     <BackgroundGradient>
       <Router>
-        <div className="flex flex-wrap items-center justify-between px-[30px] py-[20px] mb-[20px] font-['Poppins',_sans-serif] gap-[15px] text-left md:flex-row md:gap-0">
+        <style>{`
+          .desktop-navbar { display: none !important; }
+          .mobile-navbar { display: flex !important; }
+          @media (min-width: 768px) {
+            .desktop-navbar { display: flex !important; }
+            .mobile-navbar { display: none !important; }
+          }
+        `}</style>
+
+        {/* DESKTOP NAVBAR (Restored Original Layout) */}
+        <div className="desktop-navbar flex-wrap items-center justify-between px-[30px] py-[20px] mb-[20px] font-['Poppins',_sans-serif] gap-[15px] text-left md:flex-row md:gap-0">
           <h1 
-            className="text-[2.5rem] mx-[20px] font-bold font-['ElegantWomanDemo',_'Poppins',_sans-serif] bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent cursor-pointer md:cursor-auto order-0 shrink-0" 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="text-[2.5rem] mx-[20px] font-bold font-['ElegantWomanDemo',_'Poppins',_sans-serif] bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent cursor-pointer md:cursor-auto order-0 shrink-0"
+            onClick={() => window.location.href = '/'}
           >
             Spice Vault
           </h1>
           <nav className="flex flex-wrap items-center gap-[10px] md:gap-[20px] order-0 shrink-0">
             {user && <NavLink to="/" className={getNavLinkClass}>Home</NavLink>}
+            {user && <NavLink to="/feed" className={getNavLinkClass}>Feed</NavLink>}
             {user && <NavLink to="/addrecipe" className={getNavLinkClass}>Add Recipe</NavLink>}
             {user && <NavLink to="/recommendations" className={getNavLinkClass}>Recommendations</NavLink>}
             {user && (
@@ -90,7 +109,6 @@ function App() {
                 </div>
               </div>
             )}
-            {isChef && <NavLink to="/chef-insights" className={getNavLinkClass}>Chef Insights</NavLink>}
           </nav>
           <nav className="flex flex-wrap order-2 items-center gap-[10px] md:gap-[15px]">
             {user ? (
@@ -108,47 +126,75 @@ function App() {
             )}
           </nav>
         </div>
+
+        {/* MOBILE NAVBAR */}
+        <div className="mobile-navbar items-center justify-between px-[15px] py-[12px] mb-[10px] font-['Poppins',_sans-serif]">
+          <div className="flex items-center gap-[10px]">
+            <button 
+              className="bg-transparent border-none text-[#ff6600] flex items-center justify-center p-[5px] cursor-pointer hover:scale-110 transition-transform"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={28} strokeWidth={2.5} />
+            </button>
+            <h1 
+              className="text-[1.8rem] sm:text-[2rem] font-bold font-['ElegantWomanDemo',_'Poppins',_sans-serif] bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent cursor-pointer m-0" 
+              onClick={() => window.location.href = '/'}
+            >
+              Spice Vault
+            </h1>
+          </div>
+        </div>
+
         {isSidebarOpen && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black/50 z-[1000] flex justify-start md:hidden">
-            <div className="bg-white w-[250px] h-full p-[20px] flex flex-col gap-[15px] shadow-[2px_0_5px_rgba(0,0,0,0.3)] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex justify-start md:hidden transition-all duration-300">
+            <div className="bg-white w-[85%] max-w-[320px] h-full p-[20px_25px] flex flex-col gap-[10px] shadow-2xl overflow-y-auto transform transition-transform duration-300 animate-[slideIn_0.3s_ease-out]">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent m-0 font-['Nostalgia',_serif] tracking-wide">SpiceVault</h2>
+                <button onClick={() => setIsSidebarOpen(false)} className="bg-gray-50 p-2 rounded-full text-gray-500 hover:text-orange-500 hover:bg-orange-50 transition-colors cursor-pointer">
+                  <X size={22} strokeWidth={2.5} />
+                </button>
+              </div>
               {user && (
                 <>
                   <NavLink to="/" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Home</NavLink>
+                  <NavLink to="/feed" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Feed</NavLink>
                   <NavLink to="/addrecipe" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Add Recipe</NavLink>
                   <NavLink to="/recommendations" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Recommendations</NavLink>
-                  <div className="text-[#ff6600] font-bold text-[1.1rem] mt-[10px] border-b-2 border-[#ff6600]/20 pb-[5px]">Discover</div>
+                  <div className="text-orange-400 font-bold text-[0.8rem] mt-[15px] mb-[5px] px-[15px] uppercase tracking-wider">Discover</div>
                   <NavLink to="/chef-certified-recipes" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Chef Certified</NavLink>
                   <NavLink to="/global-rankings" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Global Rankings</NavLink>
                   <NavLink to="/popular-recipes" onClick={() => setIsSidebarOpen(false)} className={`${getSidebarLinkClass} pl-[15px]`}>Popular Recipes</NavLink>
-                  {isChef && <NavLink to="/chef-insights" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Chef Insights</NavLink>}
                 </>
               )}
+              <div className="mt-auto pt-6 border-t border-gray-100 flex flex-col gap-3">
               {user ? (
                 <>
-                  <NavLink to="/profile" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>Profile</NavLink>
-                  <button onClick={() => { handleLogout(); setIsSidebarOpen(false); }} className={`${logoutBtnClasses} w-max`}>
+                  <NavLink to="/profile" onClick={() => setIsSidebarOpen(false)} className={getSidebarLinkClass}>My Profile</NavLink>
+                  <button onClick={() => { handleLogout(); setIsSidebarOpen(false); }} className="w-full bg-red-50 text-red-500 font-bold py-3.5 rounded-xl hover:bg-red-100 transition-colors text-center border-none cursor-pointer">
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <NavLink to="/login" onClick={() => setIsSidebarOpen(false)} className={`${authBtnClasses} w-max`}>Login</NavLink>
-                  <NavLink to="/signup" onClick={() => setIsSidebarOpen(false)} className={`${authBtnClasses} w-max`}>Sign Up</NavLink>
+                  <NavLink to="/login" onClick={() => setIsSidebarOpen(false)} className="w-full bg-orange-100 text-orange-600 font-bold py-3.5 text-center rounded-xl hover:bg-orange-200 transition-colors no-underline">Login</NavLink>
+                  <NavLink to="/signup" onClick={() => setIsSidebarOpen(false)} className="w-full bg-gradient-to-r from-orange-500 to-[#ff8533] text-white font-bold py-3.5 text-center rounded-xl hover:from-orange-600 hover:to-[#e55a00] transition-colors no-underline shadow-md">Sign Up</NavLink>
                 </>
               )}
+              </div>
             </div>
           </div>
         )}
 
         <Routes>
           <Route path="/" element={<Home user={user} />} />
+          <Route path="/feed" element={user ? <CulinaryFeed user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/addrecipe" element={user ? <AddRecipe /> : <Navigate to="/login" replace />} />
           <Route path="/recommendations" element={user ? <Recommendations user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/chef-certified-recipes" element={<ChefCertifiedRecipesPage />} />
-          <Route path="/chef-insights" element={user && isChef ? <ChefInsightsPage user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/global-rankings" element={user ? <GlobalRankingsPage user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/popular-recipes" element={<PopularRecipesPage />} />
           <Route path="/profile" element={user ? <UserProfile user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
+          <Route path="/settings" element={user ? <Settings user={user} onUpdate={handleUserUpdate} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
           {/* The route below is likely obsolete as /recipes/:id handles viewing recipes. */}
           {/* <Route path="/viewrecipe" element={<ViewRecipe user={user} />} /> */}
           <Route path="/recipes/:id" element={<ViewRecipe user={user} />} />

@@ -19,6 +19,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { createRouteHandler } = require("uploadthing/express");
 const { uploadRouter } = require("./uploadthingRouter");
+const logger = require('./utils/logger');
+const cron = require('node-cron');
 
 const app = express();
 // const PORT = process.env.PORT || 3306;
@@ -72,6 +74,37 @@ const authRoutes = require('./routes/auth.routes');
 app.use('/api/auth', authRoutes);
 const userInteractionRoutes = require('./routes/userInteraction.routes');
 app.use('/api/user-interactions', userInteractionRoutes);
+const socialRoutes = require('./routes/social.routes');
+app.use('/api/social', socialRoutes);
+
+// Global Error Handler Middleware
+app.use((err, req, res, next) => {
+  logger.logError(err, req);
+  logger.sendErrorResponse(res, err);
+});
+
+// Catch Uncaught Exceptions & Unhandled Rejections
+process.on('uncaughtException', (err) => {
+  logger.logError(err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.logError(reason);
+});
+
+// ==========================================
+// CRON JOBS (Background Tasks)
+// ==========================================
+// Runs every hour to permanently sweep and delete expired 24h stories
+cron.schedule('0 * * * *', async () => {
+  try {
+    const result = await prisma.story.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+    if (result.count > 0) console.log(`🧹 CRON: Permanently deleted ${result.count} expired 24h stories from the database.`);
+  } catch (error) {
+    logger.logError(error);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

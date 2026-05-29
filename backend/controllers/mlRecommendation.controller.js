@@ -29,6 +29,19 @@ exports.addRating = async (req, res) => {
         data: { user_id: parseInt(user_id), recipe_id: parseInt(recipe_id), rating: parseInt(rating), review_text },
         include: { user: { select: { user_id: true, f_name: true, l_name: true, user_type: true } } }
       });
+
+      // Auto-post to the Culinary Feed if it's a 5-star rating!
+      if (parseInt(rating) === 5) {
+        await prisma.feedPost.create({
+          data: {
+            user_id: parseInt(user_id),
+            review_id: newRating.review_id,
+            recipe_id: parseInt(recipe_id),
+            content: `I just gave 5 stars to this amazing recipe! ⭐⭐⭐⭐⭐`
+          }
+        });
+      }
+
       res.status(201).json({ success: true, message: 'Rating added successfully', rating: newRating });
     }
   } catch (error) {

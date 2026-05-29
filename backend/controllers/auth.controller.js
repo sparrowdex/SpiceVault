@@ -41,7 +41,8 @@ exports.register = async (req, res) => {
         f_name: newUser.f_name,
         l_name: newUser.l_name,
         email: newUser.email,
-        user_type: newUser.user_type
+        user_type: newUser.user_type,
+        profile_picture: newUser.profile_picture
       },
       token
     });
@@ -89,7 +90,8 @@ exports.login = async (req, res) => {
         f_name: user.f_name,
         l_name: user.l_name,
         email: user.email,
-        user_type: user.user_type
+        user_type: user.user_type,
+        profile_picture: user.profile_picture
       },
       token
     });
@@ -110,7 +112,8 @@ exports.getProfile = async (req, res) => {
         f_name: true,
         l_name: true,
         email: true,
-        user_type: true
+        user_type: true,
+        profile_picture: true
       }
     });
 
