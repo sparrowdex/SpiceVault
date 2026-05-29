@@ -10,6 +10,16 @@ if (!process.env.DATABASE_URL && process.env.DB_USER) {
   process.env.DATABASE_URL = `mysql://${user}:${pass}@${host}:${port}/${db}`;
 }
 
+// Automatically push the database schema on startup
+const { execSync } = require('child_process');
+try {
+  console.log('🔄 Syncing database schema...');
+  execSync('npx prisma db push --accept-data-loss --skip-generate', { stdio: 'inherit', env: process.env });
+  console.log('✅ Database schema synced successfully.');
+} catch (error) {
+  console.error('❌ Failed to sync database schema:', error.message);
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
