@@ -10,6 +10,10 @@ All notable changes to the SpiceVault project will be documented in this file.
 - **Automated System Posts:** Injected hooks into the ML and Recipe controllers. The system now automatically generates a post on the Feed whenever a chef publishes a new recipe or a user leaves a 5-star rating, complete with clickable "View Recipe" link cards.
 - **Stories & Articles:** Implemented a horizontal "Chef Updates" (Stories) row for temporary updates, and a gorgeous, massive "Featured Articles" hero slideshow for deep-dive culinary content on the Homepage.
 - **Social Data Layer:** Extended the Prisma Schema with `Follow`, `Story`, `Article`, and `FeedPost` models. Created a dedicated `social.controller.js` to handle following logic, feed fetching, and media uploads.
+- **Dynamic Featured Articles:** Replaced hardcoded articles with a dynamic database fetch. Added an immersive, full-screen article reader modal to view the full content.
+- **Instagram-Style Story Viewer:** Implemented a full-screen, tap-to-navigate story viewer overlay for both the Homepage and Feed. Added functionality for chefs to delete their own stories.
+- **Automated Story Cleanup:** Added a background `node-cron` job to the Express server that runs hourly to permanently delete stories older than 24 hours from the database to save space.
+- **Profile Picture Fallbacks:** Fixed broken image links across the social feed and stories by properly parsing local URLs and implementing a dynamic initial-based fallback for users without custom profile pictures.
 
 ### 📱 Mobile Responsiveness & UI/UX
 - **Mobile Responsiveness:** Completed a massive overhaul of the app for smartphone viewports. Implemented a sleek, sliding glass-morphism sidebar drawer for mobile navigation. Dynamically scaled down recipe cards, filter buttons, and the "Add Recipe" form for smaller screens.
@@ -17,6 +21,10 @@ All notable changes to the SpiceVault project will be documented in this file.
 - **Profile Customization:** Added a new `profile_picture` attribute to users, complete with a drag-and-drop `UploadThing` image uploader in the new Settings page.
 - **User Profile Tab Bar:** Redesigned the layout to use a horizontal scrollable tab bar. Implemented CSS `snap-x` and hidden scrollbars to make the tabs feel like a native mobile swiping experience.
 - **Dynamic Categories:** Replaced hardcoded meal categories with a dynamic database extraction system. The homepage dropdowns and Add Recipe form now automatically populate based on user-created categories, and chefs can type custom categories on the fly with real-time duplication warnings.
+- **Upload UI Clarification:** Explicitly displayed the "Max file size: 4MB" limit on the Profile Picture uploader to prevent user confusion.
+
+### 🔒 Security & Operations
+- **Comprehensive Error Logging:** Built a professional error logging system (`utils/logger.js`) that writes detailed stack traces to a local `error.log` file for developers, while safely sanitizing error responses sent to users in production to prevent sensitive data leaks.
 
 ## [2.0.0] - 2026-05-27: The Great Modernization Refactor
 
