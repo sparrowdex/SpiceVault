@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --name spicevault-backend",
+    "start": "npx prisma db push && node index.js",
+    "postinstall": "prisma generate",
     "dev": "nodemon index.js",
     "prod:start": "pm2 start index.js --name spicevault-backend",
     "prod:stop": "pm2 stop spicevault-backend",
