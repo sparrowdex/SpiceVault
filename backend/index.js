@@ -23,11 +23,15 @@ const logger = require('./utils/logger');
 const cron = require('node-cron');
 
 const app = express();
-// const PORT = process.env.PORT || 3306;
+
+// ✅ FIX 1: Trust Hugging Face's reverse proxy headers for express-rate-limit
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 5000;
 
+// ✅ FIX 2: Allow your Vercel frontend alongside your local environment
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", /\.vercel\.app$/], // Accepts localhost and any Vercel deployment URL
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
@@ -45,7 +49,7 @@ app.use(limiter);
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(bodyParser.json({ limit: '10mb' })); // Limit payload size
-app.use(express.json({ limit: '10mb' })); // ✅ Enables JSON parsing for incoming requests
+app.use(express.json({ limit: '10mb' })); // Enables JSON parsing for incoming requests
 
 // Test Prisma DB connection
 prisma.$connect()
@@ -107,5 +111,5 @@ cron.schedule('0 * * * *', async () => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });

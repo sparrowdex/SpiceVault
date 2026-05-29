@@ -13,7 +13,7 @@ const GlobalRankingsPage = ({ user }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/ml/global-rankings?period=${selectedPeriod}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/global-rankings?period=${selectedPeriod}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -116,7 +116,7 @@ const GlobalRankingsPage = ({ user }) => {
                     onClick={() => handleRecipeClick(topThree[1].recipe_id)}
                   >
                     <img
-                      src={topThree[1].image_url?.startsWith('http') ? topThree[1].image_url : `http://localhost:5000/images/${topThree[1].image_url}`}
+                      src={topThree[1].image_url?.startsWith('http') ? topThree[1].image_url : `${import.meta.env.VITE_API_URL}/images/${topThree[1].image_url}`}
                       alt={topThree[1].title}
                       className="w-full h-[110px] md:h-[180px] object-cover"
                     />
@@ -140,7 +140,7 @@ const GlobalRankingsPage = ({ user }) => {
                     onClick={() => handleRecipeClick(topThree[0].recipe_id)}
                   >
                     <img
-                      src={topThree[0].image_url?.startsWith('http') ? topThree[0].image_url : `http://localhost:5000/images/${topThree[0].image_url}`}
+                      src={topThree[0].image_url?.startsWith('http') ? topThree[0].image_url : `${import.meta.env.VITE_API_URL}/images/${topThree[0].image_url}`}
                       alt={topThree[0].title}
                       className="w-full h-[125px] md:h-[200px] object-cover"
                     />
@@ -163,7 +163,7 @@ const GlobalRankingsPage = ({ user }) => {
                     onClick={() => handleRecipeClick(topThree[2].recipe_id)}
                   >
                     <img
-                      src={topThree[2].image_url?.startsWith('http') ? topThree[2].image_url : `http://localhost:5000/images/${topThree[2].image_url}`}
+                      src={topThree[2].image_url?.startsWith('http') ? topThree[2].image_url : `${import.meta.env.VITE_API_URL}/images/${topThree[2].image_url}`}
                       alt={topThree[2].title}
                       className="w-full h-[100px] md:h-[160px] object-cover"
                     />
@@ -192,7 +192,7 @@ const GlobalRankingsPage = ({ user }) => {
                 >
                   <div className="text-[1.2rem] font-bold text-[#666] min-w-[30px] text-center mr-[15px]">{index + 4}</div>
                   <img
-                    src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+                    src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
                     alt={recipe.title}
                     className="w-[50px] h-[50px] rounded-[6px] object-cover mr-[15px]"
                   />

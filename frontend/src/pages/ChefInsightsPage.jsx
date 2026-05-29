@@ -14,7 +14,7 @@ const ChefInsightsPage = ({ user }) => {
   const fetchUserStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/ml/chef-stats/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/chef-stats/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -32,7 +32,7 @@ const ChefInsightsPage = ({ user }) => {
   const fetchPopularRecipes = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/recipes/popular/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/popular/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -50,7 +50,7 @@ const ChefInsightsPage = ({ user }) => {
   const fetchReviews = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/recipes/reviews/chef/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/reviews/chef/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -249,7 +249,7 @@ const ChefInsightsPage = ({ user }) => {
                     onClick={() => handleRecipeClick(recipe.recipe_id)}
                   >
                     <img
-                      src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+                      src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
                       alt={recipe.title}
                       className="w-full h-[180px] object-cover border-b border-gray-100"
                     />

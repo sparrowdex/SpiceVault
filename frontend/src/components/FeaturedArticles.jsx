@@ -39,7 +39,7 @@ const FeaturedArticles = () => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/social/articles/featured?limit=5');
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/articles/featured?limit=5`);
         const data = await res.json();
         if (data.success && data.articles.length > 0) {
           setArticles(data.articles);
@@ -71,7 +71,7 @@ const FeaturedArticles = () => {
             className={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ease-in-out cursor-pointer ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
             onClick={() => setSelectedArticle(article)}
           >
-            <img src={article.image_url?.startsWith('http') ? article.image_url : `http://localhost:5000/images/${article.image_url}`} alt={article.title} className="w-full h-full object-cover opacity-80" />
+            <img src={article.image_url?.startsWith('http') ? article.image_url : `${import.meta.env.VITE_API_URL}/images/${article.image_url}`} alt={article.title} className="w-full h-full object-cover opacity-80" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-[40px] md:p-[20px]">
               <span className="text-[#ff6600] font-bold text-[14px] uppercase tracking-wider mb-[8px]">{article.category} • {article.read_time} • By {article.author?.f_name}</span>
               <h2 className="text-white text-[2.5rem] md:text-[1.8rem] font-bold leading-tight max-w-[800px] font-['Nostalgia',_serif] m-0 drop-shadow-md">{article.title}</h2>
@@ -100,7 +100,7 @@ const FeaturedArticles = () => {
             </button>
             
             <div className="w-full h-[200px] md:h-[300px] shrink-0 relative">
-              <img src={selectedArticle.image_url?.startsWith('http') ? selectedArticle.image_url : `http://localhost:5000/images/${selectedArticle.image_url}`} alt={selectedArticle.title} className="w-full h-full object-cover" />
+              <img src={selectedArticle.image_url?.startsWith('http') ? selectedArticle.image_url : `${import.meta.env.VITE_API_URL}/images/${selectedArticle.image_url}`} alt={selectedArticle.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-[20px] md:p-[30px]">
                 <span className="text-[#ff6600] font-bold text-[12px] md:text-[14px] uppercase tracking-wider mb-[5px] md:mb-[8px]">{selectedArticle.category} • {selectedArticle.read_time}</span>
                 <h2 className="text-white text-[1.5rem] md:text-[2.2rem] font-bold leading-tight font-['Nostalgia',_serif] m-0 drop-shadow-md">{selectedArticle.title}</h2>
@@ -111,7 +111,7 @@ const FeaturedArticles = () => {
               <div className="flex items-center gap-[12px] mb-[25px] pb-[20px] border-b border-[#eee]">
                 <div className="w-[45px] h-[45px] rounded-full bg-gradient-to-br from-[#ff6600] to-[#ffcc80] flex items-center justify-center text-white font-bold text-[18px] shadow-sm overflow-hidden">
                   {selectedArticle.author?.profile_picture ? (
-                    <img src={selectedArticle.author.profile_picture.startsWith('http') ? selectedArticle.author.profile_picture : `http://localhost:5000/images/${selectedArticle.author.profile_picture}`} alt={selectedArticle.author.f_name} className="w-full h-full object-cover" />
+                    <img src={selectedArticle.author.profile_picture.startsWith('http') ? selectedArticle.author.profile_picture : `${import.meta.env.VITE_API_URL}/images/${selectedArticle.author.profile_picture}`} alt={selectedArticle.author.f_name} className="w-full h-full object-cover" />
                   ) : (
                     selectedArticle.author?.f_name?.[0] || 'S'
                   )}

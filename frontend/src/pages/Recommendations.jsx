@@ -53,7 +53,7 @@ const Recommendations = ({ user }) => {
         params.append('healthFocus', healthFocus);
       }
 
-      const response = await fetch(`http://localhost:5000/api/ml/recommendations/${user.user_id}?${params.toString()}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/recommendations/${user.user_id}?${params.toString()}`, {
         headers,
         signal: controller.signal
       });
@@ -96,7 +96,7 @@ const Recommendations = ({ user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/ml/ratings', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ const Recommendations = ({ user }) => {
   const handleRecordInteraction = async (recipeId, interactionType) => {
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/ml/interactions', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/ml/interactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -164,7 +164,7 @@ const Recommendations = ({ user }) => {
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        const response = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}`, { headers });
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings/${user.user_id}`, { headers });
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.ratings.length > 0) {
@@ -242,7 +242,7 @@ const Recommendations = ({ user }) => {
             >
               {recipe.image_url && (
                 <img
-                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
                   alt={recipe.title}
                       className="w-full h-[160px] md:h-[200px] object-cover rounded-t-[8px]"
                   onLoad={() => handleRecordInteraction(recipe.recipe_id, 'view')}

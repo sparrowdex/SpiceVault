@@ -11,7 +11,7 @@ const PublicProfile = ({ currentUser }) => {
   const fetchProfile = async () => {
     try {
       const requesterParam = currentUser ? `?requesterId=${currentUser.user_id}` : '';
-      const res = await fetch(`http://localhost:5000/api/social/profile/${id}${requesterParam}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/profile/${id}${requesterParam}`);
       const json = await res.json();
       if (json.success) setData(json);
       else setData({ error: 'User not found' });
@@ -29,7 +29,7 @@ const PublicProfile = ({ currentUser }) => {
       const token = localStorage.getItem('token');
       const method = data.isFollowing ? 'DELETE' : 'POST';
       const endpoint = data.isFollowing ? `unfollow` : `follow`;
-      const res = await fetch(`http://localhost:5000/api/social/${endpoint}/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/${endpoint}/${id}`, {
         method, headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -81,7 +81,7 @@ const PublicProfile = ({ currentUser }) => {
        <div className="bg-white rounded-[20px] p-[30px] shadow-sm border border-[#eee] mb-[20px] flex flex-col md:flex-row items-center md:items-start gap-[20px] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-500/5 to-transparent rounded-bl-full pointer-events-none" />
           <div className="w-[120px] h-[120px] rounded-full overflow-hidden border-4 border-white shadow-md shrink-0 bg-gray-100 flex items-center justify-center z-10">
-            {profile.profile_picture ? <img src={profile.profile_picture.startsWith('http') ? profile.profile_picture : `http://localhost:5000/images/${profile.profile_picture}`} className="w-full h-full object-cover" /> : <User size={50} className="text-gray-400" />}
+            {profile.profile_picture ? <img src={profile.profile_picture.startsWith('http') ? profile.profile_picture : `${import.meta.env.VITE_API_URL}/images/${profile.profile_picture}`} className="w-full h-full object-cover" /> : <User size={50} className="text-gray-400" />}
           </div>
           <div className="flex-1 text-center md:text-left z-10">
             <h1 className="text-[2.2rem] font-bold text-[#333] m-0 leading-tight font-['Nostalgia',_serif]">{profile.f_name} {profile.l_name}</h1>
@@ -131,7 +131,7 @@ const PublicProfile = ({ currentUser }) => {
               <div className="grid grid-cols-2 gap-[15px]">
                 {recipes.map(r => (
                   <div key={r.recipe_id} onClick={() => navigate(`/recipes/${r.recipe_id}`)} className="cursor-pointer group">
-                    <img src={r.image_url?.startsWith('http') ? r.image_url : `http://localhost:5000/images/${r.image_url}`} className="w-full h-[120px] object-cover rounded-[12px] shadow-sm group-hover:opacity-80 transition-opacity" />
+                    <img src={r.image_url?.startsWith('http') ? r.image_url : `${import.meta.env.VITE_API_URL}/images/${r.image_url}`} className="w-full h-[120px] object-cover rounded-[12px] shadow-sm group-hover:opacity-80 transition-opacity" />
                     <h4 className="m-0 mt-[8px] text-[14px] font-semibold text-[#333] truncate">{r.title}</h4>
                   </div>
                 ))}
@@ -146,7 +146,7 @@ const PublicProfile = ({ currentUser }) => {
               <div className="flex flex-col gap-[10px]">
                 {articles.map(a => (
                   <div key={a.article_id} onClick={() => alert('View from feed or homepage!')} className="flex gap-[12px] p-[12px] rounded-[12px] bg-[#f9f9f9] border border-[#eee] cursor-pointer hover:border-[#ffcc80] transition-colors">
-                    <img src={a.image_url?.startsWith('http') ? a.image_url : `http://localhost:5000/images/${a.image_url}`} className="w-[70px] h-[70px] object-cover rounded-[8px] shrink-0" />
+                    <img src={a.image_url?.startsWith('http') ? a.image_url : `${import.meta.env.VITE_API_URL}/images/${a.image_url}`} className="w-[70px] h-[70px] object-cover rounded-[8px] shrink-0" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <h4 className="m-0 text-[14px] font-bold text-[#333] truncate mb-[4px]">{a.title}</h4>
                       <p className="m-0 text-[12px] text-[#ff6600] font-semibold">{a.category} • {a.read_time}</p>
@@ -180,7 +180,7 @@ const PublicProfile = ({ currentUser }) => {
                   
                   {post.recipe && (
                     <div className="border border-[#ffcc80] rounded-[12px] p-[12px] bg-[#fffaf5] flex gap-[15px] items-center cursor-pointer hover:bg-[#fff5f0] transition-colors shadow-sm" onClick={() => navigate(`/recipes/${post.recipe_id}`)}>
-                      <img src={post.recipe.image_url?.startsWith('http') ? post.recipe.image_url : `http://localhost:5000/images/${post.recipe.image_url}`} className="w-[50px] h-[50px] rounded-[8px] object-cover shadow-sm" />
+                      <img src={post.recipe.image_url?.startsWith('http') ? post.recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${post.recipe.image_url}`} className="w-[50px] h-[50px] rounded-[8px] object-cover shadow-sm" />
                       <div className="flex-1">
                         <h4 className="font-bold text-[#333] text-[14px] m-0 mb-[2px]">{post.recipe.title}</h4>
                         <span className="text-[11px] text-[#ff6600] font-bold uppercase tracking-wider">View Recipe →</span>

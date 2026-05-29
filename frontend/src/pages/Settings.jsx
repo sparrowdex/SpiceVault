@@ -60,7 +60,7 @@ const Settings = ({ user, onUpdate, onLogout }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/users/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/${user.user_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(formData)
@@ -214,7 +214,7 @@ const Settings = ({ user, onUpdate, onLogout }) => {
                 onClick={async () => {
                   try {
                     const token = localStorage.getItem('token');
-                    const url = modalType === 'deleteAccount' ? `http://localhost:5000/api/users/${user.user_id}` : 'http://localhost:5000/api/user-interactions/delete-all';
+                    const url = modalType === 'deleteAccount' ? `${import.meta.env.VITE_API_URL}/api/users/${user.user_id}` : `${import.meta.env.VITE_API_URL}/api/user-interactions/delete-all`;
                     const response = await fetch(url, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
                     if (!response.ok) throw new Error((await response.json()).message || 'Failed to process request');
                     showNotification(modalType === 'deleteAccount' ? 'Account deleted successfully.' : 'All interactions deleted successfully.', 'success');

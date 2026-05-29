@@ -12,7 +12,7 @@ const PopularRecipesPage = () => {
       try {
         setLoading(true);
         // Fetch global popular recipes
-        const response = await fetch('http://localhost:5000/api/ml/popular?limit=20');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/popular?limit=20`);
         if (!response.ok) {
           throw new Error('Failed to fetch popular recipes');
         }
@@ -64,7 +64,7 @@ const PopularRecipesPage = () => {
             >
               <div 
                 className="w-full h-[180px] md:h-[225px] bg-cover bg-center rounded-t-[18px] relative flex flex-col justify-end"
-                style={{ backgroundImage: `url(${recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`})` }}
+                style={{ backgroundImage: `url(${recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`})` }}
               >
                 {getBadge(recipe.avg_rating)}
                 <div className="bg-gradient-to-t from-[rgba(0,0,0,0.6)] to-transparent w-full pt-[21px] px-[20px] pb-[14px] absolute left-0 bottom-0 z-[1] flex flex-col gap-[8px]">

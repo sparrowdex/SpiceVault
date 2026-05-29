@@ -18,7 +18,7 @@ const UserProfile = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       // Fetch saved recipes (interactions with type 'save')
-      const savedResponse = await fetch(`http://localhost:5000/api/ml/interactions/${user.user_id}?type=save`, {
+      const savedResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/interactions/${user.user_id}?type=save`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -30,7 +30,7 @@ const UserProfile = ({ user, onLogout }) => {
       }
 
       // Fetch liked recipes (interactions with type 'like')
-      const likedResponse = await fetch(`http://localhost:5000/api/ml/interactions/${user.user_id}?type=like`, {
+      const likedResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/interactions/${user.user_id}?type=like`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -42,7 +42,7 @@ const UserProfile = ({ user, onLogout }) => {
       }
 
       // Fetch rated recipes
-      const ratedResponse = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}`, {
+      const ratedResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -54,7 +54,7 @@ const UserProfile = ({ user, onLogout }) => {
       }
 
       // Fetch added recipes (recipes created by this user)
-      const addedResponse = await fetch(`http://localhost:5000/api/recipes?user_id=${user.user_id}`, {
+      const addedResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes?user_id=${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -83,7 +83,7 @@ const UserProfile = ({ user, onLogout }) => {
       let method = 'DELETE';
 
       if (type === 'rated') {
-        url = `http://localhost:5000/api/ml/ratings/${idToRemove}`;
+        url = `${import.meta.env.VITE_API_URL}/api/ml/ratings/${idToRemove}`;
       } else {
         fetchUserData();
         showNotification(`${type} removed!`, 'success');
@@ -147,7 +147,7 @@ const UserProfile = ({ user, onLogout }) => {
         <div>
           {recipe.recipe && recipe.recipe.image_url && (
             <img 
-              src={recipe.recipe.image_url.startsWith('http') ? recipe.recipe.image_url : `http://localhost:5000/images/${recipe.recipe.image_url}`} 
+              src={recipe.recipe.image_url.startsWith('http') ? recipe.recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.recipe.image_url}`} 
               alt={recipe.recipe.title}
               className="w-full h-32 sm:h-40 md:h-48 object-cover border-b border-gray-100 transition-transform duration-500 group-hover:scale-105"
             />
@@ -207,7 +207,7 @@ const UserProfile = ({ user, onLogout }) => {
       <div>
         {recipe.image_url && (
           <img 
-            src={recipe.image_url.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`} 
+            src={recipe.image_url.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`} 
             alt={recipe.title}
             className="w-full h-32 sm:h-40 md:h-48 object-cover border-b border-gray-100 transition-transform duration-500 group-hover:scale-105"
           />

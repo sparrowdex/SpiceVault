@@ -19,7 +19,7 @@ const UserInsightsBar = ({ user }) => {
   const fetchUserStats = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/ml/chef-stats/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/chef-stats/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -37,7 +37,7 @@ const UserInsightsBar = ({ user }) => {
   const fetchPopularRecipes = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/recipes/popular/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/popular/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -55,7 +55,7 @@ const UserInsightsBar = ({ user }) => {
   const fetchReviews = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/reviews/chef/${user.user_id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/chef/${user.user_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

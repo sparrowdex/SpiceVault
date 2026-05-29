@@ -45,7 +45,7 @@ function ViewRecipe({ user }) {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/ml/ratings`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,7 +85,7 @@ function ViewRecipe({ user }) {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/ml/replies`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/replies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,14 +122,14 @@ function ViewRecipe({ user }) {
     const fetchRecipeAndRating = async () => {
       try {
         // Fetch recipe details
-        const resRecipe = await fetch(`http://localhost:5000/api/recipes/${id}`);
+        const resRecipe = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/${id}`);
       const dataRecipe = await resRecipe.json();
       setRecipe(dataRecipe);
 
       // Fetch user's existing rating for this recipe
       if (user && user.user_id && user.token) { // Check if user and token are present
     console.log('Fetching user rating with token:', user.token);
-    const resRating = await fetch(`http://localhost:5000/api/ml/ratings/${user.user_id}?recipe_id=${id}`, {
+    const resRating = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings/${user.user_id}?recipe_id=${id}`, {
       headers: {
         'Authorization': `Bearer ${user.token}`
       }
@@ -157,7 +157,7 @@ function ViewRecipe({ user }) {
     if (user && user.token) {
       headers['Authorization'] = `Bearer ${user.token}`;
     }
-    const resReviews = await fetch(`http://localhost:5000/api/ml/ratings?recipe_id=${id}`, {
+    const resReviews = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings?recipe_id=${id}`, {
       headers
     });
     const dataReviews = await resReviews.json();
@@ -170,7 +170,7 @@ function ViewRecipe({ user }) {
 
     // Fetch health score for this recipe
     try {
-      const resHealth = await fetch(`http://localhost:5000/api/ml/recipe-health-score/${id}`, {
+      const resHealth = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/recipe-health-score/${id}`, {
         headers
       });
       const dataHealth = await resHealth.json();
@@ -198,7 +198,7 @@ function ViewRecipe({ user }) {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/recipes/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${user.token}`
@@ -223,7 +223,7 @@ function ViewRecipe({ user }) {
     }
     setRating(newRating);
     try {
-      await fetch(`http://localhost:5000/api/ml/ratings`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -310,7 +310,7 @@ function ViewRecipe({ user }) {
         <h2 className="text-[28px] mb-[15px] text-[#bc8f8e] text-center">{recipe.title}</h2>
         <img
           className="w-full rounded-lg mb-5 object-cover"
-          src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+          src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
           alt={recipe.title}
         />
 

@@ -62,7 +62,7 @@ const CulinaryFeed = ({ user }) => {
   const fetchFeed = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/social/feed', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -77,7 +77,7 @@ const CulinaryFeed = ({ user }) => {
   const fetchRecommendedUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/social/recommended-users', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/social/recommended-users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -88,7 +88,7 @@ const CulinaryFeed = ({ user }) => {
   const fetchStories = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/social/stories/feed', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories/feed`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -111,7 +111,7 @@ const CulinaryFeed = ({ user }) => {
     setSearchQuery(query);
     if (query.length > 1) {
       try {
-        const res = await fetch(`http://localhost:5000/api/users?search=${query}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users?search=${query}`);
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.filter(u => u.user_id !== user.user_id));
@@ -125,7 +125,7 @@ const CulinaryFeed = ({ user }) => {
   const handleFollow = async (targetUser) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/follow/${targetUser.user_id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/follow/${targetUser.user_id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -149,7 +149,7 @@ const CulinaryFeed = ({ user }) => {
     setIsUploadingStory(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/social/stories', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ image_url: storyFile, content: storyText })
@@ -168,7 +168,7 @@ const CulinaryFeed = ({ user }) => {
   const handleDeleteStory = async (storyId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/stories/${storyId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories/${storyId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -185,7 +185,7 @@ const CulinaryFeed = ({ user }) => {
     setIsPublishing(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/social/articles', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/articles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(articleData)
@@ -206,7 +206,7 @@ const CulinaryFeed = ({ user }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/feed/${postId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed/${postId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -222,7 +222,7 @@ const CulinaryFeed = ({ user }) => {
   const handleEditPost = async (postId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/feed/${postId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ content: editPostContent, allow_comments: editAllowComments })
@@ -246,7 +246,7 @@ const CulinaryFeed = ({ user }) => {
     }));
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:5000/api/social/feed/${postId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }});
+      await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed/${postId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }});
     } catch (err) { console.error(err); }
   };
 
@@ -254,7 +254,7 @@ const CulinaryFeed = ({ user }) => {
     if (!replyText.trim()) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/feed/${postId}/reply`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed/${postId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ content: replyText, parent_id: replyingToReplyId })
@@ -276,7 +276,7 @@ const CulinaryFeed = ({ user }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/social/feed', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/social/feed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -352,7 +352,7 @@ const CulinaryFeed = ({ user }) => {
               <div key={resultUser.user_id} className="flex items-center justify-between p-[15px] border-b border-[#f9f9f9] last:border-none hover:bg-[#fffaf5] transition-colors">
                 <div className="flex items-center gap-[12px]">
                   <div className="w-[45px] h-[45px] rounded-full overflow-hidden bg-[#fff5f0] flex items-center justify-center border border-[#ffcc80] cursor-pointer" onClick={() => navigate(`/user/${resultUser.user_id}`)}>
-                    {resultUser.profile_picture ? <img src={resultUser.profile_picture.startsWith('http') ? resultUser.profile_picture : `http://localhost:5000/images/${resultUser.profile_picture}`} className="w-full h-full object-cover" /> : <User size={24} className="text-[#ff8533]" />}
+                    {resultUser.profile_picture ? <img src={resultUser.profile_picture.startsWith('http') ? resultUser.profile_picture : `${import.meta.env.VITE_API_URL}/images/${resultUser.profile_picture}`} className="w-full h-full object-cover" /> : <User size={24} className="text-[#ff8533]" />}
                   </div>
                   <div className="cursor-pointer group" onClick={() => navigate(`/user/${resultUser.user_id}`)}>
                     <h4 className="font-bold text-[#333] m-0 text-[15px] group-hover:text-[#ff6600] transition-colors">{resultUser.f_name} {resultUser.l_name}</h4>
@@ -379,7 +379,7 @@ const CulinaryFeed = ({ user }) => {
             {recommendedUsers.map(recUser => (
               <div key={recUser.user_id} className="flex flex-col items-center justify-between p-[15px] shrink-0 snap-start bg-white rounded-[15px] shadow-sm border border-[#f0e0d0] w-[140px] text-center hover:shadow-md transition-shadow">
                 <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-[#fff5f0] flex items-center justify-center border border-[#ffcc80] mb-[10px] cursor-pointer" onClick={() => navigate(`/user/${recUser.user_id}`)}>
-                  {recUser.profile_picture ? <img src={recUser.profile_picture.startsWith('http') ? recUser.profile_picture : `http://localhost:5000/images/${recUser.profile_picture}`} className="w-full h-full object-cover" /> : <User size={24} className="text-[#ff8533]" />}
+                  {recUser.profile_picture ? <img src={recUser.profile_picture.startsWith('http') ? recUser.profile_picture : `${import.meta.env.VITE_API_URL}/images/${recUser.profile_picture}`} className="w-full h-full object-cover" /> : <User size={24} className="text-[#ff8533]" />}
                 </div>
                 <h4 className="font-bold text-[#333] m-0 text-[14px] truncate w-full cursor-pointer hover:text-[#ff6600] transition-colors" onClick={() => navigate(`/user/${recUser.user_id}`)}>{recUser.f_name} {recUser.l_name}</h4>
                 <span className="text-[#888] text-[11px] font-medium mb-[10px] truncate w-full cursor-pointer hover:text-[#ff6600] transition-colors" onClick={() => navigate(`/user/${recUser.user_id}`)}>@{recUser.username || recUser.f_name?.toLowerCase()}</span>
@@ -421,7 +421,7 @@ const CulinaryFeed = ({ user }) => {
           {stories.map(story => (
             <div key={story.story_id} className="flex flex-col items-center gap-[6px] shrink-0 snap-start cursor-pointer group" onClick={() => setActiveStoryIndex(stories.indexOf(story))}>
               <div className={`w-[60px] h-[60px] rounded-full p-[2px] ${story.user?.user_type === 'chef' ? 'bg-gradient-to-tr from-[#ff6600] to-[#ffcc80]' : 'bg-gradient-to-tr from-[#4caf50] to-[#a8e063]'}`}>
-                <img src={story.image_url?.startsWith('http') ? story.image_url : `http://localhost:5000/images/${story.image_url}`} alt={story.user?.f_name} className="w-full h-full rounded-full object-cover border-[2px] border-white transition-transform duration-300 group-hover:scale-105" />
+                <img src={story.image_url?.startsWith('http') ? story.image_url : `${import.meta.env.VITE_API_URL}/images/${story.image_url}`} alt={story.user?.f_name} className="w-full h-full rounded-full object-cover border-[2px] border-white transition-transform duration-300 group-hover:scale-105" />
               </div>
               <span className="text-[11px] font-semibold text-[#555] max-w-[65px] truncate">{story.user?.f_name}</span>
             </div>
@@ -508,7 +508,7 @@ const CulinaryFeed = ({ user }) => {
             <div key={post.post_id} className="bg-white rounded-[20px] p-[20px] shadow-sm border border-[#f0e0d0] transition-all hover:shadow-md">
               <div className="flex items-center gap-[12px] mb-[15px]">
                 <div className="w-[45px] h-[45px] rounded-full overflow-hidden bg-[#fff5f0] flex items-center justify-center border border-[#ffcc80] cursor-pointer" onClick={() => navigate(`/user/${post.user_id}`)}>
-                  {post.user?.profile_picture ? <img src={post.user.profile_picture.startsWith('http') ? post.user.profile_picture : `http://localhost:5000/images/${post.user.profile_picture}`} alt={post.user.f_name} className="w-full h-full object-cover" /> : <User className="text-[#ff8533]" size={24} />}
+                  {post.user?.profile_picture ? <img src={post.user.profile_picture.startsWith('http') ? post.user.profile_picture : `${import.meta.env.VITE_API_URL}/images/${post.user.profile_picture}`} alt={post.user.f_name} className="w-full h-full object-cover" /> : <User className="text-[#ff8533]" size={24} />}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-[#333] text-[15px] m-0 leading-tight flex items-center cursor-pointer hover:text-[#ff6600] transition-colors inline-flex" onClick={() => navigate(`/user/${post.user_id}`)}>
@@ -576,7 +576,7 @@ const CulinaryFeed = ({ user }) => {
               {(post.recipe || post.review) && (
                 <div className="mt-[10px] border border-[#ffcc80] rounded-[12px] p-[12px] bg-[#fffaf5] cursor-pointer hover:bg-[#fff5f0] transition-colors flex gap-[15px] items-center group shadow-sm" onClick={() => navigate(`/recipes/${post.recipe_id}`)}>
                   {(post.recipe?.image_url || post.review?.recipe?.image_url) && (
-                    <img src={(post.recipe?.image_url || post.review?.recipe?.image_url)?.startsWith('http') ? (post.recipe?.image_url || post.review?.recipe?.image_url) : `http://localhost:5000/images/${(post.recipe?.image_url || post.review?.recipe?.image_url)}`} alt="Recipe" className="w-[60px] h-[60px] rounded-[8px] object-cover shadow-sm group-hover:scale-105 transition-transform" />
+                    <img src={(post.recipe?.image_url || post.review?.recipe?.image_url)?.startsWith('http') ? (post.recipe?.image_url || post.review?.recipe?.image_url) : `${import.meta.env.VITE_API_URL}/images/${(post.recipe?.image_url || post.review?.recipe?.image_url)}`} alt="Recipe" className="w-[60px] h-[60px] rounded-[8px] object-cover shadow-sm group-hover:scale-105 transition-transform" />
                   )}
                   <div className="flex-1">
                     <h4 className="font-bold text-[#333] text-[15px] m-0 mb-[4px] leading-tight">{post.recipe?.title || post.review?.recipe?.title}</h4>
@@ -732,7 +732,7 @@ const CulinaryFeed = ({ user }) => {
           <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
             <div className="flex items-center gap-3">
               {stories[activeStoryIndex].user?.profile_picture ? (
-                <img src={stories[activeStoryIndex].user.profile_picture.startsWith('http') ? stories[activeStoryIndex].user.profile_picture : `http://localhost:5000/images/${stories[activeStoryIndex].user.profile_picture}`} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="Avatar"/>
+                <img src={stories[activeStoryIndex].user.profile_picture.startsWith('http') ? stories[activeStoryIndex].user.profile_picture : `${import.meta.env.VITE_API_URL}/images/${stories[activeStoryIndex].user.profile_picture}`} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="Avatar"/>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff6600] to-[#ffcc80] flex items-center justify-center text-white font-bold border border-white/30">{stories[activeStoryIndex].user?.f_name?.[0] || 'S'}</div>
               )}
@@ -757,7 +757,7 @@ const CulinaryFeed = ({ user }) => {
             <div className="w-1/2 h-full cursor-pointer" onClick={() => setActiveStoryIndex(prev => prev > 0 ? prev - 1 : prev)} />
             <div className="w-1/2 h-full cursor-pointer" onClick={() => setActiveStoryIndex(prev => prev < stories.length - 1 ? prev + 1 : prev)} />
           </div>
-          <img src={stories[activeStoryIndex].image_url?.startsWith('http') ? stories[activeStoryIndex].image_url : `http://localhost:5000/images/${stories[activeStoryIndex].image_url}`} className="max-h-[100vh] max-w-full object-contain pointer-events-none z-20" alt="Story" />
+          <img src={stories[activeStoryIndex].image_url?.startsWith('http') ? stories[activeStoryIndex].image_url : `${import.meta.env.VITE_API_URL}/images/${stories[activeStoryIndex].image_url}`} className="max-h-[100vh] max-w-full object-contain pointer-events-none z-20" alt="Story" />
           {stories[activeStoryIndex].content && (
             <div className="absolute bottom-[10%] left-0 w-full text-center z-50 pointer-events-none px-4">
               <span className="bg-black/60 backdrop-blur-md text-white px-5 py-3 rounded-2xl text-[15px] font-medium inline-block max-w-[80%]">{stories[activeStoryIndex].content}</span>

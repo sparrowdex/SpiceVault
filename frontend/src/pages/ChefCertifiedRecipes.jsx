@@ -11,7 +11,7 @@ const ChefCertifiedRecipesPage = () => {
     const fetchChefCertifiedRecipes = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/recipes/chef-certified');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/chef-certified`);
         if (!response.ok) {
           throw new Error('Failed to fetch chef certified recipes');
         }
@@ -62,7 +62,7 @@ const ChefCertifiedRecipesPage = () => {
           >
             {getBadge(recipe.avg_rating)}
             <img
-              src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+              src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
               alt={recipe.title}
               className="w-full h-[180px] object-cover rounded-[12px] mb-[15px] shadow-[0_4px_8px_rgba(255,165,0,0.4)] transition-transform duration-300 bg-[rgba(255,255,255,0.3)] group-hover:scale-105"
             />

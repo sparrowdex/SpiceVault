@@ -88,7 +88,7 @@ const Home = ({ user }) => {
 
       const query = new URLSearchParams(queryParams);
 
-      const res = await fetch(`http://localhost:5000/api/recipes?${query}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes?${query}`);
       const data = await res.json();
       
       if (res.ok) {
@@ -106,7 +106,7 @@ const Home = ({ user }) => {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/recipes?fetchCategories=true');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes?fetchCategories=true`);
       const data = await res.json();
       if (data.success && data.categories.length > 0) {
         setDynamicCategories([{ value: '', label: 'All' }, ...data.categories]);
@@ -120,7 +120,7 @@ const Home = ({ user }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch('http://localhost:5000/api/social/stories/feed', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories/feed`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -133,7 +133,7 @@ const Home = ({ user }) => {
   // Fetch popular recipes for homepage
   const fetchPopularRecipes = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/ml/popular?limit=12');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/popular?limit=12`);
       const data = await res.json();
       if (data.success) {
         setPopularRecipes(data.popularRecipes || []);
@@ -161,7 +161,7 @@ const Home = ({ user }) => {
     setIsUploadingStory(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/social/stories', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ image_url: storyFile, content: storyText })
@@ -179,7 +179,7 @@ const Home = ({ user }) => {
   const handleDeleteStory = async (storyId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/social/stories/${storyId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/social/stories/${storyId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -302,7 +302,7 @@ const Home = ({ user }) => {
               {stories.map(story => (
                 <div key={story.story_id} className="flex flex-col items-center gap-[6px] shrink-0 snap-start cursor-pointer group" onClick={() => setActiveStoryIndex(stories.indexOf(story))}>
                   <div className={`w-[60px] h-[60px] rounded-full p-[2px] ${story.user?.user_type === 'chef' ? 'bg-gradient-to-tr from-[#ff6600] to-[#ffcc80]' : 'bg-gradient-to-tr from-[#4caf50] to-[#a8e063]'}`}>
-                    <img src={story.image_url?.startsWith('http') ? story.image_url : `http://localhost:5000/images/${story.image_url}`} alt={story.user?.f_name} className="w-full h-full rounded-full object-cover border-[2px] border-white transition-transform duration-300 group-hover:scale-105" />
+                    <img src={story.image_url?.startsWith('http') ? story.image_url : `${import.meta.env.VITE_API_URL}/images/${story.image_url}`} alt={story.user?.f_name} className="w-full h-full rounded-full object-cover border-[2px] border-white transition-transform duration-300 group-hover:scale-105" />
                   </div>
                   <span className="text-[11px] font-semibold text-[#555] max-w-[65px] truncate">{story.user?.f_name}</span>
                 </div>
@@ -315,7 +315,7 @@ const Home = ({ user }) => {
           <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-50 bg-gradient-to-b from-black/80 to-transparent">
             <div className="flex items-center gap-3">
               {stories[activeStoryIndex].user?.profile_picture ? (
-                <img src={stories[activeStoryIndex].user.profile_picture.startsWith('http') ? stories[activeStoryIndex].user.profile_picture : `http://localhost:5000/images/${stories[activeStoryIndex].user.profile_picture}`} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="Avatar"/>
+                <img src={stories[activeStoryIndex].user.profile_picture.startsWith('http') ? stories[activeStoryIndex].user.profile_picture : `${import.meta.env.VITE_API_URL}/images/${stories[activeStoryIndex].user.profile_picture}`} className="w-10 h-10 rounded-full object-cover border border-white/30" alt="Avatar"/>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#ff6600] to-[#ffcc80] flex items-center justify-center text-white font-bold border border-white/30">{stories[activeStoryIndex].user?.f_name?.[0] || 'S'}</div>
               )}
@@ -335,7 +335,7 @@ const Home = ({ user }) => {
             <div className="w-1/2 h-full cursor-pointer" onClick={() => setActiveStoryIndex(prev => prev > 0 ? prev - 1 : prev)} />
             <div className="w-1/2 h-full cursor-pointer" onClick={() => setActiveStoryIndex(prev => prev < stories.length - 1 ? prev + 1 : prev)} />
           </div>
-          <img src={stories[activeStoryIndex].image_url?.startsWith('http') ? stories[activeStoryIndex].image_url : `http://localhost:5000/images/${stories[activeStoryIndex].image_url}`} className="max-h-[100vh] max-w-full object-contain pointer-events-none z-20" alt="Story" />
+          <img src={stories[activeStoryIndex].image_url?.startsWith('http') ? stories[activeStoryIndex].image_url : `${import.meta.env.VITE_API_URL}/images/${stories[activeStoryIndex].image_url}`} className="max-h-[100vh] max-w-full object-contain pointer-events-none z-20" alt="Story" />
           {stories[activeStoryIndex].content && (
             <div className="absolute bottom-[10%] left-0 w-full text-center z-50 pointer-events-none px-4"><span className="bg-black/60 backdrop-blur-md text-white px-5 py-3 rounded-2xl text-[15px] font-medium inline-block max-w-[80%]">{stories[activeStoryIndex].content}</span></div>
           )}
@@ -374,7 +374,7 @@ const Home = ({ user }) => {
                   {(index % popularRecipes.length) + 1}
                 </div>
                 <img
-                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="w-[202px] h-[113px] object-cover rounded-[8px]"
                 />
@@ -464,7 +464,7 @@ const Home = ({ user }) => {
               recipes.map((recipe) => (
               <div key={recipe.recipe_id} className={gridCardClasses} onClick={() => window.location.href = `/recipes/${recipe.recipe_id}`}>
                 <img
-                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
+                  src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
                   alt={recipe.title}
                   className="w-full h-[90px] sm:h-[100px] md:h-[113px] object-cover rounded-[8px]"
                 />

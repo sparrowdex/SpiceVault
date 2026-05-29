@@ -47,7 +47,7 @@ const AddRecipe = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/recipes?fetchCategories=true');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes?fetchCategories=true`);
       const data = await res.json();
       if (data.success && data.categories.length > 0) {
         setDynamicCategories(data.categories);
@@ -100,7 +100,7 @@ const AddRecipe = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/recipes`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
