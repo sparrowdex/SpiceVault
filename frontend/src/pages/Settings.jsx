@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Settings as SettingsIcon, User as UserIcon } from 'lucide-react';
+import { Trash2, Settings as SettingsIcon, User as UserIcon, Eye } from 'lucide-react';
 import { UploadButton } from '../utils/uploadthing';
 import "@uploadthing/react/styles.css";
 
@@ -9,8 +9,13 @@ const Settings = ({ user, onUpdate, onLogout }) => {
   const [formData, setFormData] = useState({
     f_name: user?.f_name || '',
     l_name: user?.l_name || '',
+    username: user?.username || '',
     email: user?.email || '',
-    profile_picture: user?.profile_picture || ''
+    profile_picture: user?.profile_picture || '',
+    bio: user?.bio || '',
+    show_stats: user?.show_stats ?? true,
+    show_articles: user?.show_articles ?? true,
+    show_recipes: user?.show_recipes ?? true,
   });
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -45,7 +50,10 @@ const Settings = ({ user, onUpdate, onLogout }) => {
     }, 3000);
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -74,12 +82,20 @@ const Settings = ({ user, onUpdate, onLogout }) => {
 
   return (
     <div className="max-w-[800px] mx-auto p-[20px] font-['Poppins',_sans-serif]">
-      <button 
-        className="bg-white border border-gray-200 text-gray-700 py-2.5 px-5 rounded-xl font-semibold mb-6 flex items-center gap-2 transition-colors hover:bg-gray-50 shadow-sm cursor-pointer"
-        onClick={() => navigate('/profile')}
-      >
-        ← Back to Profile
-      </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <button 
+          className="bg-white border border-gray-200 text-gray-700 py-2.5 px-5 rounded-xl font-semibold flex items-center gap-2 transition-colors hover:bg-gray-50 shadow-sm cursor-pointer"
+          onClick={() => navigate('/profile')}
+        >
+          ← Back to Profile
+        </button>
+        <button 
+          className="bg-orange-50 border border-orange-200 text-orange-600 py-2.5 px-5 rounded-xl font-bold flex items-center gap-2 transition-colors hover:bg-orange-100 shadow-sm cursor-pointer"
+          onClick={() => navigate(`/user/${user.user_id}`)}
+        >
+          <Eye size={18} /> Preview Public Profile
+        </button>
+      </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"><UserIcon className="text-orange-500" /> Edit Profile</h2>
@@ -96,7 +112,7 @@ const Settings = ({ user, onUpdate, onLogout }) => {
             <UploadButton
               endpoint="imageUploader"
               onClientUploadComplete={(res) => {
-                setFormData({ ...formData, profile_picture: res[0].url });
+                setFormData({ ...formData, profile_picture: res[0].ufsUrl || res[0].url });
                 showNotification('Image uploaded successfully! Remember to save changes.', 'success');
               }}
               onUploadError={(error) => {
@@ -125,9 +141,40 @@ const Settings = ({ user, onUpdate, onLogout }) => {
               </div>
             </div>
             <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Username</label>
+              <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Username" className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all bg-gray-50 focus:bg-white" />
+            </div>
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all bg-gray-50 focus:bg-white" />
             </div>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-semibold text-gray-700 m-0">Bio</label>
+                <span className={`text-xs font-medium ${(formData.bio || '').length >= 160 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {(formData.bio || '').length}/160
+                </span>
+              </div>
+              <textarea name="bio" value={formData.bio} onChange={handleChange} maxLength={160} placeholder="Tell the community about yourself..." className="w-full p-3 border border-gray-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all bg-gray-50 focus:bg-white h-24 resize-none" />
+            </div>
+            
+            <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100 flex flex-col gap-3">
+              <label className="block text-sm font-bold text-gray-800 m-0">Public Profile Privacy</label>
+              <p className="text-xs text-orange-800 mt-[-5px] mb-2 font-medium">Disclaimer: You can toggle exactly what followers see on your profile here.</p>
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" name="show_stats" checked={formData.show_stats} onChange={handleChange} className="w-4 h-4 accent-orange-500 cursor-pointer" />
+                Show my total likes & saves
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" name="show_recipes" checked={formData.show_recipes} onChange={handleChange} className="w-4 h-4 accent-orange-500 cursor-pointer" />
+                Show my published recipes
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" name="show_articles" checked={formData.show_articles} onChange={handleChange} className="w-4 h-4 accent-orange-500 cursor-pointer" />
+                Show my featured articles
+              </label>
+            </div>
+
             <button type="submit" disabled={loading} className="mt-2 bg-orange-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-orange-600 transition-colors shadow-sm disabled:opacity-50 w-full md:w-max cursor-pointer">
               {loading ? 'Saving...' : 'Save Changes'}
             </button>

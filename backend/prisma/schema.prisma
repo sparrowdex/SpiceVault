@@ -8,23 +8,30 @@ datasource db {
 }
 
 model User {
-  user_id       Int           @id @default(autoincrement())
-  f_name        String
-  l_name        String
-  email         String        @unique
-  password      String
-  user_type     String        @default("Regular")
+  user_id         Int             @id @default(autoincrement())
+  f_name          String
+  l_name          String
+  email           String          @unique
+  password        String
+  user_type       String          @default("Regular")
+  username        String?         @unique
   profile_picture String?
-  recipes       Recipe[]      @relation("UserRecipes")
-  chef_recipes  Recipe[]      @relation("ChefRecipes")
-  reviews       Review[]
-  replies       Reply[]
-  interactions  Interaction[]
-  followers     Follow[]      @relation("Followers")
-  following     Follow[]      @relation("Following")
-  stories       Story[]
-  articles      Article[]
-  feed_posts    FeedPost[]
+  bio           String?       @db.Text
+  show_stats    Boolean       @default(true)
+  show_articles Boolean       @default(true)
+  show_recipes  Boolean       @default(true)
+  recipes         Recipe[]        @relation("UserRecipes")
+  chef_recipes    Recipe[]        @relation("ChefRecipes")
+  reviews         Review[]
+  replies         Reply[]
+  interactions    Interaction[]
+  followers       Follow[]        @relation("Followers")
+  following       Follow[]        @relation("Following")
+  stories         Story[]
+  articles        Article[]
+  feed_posts      FeedPost[]
+  feed_likes      FeedPostLike[]
+  feed_replies    FeedPostReply[]
 
   @@map("user")
 }
@@ -60,14 +67,14 @@ model Recipe {
 }
 
 model Review {
-  review_id   Int      @id @default(autoincrement())
+  review_id   Int        @id @default(autoincrement())
   rating      Int
-  review_text String?  @db.Text
-  datestamp   DateTime @default(now())
+  review_text String?    @db.Text
+  datestamp   DateTime   @default(now())
   recipe_id   Int
   user_id     Int
-  recipe      Recipe   @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
-  user        User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  recipe      Recipe     @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  user        User       @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
   replies     Reply[]
   feed_posts  FeedPost[]
 
@@ -88,7 +95,7 @@ model Reply {
 
 model Interaction {
   interaction_id   Int      @id @default(autoincrement())
-  interaction_type String   // e.g. 'view', 'like', 'save'
+  interaction_type String // e.g. 'view', 'like', 'save'
   recipe_id        Int
   user_id          Int
   createdAt        DateTime @default(now())
@@ -103,21 +110,21 @@ model Follow {
   following_id Int
   createdAt    DateTime @default(now())
 
-  follower     User @relation("Following", fields: [follower_id], references: [user_id], onDelete: Cascade)
-  following    User @relation("Followers", fields: [following_id], references: [user_id], onDelete: Cascade)
+  follower  User @relation("Following", fields: [follower_id], references: [user_id], onDelete: Cascade)
+  following User @relation("Followers", fields: [following_id], references: [user_id], onDelete: Cascade)
 
   @@id([follower_id, following_id])
   @@map("follows")
 }
 
 model Story {
-  story_id   Int      @id @default(autoincrement())
-  image_url  String?
-  content    String?  @db.Text
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime 
-  user_id    Int
-  user       User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  story_id  Int      @id @default(autoincrement())
+  image_url String?
+  content   String?  @db.Text
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user_id   Int
+  user      User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@map("stories")
 }
@@ -137,17 +144,47 @@ model Article {
 }
 
 model FeedPost {
-  post_id    Int      @id @default(autoincrement())
-  content    String?  @db.Text
-  media_url  String?
-  media_type String?  // 'image' or 'video'
-  createdAt  DateTime @default(now())
-  user_id    Int
-  recipe_id  Int?
-  review_id  Int?
-  user       User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  recipe     Recipe?  @relation(fields: [recipe_id], references: [recipe_id], onDelete: SetNull)
-  review     Review?  @relation(fields: [review_id], references: [review_id], onDelete: SetNull)
+  post_id       Int             @id @default(autoincrement())
+  content       String?         @db.Text
+  is_public     Boolean         @default(true)
+  allow_comments Boolean        @default(true)
+  media_url     String?
+  media_type    String? // 'image' or 'video'
+  createdAt     DateTime        @default(now())
+  user_id       Int
+  recipe_id     Int?
+  review_id     Int?
+  user          User            @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  recipe        Recipe?         @relation(fields: [recipe_id], references: [recipe_id], onDelete: SetNull)
+  review        Review?         @relation(fields: [review_id], references: [review_id], onDelete: SetNull)
+  likes         FeedPostLike[]
+  replies       FeedPostReply[]
 
   @@map("feed_posts")
+}
+
+model FeedPostLike {
+  id      Int      @id @default(autoincrement())
+  user_id Int
+  post_id Int
+  user    User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  post    FeedPost @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+
+  @@unique([user_id, post_id])
+  @@map("feed_post_likes")
+}
+
+model FeedPostReply {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  user_id   Int
+  post_id   Int
+  parent_id Int?
+  user      User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  post      FeedPost @relation(fields: [post_id], references: [post_id], onDelete: Cascade)
+  parent    FeedPostReply?  @relation("ReplyToReply", fields: [parent_id], references: [id], onDelete: Cascade)
+  children  FeedPostReply[] @relation("ReplyToReply")
+
+  @@map("feed_post_replies")
 }

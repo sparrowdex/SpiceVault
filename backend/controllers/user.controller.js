@@ -21,13 +21,14 @@ exports.getAllUsers = async (req, res) => {
       whereClause = {
         OR: [
           { f_name: { contains: search } },
-          { l_name: { contains: search } }
+          { l_name: { contains: search } },
+          { username: { contains: search } }
         ]
       };
     }
     const users = await prisma.user.findMany({
       where: whereClause,
-      select: { user_id: true, f_name: true, l_name: true, user_type: true, profile_picture: true }
+      select: { user_id: true, f_name: true, l_name: true, username: true, user_type: true, profile_picture: true }
     });
     res.status(200).json(users);
   } catch (error) {

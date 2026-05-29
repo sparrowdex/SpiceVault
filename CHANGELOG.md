@@ -7,6 +7,8 @@ All notable changes to the SpiceVault project will be documented in this file.
 ### 🌐 Social Ecosystem & Feed
 - **The Culinary Feed:** Built a "Threads-like" social timeline (`/feed`) where users can scroll through updates from chefs they follow.
 - **Rich Media Posts:** Extended the `UploadThing` router to support uploading videos (up to 32MB) alongside images for feed posts.
+- **Post Interactions:** Users can swipe through multiple media items, edit posts, toggle comment visibility, like posts, and engage in deeply nested reply threads.
+- **Public Profiles:** Introduced customizable Public Profiles (`/user/:id`). Chefs can write a bio and toggle the visibility of their stats, published recipes, and featured articles.
 - **Automated System Posts:** Injected hooks into the ML and Recipe controllers. The system now automatically generates a post on the Feed whenever a chef publishes a new recipe or a user leaves a 5-star rating, complete with clickable "View Recipe" link cards.
 - **Stories & Articles:** Implemented a horizontal "Chef Updates" (Stories) row for temporary updates, and a gorgeous, massive "Featured Articles" hero slideshow for deep-dive culinary content on the Homepage.
 - **Social Data Layer:** Extended the Prisma Schema with `Follow`, `Story`, `Article`, and `FeedPost` models. Created a dedicated `social.controller.js` to handle following logic, feed fetching, and media uploads.

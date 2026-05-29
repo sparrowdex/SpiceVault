@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ChefHat, Trophy, TrendingUp, Leaf, Eye, Heart, Save, Lightbulb, BarChart2 } from 'lucide-react';
+import { Star, ChefHat, Trophy, TrendingUp, Leaf, Eye, Heart, Save, Lightbulb, BarChart2, Globe, Settings as SettingsIcon } from 'lucide-react';
 
 const ChefInsightsPage = ({ user }) => {
   const [userStats, setUserStats] = useState(null);
@@ -130,9 +130,28 @@ const ChefInsightsPage = ({ user }) => {
         </div>
       ) : (
         <div className="flex flex-col gap-8">
+          {/* Public Profile Disclaimer & Navigation */}
+          <div className="bg-gradient-to-r from-orange-50 to-[#fff5f0] border border-orange-200 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-orange-500/5 rounded-bl-full pointer-events-none" />
+            <div className="flex items-center gap-4 z-10">
+              <div className="bg-white p-2 rounded-full shadow-sm"><Globe className="text-orange-500" size={24} /></div>
+              <p className="text-orange-900 text-[14px] font-medium m-0 leading-relaxed">
+                <strong>Disclaimer:</strong> Your recipes, stats, and articles are visible on your <a href={`/user/${user.user_id}`} onClick={(e) => {e.preventDefault(); navigate(`/user/${user.user_id}`)}} className="text-orange-600 font-bold hover:underline cursor-pointer">Public Profile</a>. You can always change your visibility in the privacy settings!
+              </p>
+            </div>
+            <div className="flex gap-3 shrink-0 z-10 w-full md:w-auto">
+              <button onClick={() => navigate('/settings')} className="flex-1 md:flex-none bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2">
+                <SettingsIcon size={16} /> Settings
+              </button>
+              <button onClick={() => navigate(`/user/${user.user_id}`)} className="flex-1 md:flex-none bg-orange-500 text-white border-none hover:bg-orange-600 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm cursor-pointer hover:-translate-y-[1px] flex items-center justify-center gap-2">
+                <Eye size={16} /> Preview Profile
+              </button>
+            </div>
+          </div>
+
           {/* Performance Analytics Section */}
-          <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}><BarChart2 className="text-orange-500" size={24} /> Performance Analytics</h2>
+          <section className={`${sectionClasses} relative`}>
+            <h2 className="text-xl font-bold text-gray-800 m-0 mb-6 flex items-center gap-3"><BarChart2 className="text-orange-500" size={24} /> Performance Analytics</h2>
             {userStats ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className={statCardClasses}>

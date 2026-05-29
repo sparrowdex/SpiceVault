@@ -8,12 +8,15 @@ const prisma = new PrismaClient();
 // Register a new user
 exports.register = async (req, res) => {
   try {
-    const { f_name, l_name, email, password, user_type } = req.body;
+    const { f_name, l_name, username, email, password, user_type } = req.body;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'User already exists with this email' });
     }
+    
+    // Generate unique username if none provided
+    let finalUsername = username || email.split('@')[0] + Math.floor(Math.random() * 1000);
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -21,6 +24,7 @@ exports.register = async (req, res) => {
       data: {
         f_name,
         l_name,
+        username: finalUsername,
         email,
         password: hashedPassword,
         user_type: user_type || 'Regular'
@@ -40,9 +44,14 @@ exports.register = async (req, res) => {
         user_id: newUser.user_id,
         f_name: newUser.f_name,
         l_name: newUser.l_name,
+        username: newUser.username,
         email: newUser.email,
         user_type: newUser.user_type,
-        profile_picture: newUser.profile_picture
+        profile_picture: newUser.profile_picture,
+        bio: newUser.bio,
+        show_stats: newUser.show_stats,
+        show_articles: newUser.show_articles,
+        show_recipes: newUser.show_recipes
       },
       token
     });
@@ -89,9 +98,14 @@ exports.login = async (req, res) => {
         user_id: user.user_id,
         f_name: user.f_name,
         l_name: user.l_name,
+        username: user.username,
         email: user.email,
         user_type: user.user_type,
-        profile_picture: user.profile_picture
+        profile_picture: user.profile_picture,
+        bio: user.bio,
+        show_stats: user.show_stats,
+        show_articles: user.show_articles,
+        show_recipes: user.show_recipes
       },
       token
     });
@@ -111,9 +125,14 @@ exports.getProfile = async (req, res) => {
         user_id: true,
         f_name: true,
         l_name: true,
+        username: true,
         email: true,
         user_type: true,
-        profile_picture: true
+        profile_picture: true,
+        bio: true,
+        show_stats: true,
+        show_articles: true,
+        show_recipes: true
       }
     });
 
