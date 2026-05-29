@@ -1,21 +1,31 @@
-# Spice Vault 
+<h1 align="center">
+  <span style="background: -webkit-linear-gradient(45deg, #ff6600, #ff8533); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+    SpiceVault
+  </span>
+</h1>
 
-Spice Vault is a full-stack web application designed to bring together recipes from all around the world into one accessible platform. It aims to be the go-to place for users to explore, learn, and share cooking recipes in real-time, making cooking a fun and interactive experience.
+<p align="center">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" alt="Prisma" />
+  <img src="https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/UploadThing-171717?style=for-the-badge&logo=vercel&logoColor=white" alt="UploadThing" />
+</p>
 
 ---
 
-##  Project Overview
+## 🌟 Core Features
 
-Spice Vault offers users a comprehensive recipe database where they can:
-
-- Browse recipes from diverse cuisines worldwide.
-- Search for dishes based on available ingredients — no more wondering what to cook with what you have!
-- Filter recipes by difficulty levels, helping beginners and pros alike find suitable dishes.
-
-### Future Features (Coming Soon)
-- **Leaderboard:** Track and showcase users’ progress in posting and learning recipes.
-- **Recipe Posting:** Enable users to contribute their own recipes to the platform.
-- **Video Section:** Watch cooking tutorials and recipe videos directly within the app.
+- **The Culinary Feed (Social Network):** A full "Threads/Instagram-style" social timeline where users can scroll through rich-media updates, articles, and automated recipe posts from the chefs they follow.
+- **Instagram-Style Stories:** A full-screen, tap-to-navigate 24-hour story viewer for chefs to share temporary updates with auto-cleanup background cron jobs.
+- **Machine Learning Recommendations:** A hybrid recommendation engine (Collaborative + Content-Based Filtering) that learns from your views, likes, saves, and ratings to provide highly personalized recipe suggestions.
+- **Dynamic Content:** A gorgeous Featured Articles slideshow, Endless Auto-Sliding Recipe Carousels, and dynamic database-driven category filtering.
+- **Chef Insights Dashboard:** Advanced analytics for content creators, featuring 6-month rating trend charts and AI-generated personalized profile tips.
+- **Global Leaderboards:** Track the top-rated recipes across Daily, Weekly, Monthly, and All-Time categories.
+- **Cloud Media Uploads:** Seamless drag-and-drop image and video uploading powered by UploadThing.
 
 ---
 
@@ -23,10 +33,10 @@ Spice Vault offers users a comprehensive recipe database where they can:
 
 The frontend is a responsive, user-friendly interface built to offer an engaging cooking experience:
 
-- **Homepage:** Browse featured recipes and quick search.
-- **Search by Ingredients:** Input available ingredients to find matching recipes.
-- **Difficulty Categorizer:** Filter recipes by easy, medium, or hard cooking levels.
-- **Recipe Details:** View detailed cooking instructions, ingredients list, and nutritional info.
+- **Mobile-First Design:** Fully responsive UI with an animated glass-morphism sidebar for mobile devices.
+- **Interactive Filtering:** Clean dropdowns, swiping carousels, and dynamic categories that extract themselves directly from the database.
+- **Auto-Formatting text:** Automatically formats user-entered recipe instructions and ingredients into neat bulleted lists.
+- **User Profiles:** A sleek, horizontal tab-bar interface to manage saved, liked, rated, and authored recipes.
 
 ---
 
@@ -34,11 +44,12 @@ The frontend is a responsive, user-friendly interface built to offer an engaging
 
 | Layer      | Technologies                           |
 |------------|-------------------------------------|
-| Frontend   | React, Vite, Tailwind CSS, UploadThing |
-| Backend    | Node.js, Express.js                  |
-| Database   | MySQL with Prisma ORM                |
+| Frontend   | React 19, Vite, Tailwind CSS, Lucide React, UploadThing |
+| Backend    | Node.js, Express.js, node-cron         |
+| Database   | MySQL with Prisma ORM                  |
+| ML Engine  | Custom algorithms using `ml-matrix` and `natural` |
 | Version Control | Git & GitHub                     |
-| Deployment (future) | TBD (e.g., Heroku, Vercel, Netlify) |
+| Deployment | Vercel (Frontend), HuggingFace (Backend)    |
 
 ---
 
