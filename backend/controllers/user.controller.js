@@ -15,7 +15,20 @@ exports.createUser = async (req, res) => {
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await prisma.user.findMany();
+    const { search } = req.query;
+    let whereClause = {};
+    if (search) {
+      whereClause = {
+        OR: [
+          { f_name: { contains: search } },
+          { l_name: { contains: search } }
+        ]
+      };
+    }
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      select: { user_id: true, f_name: true, l_name: true, user_type: true, profile_picture: true }
+    });
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });

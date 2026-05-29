@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ChefHat, Trophy, TrendingUp, Leaf, Eye, Heart, Save, Lightbulb } from 'lucide-react';
-import ReviewSlideshow from '../components/ReviewSlideshow';
+import { Star, ChefHat, Trophy, TrendingUp, Leaf, Eye, Heart, Save, Lightbulb, BarChart2 } from 'lucide-react';
 
 const ChefInsightsPage = ({ user }) => {
   const [userStats, setUserStats] = useState(null);
@@ -108,70 +107,61 @@ const ChefInsightsPage = ({ user }) => {
     return tips.slice(0, 4);
   };
 
-  const statCardClasses = "bg-[#f9f0e0] border border-dashed border-[#A0522D] rounded-lg p-5 md:p-[15px] text-center shadow-[0_2px_8px_rgba(139,69,19,0.2),inset_0_1px_0_rgba(218,165,32,0.1)] md:shadow-[0_2px_6px_rgba(139,69,19,0.2)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(218,165,32,0.2)]";
-  const statValueClasses = "text-[2rem] md:text-[1.5rem] font-bold text-[#DAA520] mb-[8px] drop-shadow-[1px_1px_1px_rgba(139,69,19,0.2)]";
-  const engagementValueClasses = "text-[2rem] md:text-[1.5rem] font-bold text-[#DAA520] leading-[1.2] drop-shadow-[1px_1px_1px_rgba(139,69,19,0.2)]";
-  const statLabelClasses = "text-[1rem] text-[#5D4037] font-medium";
-  const sectionClasses = "bg-transparent border-2 border-[#8B4513] rounded-lg p-[30px] md:p-5 shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]";
-  const sectionTitleClasses = "text-[1.8rem] md:text-[1.5rem] mb-[25px] font-['ElegantWomanDemo',_cursive] bg-gradient-to-r from-[#8B4513] to-[#D2691E] bg-clip-text text-transparent font-semibold border-b-2 border-b-[#A0522D] pb-[10px] drop-shadow-[1px_1px_2px_rgba(139,69,19,0.3)]";
+  const statCardClasses = "bg-white border border-gray-100 rounded-2xl p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md";
+  const statValueClasses = "text-3xl font-bold text-gray-800 mb-1";
+  const engagementValueClasses = "text-3xl font-bold text-gray-800 mb-1";
+  const statLabelClasses = "text-sm text-gray-500 font-medium";
+  const sectionClasses = "bg-white border border-gray-100 rounded-2xl p-8 shadow-sm";
+  const sectionTitleClasses = "text-xl font-bold text-gray-800 mb-6 flex items-center gap-3";
 
   if (!user || user.user_type !== 'chef') {
-    return (
-      <div className="max-w-[1200px] mx-auto p-5 font-['Georgia',_serif] bg-transparent min-h-screen md:p-[15px]">
-        <div className="text-center py-[60px] px-5 bg-gradient-to-br from-[#f4e4bc] to-[#d7c4a3] border-2 border-[#8B4513] rounded-lg shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] my-5 mx-auto max-w-[600px]">
-          <h2 className="text-[#DAA520] mb-5 text-[2rem] font-['ElegantWomanDemo',_cursive] bg-gradient-to-r from-[#8B4513] to-[#D2691E] bg-clip-text text-transparent drop-shadow-[1px_1px_2px_rgba(139,69,19,0.3)]">Access Restricted</h2>
-          <p className="text-[1.1rem] text-[#5D4037] leading-[1.6]">This page is only available for chefs. Please upgrade your account to access chef insights.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto p-5 font-['Georgia',_serif] bg-transparent min-h-screen md:p-[15px]">
-      <h1 className="text-center text-[2.5rem] md:text-[2rem] mb-[40px] md:mb-[30px] font-['ElegantWomanDemo',_cursive] bg-gradient-to-r from-[#8B4513] to-[#D2691E] bg-clip-text text-transparent font-bold drop-shadow-[1px_1px_2px_rgba(139,69,19,0.3)]">Chef Insights Dashboard</h1>
-
+    <div className="w-full font-['Poppins',_sans-serif] bg-transparent">
       {loading ? (
-        <div className="text-center py-[60px] px-5 text-[1.2rem] text-[#5D4037] bg-gradient-to-br from-[#f4e4bc] to-[#d7c4a3] border border-[#8B4513] rounded-lg my-5 mx-auto max-w-[600px]">
+        <div className="text-center py-[60px] px-5 text-[1.2rem] text-gray-500 bg-white border border-gray-100 rounded-2xl my-5 mx-auto max-w-[600px] shadow-sm">
           <p>Loading your insights...</p>
         </div>
       ) : error ? (
-        <div className="text-center py-[60px] px-5 text-[1.2rem] text-[#5D4037] bg-gradient-to-br from-[#f4e4bc] to-[#d7c4a3] border border-[#8B4513] rounded-lg my-5 mx-auto max-w-[600px]">
-          <p className="text-[#8B4513] bg-[#f9f0e0] p-[15px] rounded-lg border-l-[3px] border-l-[#8B4513] border border-dashed border-[#A0522D]">{error}</p>
+        <div className="text-center py-[60px] px-5 text-[1.2rem] text-gray-500 bg-white border border-gray-100 rounded-2xl my-5 mx-auto max-w-[600px] shadow-sm">
+          <p className="text-red-500 bg-red-50 p-[15px] rounded-lg border border-red-100">{error}</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-[40px]">
+        <div className="flex flex-col gap-8">
           {/* Performance Analytics Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Performance Analytics</h2>
+            <h2 className={sectionTitleClasses}><BarChart2 className="text-orange-500" size={24} /> Performance Analytics</h2>
             {userStats ? (
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5 md:gap-[15px]">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className={statCardClasses}>
-                  <Star className="w-[32px] h-[32px] mb-[8px] text-[#DAA520] mx-auto fill-current" />
+                  <Star className="w-8 h-8 mb-3 text-orange-500 mx-auto fill-current" />
                   <div className={statValueClasses}>{userStats.averageRating || 'N/A'}</div>
                   <div className={statLabelClasses}>Average Rating</div>
                 </div>
                 <div className={statCardClasses}>
-                  <ChefHat className="w-[32px] h-[32px] mb-[8px] text-[#8B4513] mx-auto" />
+                  <ChefHat className="w-8 h-8 mb-3 text-orange-500 mx-auto" />
                   <div className={statValueClasses}>{userStats.totalRecipes}</div>
                   <div className={statLabelClasses}>Total Recipes</div>
                 </div>
                 <div className={statCardClasses}>
-                  <Trophy className="w-[32px] h-[32px] mb-[8px] text-[#DAA520] mx-auto" />
+                  <Trophy className="w-8 h-8 mb-3 text-orange-500 mx-auto" />
                   <div className={statValueClasses}>{userStats.recipesInTop10}</div>
                   <div className={statLabelClasses}>Recipes in Top 10</div>
                 </div>
                 <div className={statCardClasses}>
-                  <TrendingUp className="w-[32px] h-[32px] mb-[8px] text-[#8B4513] mx-auto" />
+                  <TrendingUp className="w-8 h-8 mb-3 text-orange-500 mx-auto" />
                   <div className={statValueClasses}>{userStats.successScore}/100</div>
                   <div className={statLabelClasses}>Success Score</div>
                 </div>
                 <div className={statCardClasses}>
-                  <Leaf className="w-[32px] h-[32px] mb-[8px] text-[#4caf50] mx-auto" />
+                  <Leaf className="w-8 h-8 mb-3 text-green-500 mx-auto" />
                   <div className={statValueClasses}>{userStats.healthRecipes}</div>
                   <div className={statLabelClasses}>Health Recipes</div>
                 </div>
                 <div className={statCardClasses}>
-                  <Eye className="w-[32px] h-[32px] mb-[8px] text-[#5D4037] mx-auto" />
+                  <Eye className="w-8 h-8 mb-3 text-blue-500 mx-auto" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['view'] !== undefined
                       ? userStats.engagementMetrics['view']
@@ -180,7 +170,7 @@ const ChefInsightsPage = ({ user }) => {
                   <div className={statLabelClasses}>Views</div>
                 </div>
                 <div className={statCardClasses}>
-                  <Heart className="w-[32px] h-[32px] mb-[8px] text-[#e74c3c] mx-auto fill-current" />
+                  <Heart className="w-8 h-8 mb-3 text-red-500 mx-auto fill-current" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['like'] !== undefined
                       ? userStats.engagementMetrics['like']
@@ -189,7 +179,7 @@ const ChefInsightsPage = ({ user }) => {
                   <div className={statLabelClasses}>Likes</div>
                 </div>
                 <div className={statCardClasses}>
-                  <Save className="w-[32px] h-[32px] mb-[8px] text-[#2196f3] mx-auto" />
+                  <Save className="w-8 h-8 mb-3 text-indigo-500 mx-auto" />
                   <div className={engagementValueClasses}>
                     {userStats.engagementMetrics && userStats.engagementMetrics['save'] !== undefined
                       ? userStats.engagementMetrics['save']
@@ -199,54 +189,54 @@ const ChefInsightsPage = ({ user }) => {
                 </div>
               </div>
             ) : (
-              <p>Loading performance data...</p>
+              <p className="text-gray-500">Loading performance data...</p>
             )}
           </section>
 
           {/* Rating Trends Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Rating Trends - last six months </h2>
+            <h2 className={sectionTitleClasses}><TrendingUp className="text-orange-500" size={24} /> Rating Trends - last six months </h2>
             {userStats && userStats.ratingTrends && userStats.ratingTrends.length > 0 ? (
-              <div className="flex items-end justify-center h-[220px] mt-[30px] gap-[15px] sm:gap-[5px] max-w-[800px] mx-auto">
+              <div className="flex items-end justify-center h-[220px] mt-8 gap-4 max-w-[800px] mx-auto">
                 {[...userStats.ratingTrends].reverse().map((trend, index) => {
                   const heightPercentage = (parseFloat(trend.avgRating) / 5) * 100;
                   return (
                     <div key={index} className="flex flex-col items-center flex-1 group">
-                      <span className="text-[#DAA520] font-bold text-[1rem] sm:text-[0.8rem] mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-[5px] group-hover:translate-y-0 flex items-center justify-center gap-[4px]"><Star className="w-[14px] h-[14px] fill-current" /> {trend.avgRating}</span>
-                      <div className="w-full max-w-[60px] sm:max-w-[30px] bg-[#f0e6d6] rounded-t-md relative h-full flex flex-col justify-end">
-                        <div className="w-full bg-gradient-to-t from-[#8B4513] to-[#D2691E] rounded-t-md transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(210,105,30,0.3)]" style={{ height: `${heightPercentage}%` }}></div>
+                      <span className="text-orange-500 font-bold text-sm mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-1 group-hover:translate-y-0 flex items-center justify-center gap-1"><Star className="w-3.5 h-3.5 fill-current" /> {trend.avgRating}</span>
+                      <div className="w-full max-w-[60px] bg-gray-50 rounded-t-xl relative h-full flex flex-col justify-end">
+                        <div className="w-full bg-gradient-to-t from-orange-400 to-orange-500 rounded-t-xl transition-all duration-1000 ease-out shadow-sm" style={{ height: `${heightPercentage}%` }}></div>
                       </div>
-                      <span className="text-[#5D4037] text-[0.9rem] sm:text-[0.7rem] mt-3 font-semibold uppercase tracking-wider">{new Date(trend.month + '-01').toLocaleDateString('en-US', { month: 'short' })}</span>
+                      <span className="text-gray-500 text-xs mt-3 font-semibold uppercase tracking-wider">{new Date(trend.month + '-01').toLocaleDateString('en-US', { month: 'short' })}</span>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-center text-[#5D4037] italic">Not enough historical data to show trends yet.</p>
+              <p className="text-center text-gray-500 italic">Not enough historical data to show trends yet.</p>
             )}
           </section>
 
           {/* Popular Recipes Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Your Popular Recipes</h2>
+            <h2 className={sectionTitleClasses}><Trophy className="text-orange-500" size={24} /> Your Popular Recipes</h2>
             {popularRecipes.length === 0 ? (
-              <p>No popular recipes currently. Keep creating amazing recipes!</p>
+              <p className="text-gray-500">No popular recipes currently. Keep creating amazing recipes!</p>
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-5 md:gap-[15px]">
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-5">
                 {popularRecipes.map((recipe) => (
                   <div
                     key={recipe.recipe_id}
-                    className="bg-[#f9f0e0] border border-[#8B4513] rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(139,69,19,0.2)] md:shadow-[0_2px_6px_rgba(139,69,19,0.2)] cursor-pointer transition-all duration-300 hover:-translate-y-[5px] hover:shadow-[0_4px_12px_rgba(139,69,19,0.3)]"
+                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                     onClick={() => handleRecipeClick(recipe.recipe_id)}
                   >
                     <img
                       src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                       alt={recipe.title}
-                      className="w-full h-[180px] object-cover border-b border-b-[#A0522D]"
+                      className="w-full h-[180px] object-cover border-b border-gray-100"
                     />
-                    <div className="p-[15px] text-center">
-                      <h3 className="m-0 mb-[8px] text-[1.2rem] font-semibold text-[#5D4037] leading-[1.3] font-['Georgia',_serif]">{recipe.title}</h3>
-                      <p className="m-0 text-[1.1rem] text-[#DAA520] font-medium flex items-center justify-center gap-[4px]"><Star className="w-[18px] h-[18px] fill-current" /> {parseFloat(recipe.avg_rating).toFixed(1)}</p>
+                    <div className="p-5 text-center bg-white">
+                      <h3 className="m-0 mb-2 text-lg font-bold text-gray-800 leading-tight truncate">{recipe.title}</h3>
+                      <p className="m-0 text-orange-500 font-bold flex items-center justify-center gap-1"><Star className="w-4 h-4 fill-current" /> {parseFloat(recipe.avg_rating).toFixed(1)}</p>
                     </div>
                   </div>
                 ))}
@@ -256,24 +246,31 @@ const ChefInsightsPage = ({ user }) => {
 
           {/* Recent Reviews Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Recent Reviews</h2>
+            <h2 className={sectionTitleClasses}><Heart className="text-orange-500" size={24} /> Recent Reviews</h2>
             {reviews.length === 0 ? (
-              <p>No recent reviews. Keep engaging with your audience!</p>
+              <p className="text-gray-500 text-center py-4">No recent reviews. Keep engaging with your audience!</p>
             ) : (
               <div className="flex flex-col items-center gap-5">
                 <div className="w-full max-w-[800px]">
-                  <div className="bg-[#f0e6d6] border-2 border-[#A0522D] rounded-[12px] p-[30px] border-l-[4px] border-l-[#8B4513] shadow-[0_4px_12px_rgba(139,69,19,0.2)] min-h-[200px] flex items-center justify-center overflow-hidden">
-                    <div key={currentReviewIndex} className="text-center w-full animate-[fadeIn_0.5s_ease-in-out]">
-                      <h4 className="text-[1.4rem] font-semibold text-[#5D4037] mb-[15px] font-['Georgia',_serif]">Review for: {reviews[currentReviewIndex].recipe_title}</h4>
-                      <div className="flex items-center justify-center gap-[6px] text-[1.2rem] text-[#DAA520] mb-[15px] font-medium"><Star className="w-[22px] h-[22px] fill-current" /> {reviews[currentReviewIndex].rating}/5</div>
-                      <p className="italic text-[#5D4037] mb-[15px] leading-[1.6] text-[1.1rem] font-['Georgia',_serif]">"{reviews[currentReviewIndex].review_text}"</p>
-                      <p className="text-[#8B4513] font-semibold text-[1rem] font-['Georgia',_serif]">- {reviews[currentReviewIndex].reviewer_name}</p>
+                  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-8 min-h-[200px] flex items-center justify-center overflow-hidden relative">
+                    <div className="absolute top-4 left-4 text-orange-200">
+                      <Star size={40} className="fill-current opacity-50" />
+                    </div>
+                    <div key={currentReviewIndex} className="text-center w-full animate-[fadeIn_0.5s_ease-in-out] z-10">
+                      <h4 className="text-lg font-bold text-gray-800 mb-3">Review for: {reviews[currentReviewIndex].recipe_title}</h4>
+                      <div className="flex items-center justify-center gap-1 text-orange-500 mb-4 font-bold">
+                        {[...Array(5)].map((_, i) => (
+                           <Star key={i} size={18} className={i < reviews[currentReviewIndex].rating ? "fill-current" : "fill-gray-200 text-gray-200"} />
+                        ))}
+                      </div>
+                      <p className="italic text-gray-600 mb-4 leading-relaxed text-lg">"{reviews[currentReviewIndex].review_text}"</p>
+                      <p className="text-orange-500 font-bold text-sm uppercase tracking-wider">- {reviews[currentReviewIndex].reviewer_name}</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-center gap-5 mt-5">
+                <div className="flex items-center justify-center gap-5 mt-2">
                   <button
-                    className="bg-[#8B4513] text-white border-none rounded-full w-[40px] h-[40px] text-[1.5rem] cursor-pointer flex items-center justify-center transition-all duration-300 shadow-[0_2px_6px_rgba(139,69,19,0.3)] hover:bg-[#A0522D] hover:scale-110"
+                    className="bg-white text-gray-600 border border-gray-200 rounded-full w-10 h-10 text-xl flex items-center justify-center transition-all duration-300 hover:bg-gray-50 hover:text-orange-500 shadow-sm cursor-pointer"
                     onClick={() => setCurrentReviewIndex(currentReviewIndex === 0 ? reviews.length - 1 : currentReviewIndex - 1)}
                   >
                     ‹
@@ -282,13 +279,13 @@ const ChefInsightsPage = ({ user }) => {
                     {reviews.slice(0, 5).map((_, index) => (
                       <span
                         key={index}
-                        className={`w-[12px] h-[12px] rounded-full cursor-pointer transition-all duration-300 ${index === currentReviewIndex ? 'bg-[#8B4513] scale-125' : 'bg-[#D7C4A3]'}`}
+                        className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-all duration-300 ${index === currentReviewIndex ? 'bg-orange-500 w-6' : 'bg-gray-300'}`}
                         onClick={() => setCurrentReviewIndex(index)}
                       ></span>
                     ))}
                   </div>
                   <button
-                    className="bg-[#8B4513] text-white border-none rounded-full w-[40px] h-[40px] text-[1.5rem] cursor-pointer flex items-center justify-center transition-all duration-300 shadow-[0_2px_6px_rgba(139,69,19,0.3)] hover:bg-[#A0522D] hover:scale-110"
+                    className="bg-white text-gray-600 border border-gray-200 rounded-full w-10 h-10 text-xl flex items-center justify-center transition-all duration-300 hover:bg-gray-50 hover:text-orange-500 shadow-sm cursor-pointer"
                     onClick={() => setCurrentReviewIndex(currentReviewIndex === reviews.length - 1 ? 0 : currentReviewIndex + 1)}
                   >
                     ›
@@ -296,7 +293,7 @@ const ChefInsightsPage = ({ user }) => {
                 </div>
                 <div className="mt-5">
                   <button
-                    className="bg-gradient-to-br from-[#8B4513] to-[#D2691E] text-white border-none rounded-lg py-[12px] px-[24px] text-[1rem] font-semibold cursor-pointer transition-all duration-300 shadow-[0_2px_8px_rgba(139,69,19,0.3)] font-['Georgia',_serif] hover:from-[#A0522D] hover:to-[#CD853F] hover:-translate-y-[2px]"
+                    className="bg-orange-500 text-white border-none rounded-xl py-3 px-6 text-sm font-bold cursor-pointer transition-all duration-300 hover:bg-orange-600 hover:-translate-y-0.5 shadow-sm"
                     onClick={() => handleRecipeClick(reviews[currentReviewIndex].recipe_id)}
                   >
                     View Recipe
@@ -308,12 +305,12 @@ const ChefInsightsPage = ({ user }) => {
 
           {/* Tips & Tricks Section */}
           <section className={sectionClasses}>
-            <h2 className={sectionTitleClasses}>Smart AI Tips</h2>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] md:grid-cols-1 gap-5 md:gap-[15px]">
+            <h2 className={sectionTitleClasses}><Lightbulb className="text-orange-500" size={24} /> Smart AI Tips</h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] md:grid-cols-1 gap-4">
               {generateDynamicTips(userStats).map((tip, index) => (
-                <div key={index} className="bg-gradient-to-br from-[#e8d8b9] to-[#d7c4a3] border border-[#A0522D] rounded-lg p-5 md:p-[15px] flex items-start gap-[15px] shadow-[0_2px_8px_rgba(139,69,19,0.2),inset_0_1px_0_rgba(218,165,32,0.1)] md:shadow-[0_2px_6px_rgba(139,69,19,0.2)] transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(139,69,19,0.3),inset_0_1px_0_rgba(218,165,32,0.2)]">
-                  <Lightbulb className="w-[28px] h-[28px] shrink-0 text-[#8B4513] mt-[2px]" />
-                  <p className="m-0 text-[#5D4037] leading-[1.5] text-[1rem] font-['Georgia',_serif]">{tip}</p>
+                <div key={index} className="bg-orange-50 border border-orange-100 rounded-xl p-5 flex items-start gap-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-sm">
+                  <Lightbulb className="w-6 h-6 shrink-0 text-orange-500 mt-0.5" />
+                  <p className="m-0 text-gray-700 leading-relaxed text-sm font-medium">{tip}</p>
                 </div>
               ))}
             </div>

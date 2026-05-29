@@ -10,6 +10,12 @@ const uploadRouter = {
   }).onUploadComplete(({ metadata, file }) => {
     console.log("Upload complete! File URL:", file.url);
   }),
+  mediaUploader: f({
+    image: { maxFileSize: "8MB", maxFileCount: 1 },
+    video: { maxFileSize: "32MB", maxFileCount: 1 },
+  }).onUploadComplete(({ metadata, file }) => {
+    console.log("Media Upload complete! File URL:", file.url);
+  }),
 };
 
 module.exports = { uploadRouter };

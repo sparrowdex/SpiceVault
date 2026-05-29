@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Save, Heart, Star, ChefHat, Clock, Flame, BarChart2, User, Settings, Eye, Edit3, Trash2 } from 'lucide-react';
+import ChefInsightsPage from '../pages/ChefInsightsPage';
 
 const UserProfile = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('saved');
@@ -8,8 +10,6 @@ const UserProfile = ({ user, onLogout }) => {
   const [ratedRecipes, setRatedRecipes] = useState([]);
   const [addedRecipes, setAddedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'deleteAccount' or 'deleteInteractions'
   const navigate = useNavigate();
 
   const fetchUserData = useCallback(async () => {
@@ -143,35 +143,34 @@ const UserProfile = ({ user, onLogout }) => {
 
   const renderRecipeCard = (recipe, type) => {
     return (
-      <div key={recipe.recipe_id || recipe.interaction_id} className="bg-white rounded-[15px] shadow-[0_6px_20px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 border border-[#e0e0e0] w-full hover:-translate-y-[5px] hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] flex flex-col justify-between">
+      <div key={recipe.recipe_id || recipe.interaction_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 w-full hover:-translate-y-1 hover:shadow-md flex flex-col justify-between group">
         <div>
           {recipe.recipe && recipe.recipe.image_url && (
             <img 
               src={recipe.recipe.image_url.startsWith('http') ? recipe.recipe.image_url : `http://localhost:5000/images/${recipe.recipe.image_url}`} 
               alt={recipe.recipe.title}
-              className="w-full h-[160px] object-cover border-b border-[#e0e0e0]"
+              className="w-full h-32 sm:h-40 md:h-48 object-cover border-b border-gray-100 transition-transform duration-500 group-hover:scale-105"
             />
           )}
           
-          <div className="p-[15px]">
-            <h3 className="m-0 mb-[10px] text-[#333] text-[18px] font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="p-3 md:p-5 relative bg-white z-10">
+            <h3 className="m-0 mb-1 md:mb-2 text-gray-800 text-base md:text-lg font-bold whitespace-nowrap overflow-hidden text-ellipsis">
               {recipe.recipe ? recipe.recipe.title : recipe.title}
             </h3>
-            <p className="text-[14px] text-[#666] my-[10px] mb-[15px] leading-[1.5] line-clamp-2 overflow-hidden text-ellipsis h-[42px]">
+            <p className="text-xs md:text-sm text-gray-500 m-0 mb-3 md:mb-4 leading-relaxed line-clamp-2 h-8 md:h-10">
               {recipe.recipe ? recipe.recipe.description : recipe.description}
             </p>
             
             {type === 'rated' && (
-              <div className="flex items-center gap-[10px] my-[15px] p-[10px] bg-[#f8f9fa] rounded-[8px]">
-                <span className="font-medium text-[#333] text-[14px]">Your Rating:</span>
-                <div className="flex gap-[2px]">
+              <div className="flex items-center gap-1 md:gap-2 mt-3 md:mt-4 p-2 md:p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <span className="font-semibold text-gray-700 text-[10px] md:text-xs uppercase tracking-wider">Your Rating:</span>
+                <div className="flex gap-0.5">
                   {[1, 2, 3, 4, 5].map(star => (
-                    <span 
+                    <Star
                       key={star} 
-                      className={`text-[16px] transition-colors duration-200 ${star <= recipe.rating ? 'text-[#ff6600]' : 'text-[#ddd]'}`}
-                    >
-                      ★
-                    </span>
+                      size={14}
+                      className={star <= recipe.rating ? 'fill-orange-500 text-orange-500' : 'fill-gray-200 text-gray-200'}
+                    />
                   ))}
                 </div>
               </div>
@@ -179,16 +178,16 @@ const UserProfile = ({ user, onLogout }) => {
           </div>
         </div>
         
-        <div className="p-[15px] pt-0">
-          <div className="flex gap-[10px] mt-[5px]">
+        <div className="p-3 md:p-5 pt-0 bg-white z-10">
+          <div className="flex gap-2">
             <button 
-              className="flex-1 py-[10px] px-[15px] border-none rounded-[8px] cursor-pointer text-[14px] font-medium transition-all duration-300 bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[1px]"
+              className="flex-1 py-2 md:py-2.5 px-3 md:px-4 bg-orange-500 text-white rounded-xl font-semibold text-xs md:text-sm transition-colors hover:bg-orange-600 flex items-center justify-center gap-2"
               onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
             >
-              View
+              <Eye size={16} /> View
             </button>
             <button 
-              className="flex-1 py-[10px] px-[15px] border border-[#ddd] rounded-[8px] cursor-pointer text-[14px] font-medium transition-all duration-300 bg-[#f5f5f5] text-[#666] hover:bg-[#ffebee] hover:text-[#d32f2f] hover:border-[#ffcdd2]"
+              className="flex-1 py-2 md:py-2.5 px-3 md:px-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold text-xs md:text-sm transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-100"
               onClick={() => handleRemoveInteraction(type === 'rated' ? recipe.review_id : recipe.recipe_id, type)}
             >
               Remove
@@ -200,44 +199,47 @@ const UserProfile = ({ user, onLogout }) => {
   };
 
   const renderAddedRecipeCard = (recipe) => (
-    <div key={recipe.recipe_id} className="bg-white rounded-[15px] shadow-[0_6px_20px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-300 w-full hover:-translate-y-[5px] hover:shadow-[0_10px_30px_rgba(0,0,0,0.15)] border-2 border-[#ff6600] relative before:content-['👨‍🍳'] before:absolute before:top-[10px] before:right-[10px] before:bg-[#ff6600e6] before:text-white before:py-[5px] before:px-[8px] before:rounded-full before:text-[16px] before:z-[1] flex flex-col justify-between">
+    <div key={recipe.recipe_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 w-full hover:-translate-y-1 hover:shadow-md relative flex flex-col justify-between group">
+      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-orange-600 p-2 rounded-full shadow-sm z-20">
+        <ChefHat size={18} />
+      </div>
+      
       <div>
         {recipe.image_url && (
           <img 
             src={recipe.image_url.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`} 
             alt={recipe.title}
-            className="w-full h-[160px] object-cover border-b border-[#e0e0e0]"
+            className="w-full h-32 sm:h-40 md:h-48 object-cover border-b border-gray-100 transition-transform duration-500 group-hover:scale-105"
           />
         )}
         
-        <div className="p-[15px]">
-          <div className="flex justify-between items-center mb-[10px] gap-[10px]">
-            <h3 className="m-0 text-[#333] text-[18px] font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-[60%]">{recipe.title}</h3>
-            <span className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white py-[4px] px-[10px] rounded-[20px] text-[11px] font-semibold shrink-0">Your Recipe</span>
+        <div className="p-3 md:p-5 relative bg-white z-10">
+          <div className="flex justify-between items-center mb-2 gap-2">
+            <h3 className="m-0 text-gray-800 text-base md:text-lg font-bold whitespace-nowrap overflow-hidden text-ellipsis flex-1">{recipe.title}</h3>
           </div>
-          <p className="text-[14px] text-[#666] my-[10px] mb-[15px] leading-[1.5] line-clamp-2 overflow-hidden text-ellipsis h-[42px]">{recipe.description}</p>
+          <p className="text-xs md:text-sm text-gray-500 m-0 mb-3 md:mb-4 leading-relaxed line-clamp-2 h-8 md:h-10">{recipe.description}</p>
           
-          <div className="flex gap-[8px] my-[15px] flex-wrap">
-            <span className="flex items-center gap-[3px] text-[12px] text-[#666] bg-[#f8f9fa] py-[4px] px-[8px] rounded-[15px]">⏱️ {recipe.preparation_time}</span>
-            <span className="flex items-center gap-[3px] text-[12px] text-[#666] bg-[#f8f9fa] py-[4px] px-[8px] rounded-[15px]">🔥 {recipe.cooking_time}</span>
-            <span className="flex items-center gap-[3px] text-[12px] text-[#666] bg-[#f8f9fa] py-[4px] px-[8px] rounded-[15px]">📊 {recipe.difficulty}</span>
+          <div className="flex gap-1.5 md:gap-2 my-3 md:my-4 flex-wrap">
+            <span className="flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs text-gray-600 bg-gray-50 border border-gray-100 py-1 md:py-1.5 px-2 md:px-3 rounded-lg font-semibold"><Clock size={12} className="text-orange-500 md:w-3.5 md:h-3.5"/> {recipe.preparation_time}</span>
+            <span className="flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs text-gray-600 bg-gray-50 border border-gray-100 py-1 md:py-1.5 px-2 md:px-3 rounded-lg font-semibold"><Flame size={12} className="text-orange-500 md:w-3.5 md:h-3.5"/> {recipe.cooking_time}</span>
+            <span className="flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs text-gray-600 bg-gray-50 border border-gray-100 py-1 md:py-1.5 px-2 md:px-3 rounded-lg font-semibold"><BarChart2 size={12} className="text-orange-500 md:w-3.5 md:h-3.5"/> {recipe.difficulty}</span>
           </div>
         </div>
       </div>
       
-      <div className="p-[15px] pt-0">
-        <div className="flex gap-[10px] mt-[5px]">
+      <div className="p-3 md:p-5 pt-0 bg-white z-10">
+        <div className="flex gap-2">
           <button 
-            className="flex-1 py-[10px] px-[15px] border-none rounded-[8px] cursor-pointer text-[14px] font-medium transition-all duration-300 bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[1px]"
+            className="flex-1 py-2 md:py-2.5 px-3 md:px-4 bg-orange-500 text-white rounded-xl font-semibold text-xs md:text-sm transition-colors hover:bg-orange-600 flex items-center justify-center gap-2"
             onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
           >
-            View
+            <Eye size={16} /> View
           </button>
           <button 
-            className="flex-1 py-[10px] px-[15px] border-none rounded-[8px] cursor-pointer text-[14px] font-medium transition-all duration-300 bg-gradient-to-br from-[#4caf50] to-[#66bb6a] text-white hover:from-[#388e3c] hover:to-[#4caf50] hover:-translate-y-[1px]"
+            className="flex-1 py-2 md:py-2.5 px-3 md:px-4 bg-white text-gray-700 border border-gray-200 rounded-xl font-semibold text-xs md:text-sm transition-colors hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
             onClick={() => showNotification('Edit recipe feature coming soon!', 'info')}
           >
-            Edit
+            <Edit3 size={16} /> Edit
           </button>
         </div>
       </div>
@@ -254,155 +256,85 @@ const UserProfile = ({ user, onLogout }) => {
 
   return (
     <div className="max-w-[1200px] mx-auto p-[20px] font-['Poppins',_sans-serif]">
-      <div className="flex justify-between items-center bg-gradient-to-br from-[#ff6600] via-[#ff8533] to-[#cc6600] text-white p-[30px] sm:p-[20px] rounded-[30px_/_60px] mb-[30px] shadow-[0_6px_20px_rgba(255,102,0,0.3)] filter drop-shadow-[0_0_5px_rgba(255,102,0,0.5)] transition-all duration-300 hover:drop-shadow-[0_0_15px_rgba(255,102,0,0.8)]">
-        <div>
-          <h1 className="m-0 mb-[10px] sm:mb-[5px] text-[32px] sm:text-[22px] font-semibold flex items-baseline gap-[6px] flex-wrap"><span className="font-['MerivalRounded',_serif] text-[28px] sm:text-[20px] font-semibold">Welcome,</span> <span className="font-['MerivalRounded',_serif] text-[32px] sm:text-[24px] font-bold">{user.f_name}!</span></h1>
-          <p className="m-[5px_0] text-[16px] sm:text-[13px] opacity-90">{user.user_type} Account</p>
-          <p className="m-[5px_0_0_0] text-[14px] sm:text-[11px] opacity-80 sm:break-all">{user.email}</p>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-500/10 to-transparent rounded-bl-full pointer-events-none" />
+        
+        <div className="flex items-center gap-6 z-10 w-full md:w-auto">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-orange-400 flex items-center justify-center text-white shadow-md shrink-0 border-4 border-white overflow-hidden">
+            {user.profile_picture ? (
+              <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <User size={40} />
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 font-['Nostalgia',_serif] tracking-wide m-0 mb-2">
+              {user.f_name} {user.l_name}
+            </h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-sm font-semibold tracking-wide capitalize flex items-center gap-1.5">
+                {user.user_type === 'chef' ? <ChefHat size={14} /> : <User size={14} />}
+                {user.user_type}
+              </span>
+              <span className="text-gray-500 text-sm font-medium">{user.email}</span>
+            </div>
+          </div>
         </div>
-        <div className="shrink-0 ml-[10px]">
-          <button className="bg-transparent text-white border-2 border-[#f44336] py-[10px] px-[20px] sm:py-[8px] sm:px-[12px] sm:text-[13px] rounded-[8px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#f44336] hover:-translate-y-[1px] whitespace-nowrap" onClick={() => { setModalType('deleteInteractions'); setShowDeleteModal(true); }}>
-            Delete Account
+
+        <div className="flex gap-3 z-10 w-full md:w-auto">
+          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm text-sm cursor-pointer" onClick={() => navigate('/settings')}>
+            <Settings size={18} />
+            Settings
+          </button>
+          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl font-semibold hover:bg-red-100 transition-colors shadow-sm text-sm cursor-pointer" onClick={onLogout}>
+            Logout
           </button>
         </div>
       </div>
 
-      {showDeleteModal && modalType === 'deleteAccount' && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-[2000]">
-          <div className="bg-white p-[30px] rounded-[12px] max-w-[400px] w-[90%] shadow-[0_8px_24px_rgba(0,0,0,0.2)] text-center">
-            <h3 className="mt-0 mb-[15px] text-[22px] text-[#333]">Confirm Account Deletion</h3>
-            <p className="text-[16px] mb-[25px] text-[#555]">Are you sure you want to delete your account? This action cannot be undone.</p>
-            <div className="flex justify-around gap-[15px]">
-              <button 
-                className="bg-transparent text-[#f44336] border-2 border-[#f44336] font-['TropicalCalm',_serif] flex-1 py-[10px] px-0 rounded-[8px] font-semibold cursor-pointer transition-all duration-300 max-w-[150px] text-center hover:bg-[#f44336] hover:text-white" 
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`http://localhost:5000/api/users/${user.user_id}`, {
-                      method: 'DELETE',
-                      headers: {
-                        'Authorization': `Bearer ${token}`
-                      }
-                    });
-                    if (response.ok) {
-                      showNotification('Account deleted successfully.', 'success');
-                      onLogout();
-                      navigate('/');
-                    } else {
-                      const errorData = await response.json();
-                      throw new Error(errorData.message || 'Failed to delete account');
-                    }
-                  } catch (error) {
-                    showNotification(`Error: ${error.message}`, 'error');
-                  } finally {
-                    setShowDeleteModal(false);
-                    setModalType(null);
-                  }
-                }}
-              >
-                Confirm Delete
-              </button>
-              <button 
-                className="bg-transparent text-[#f44336] border-2 border-[#f44336] font-['TropicalCalm',_serif] flex-1 py-[10px] px-0 rounded-[8px] font-semibold cursor-pointer transition-all duration-300 max-w-[150px] text-center hover:bg-[#f44336] hover:text-white" 
-                onClick={() => { setShowDeleteModal(false); setModalType(null); }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDeleteModal && modalType === 'deleteInteractions' && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/50 flex justify-center items-center z-[2000]">
-          <div className="bg-white p-[30px] rounded-[12px] max-w-[400px] w-[90%] shadow-[0_8px_24px_rgba(0,0,0,0.2)] text-center">
-            <h3 className="mt-0 mb-[15px] text-[22px] text-[#333]">Delete All Interactions</h3>
-            <p className="text-[16px] mb-[25px] text-[#555]">This will delete all your saved, liked, and other interactions. This action cannot be undone.</p>
-            <div className="flex justify-around gap-[15px]">
-              <button
-                className="bg-transparent text-[#f44336] border-2 border-[#f44336] font-['TropicalCalm',_serif] flex-1 py-[10px] px-0 rounded-[8px] font-semibold cursor-pointer transition-all duration-300 max-w-[150px] text-center hover:bg-[#f44336] hover:text-white"
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch('http://localhost:5000/api/user-interactions/delete-all', {
-                      method: 'DELETE',
-                      headers: {
-                        'Authorization': `Bearer ${token}`
-                      }
-                    });
-                    if (response.ok) {
-                      showNotification('All interactions deleted successfully.', 'success');
-                      await fetchUserData();
-                      setModalType('deleteAccount');
-                    } else {
-                      const errorData = await response.json();
-                      throw new Error(errorData.message || 'Failed to delete interactions');
-                    }
-                  } catch (error) {
-                    showNotification(`Error: ${error.message}`, 'error');
-                  }
-                }}
-              >
-                Confirm Delete All Interactions
-              </button>
-              <button
-                className="bg-transparent text-[#f44336] border-2 border-[#f44336] font-['TropicalCalm',_serif] flex-1 py-[10px] px-0 rounded-[8px] font-semibold cursor-pointer transition-all duration-300 max-w-[150px] text-center hover:bg-[#f44336] hover:text-white"
-                onClick={() => { setShowDeleteModal(false); setModalType(null); }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Tabs Container */}
-      <div className="flex gap-[10px] sm:gap-[5px] mb-[30px] border-b-2 border-[#e0e0e0] overflow-x-auto pb-2 whitespace-nowrap">
-        <button 
-          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'saved' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-          onClick={() => setActiveTab('saved')}
-        >
-          💾 Saved ({savedRecipes.length})
-        </button>
-        <button 
-          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'liked' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-          onClick={() => setActiveTab('liked')}
-        >
-          ❤️ Liked ({likedRecipes.length})
-        </button>
-        <button 
-          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'rated' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-          onClick={() => setActiveTab('rated')}
-        >
-          ⭐ Rated ({ratedRecipes.length})
-        </button>
-        {user.user_type === 'chef' && (
-          <button 
-            className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'added' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-            onClick={() => setActiveTab('added')}
+      <div className="flex gap-3 mb-8 overflow-x-auto pb-2 w-full snap-x scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {[
+          { id: 'saved', label: 'Saved', icon: Save, count: savedRecipes.length },
+          { id: 'liked', label: 'Liked', icon: Heart, count: likedRecipes.length },
+          { id: 'rated', label: 'Rated', icon: Star, count: ratedRecipes.length },
+          ...(user.user_type === 'chef' ? [
+            { id: 'added', label: 'Added', icon: ChefHat, count: addedRecipes.length },
+            { id: 'insights', label: 'Insights', icon: BarChart2 }
+          ] : [])
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-300 whitespace-nowrap shrink-0 snap-start cursor-pointer ${
+              activeTab === tab.id 
+                ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25' 
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+            }`}
           >
-            👨‍🍳 Added ({addedRecipes.length})
+            <tab.icon size={18} className={activeTab === tab.id ? 'text-white' : 'text-gray-400'} />
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className={`px-2 py-0.5 rounded-full text-xs ml-1 ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                {tab.count}
+              </span>
+            )}
           </button>
-        )}
-        <button 
-          className={`bg-transparent border-none py-[15px] px-[25px] lg:px-[40px] sm:py-[10px] sm:px-[15px] cursor-pointer text-[18px] lg:text-[20px] sm:text-[14px] font-semibold border-b-[3px] transition-all duration-300 rounded-[8px_8px_0_0] font-['TropicalCalm',_serif] tracking-[0.1em] sm:tracking-normal whitespace-nowrap shrink-0 ${activeTab === 'journal' ? 'text-[#ff6600] border-b-[#ff6600] bg-[#fff5f0]' : 'text-[#666] border-transparent hover:text-[#ff6600] hover:bg-[#fff5f0]'}`}
-          onClick={() => setActiveTab('journal')}
-        >
-          📓 {user.user_type === 'chef' ? 'Chef Stories' : 'Journal'}
-        </button>
+        ))}
       </div>
 
       {/* Grid Layout Fix Applied Below */}
       <div className="min-h-[400px]">
         {activeTab === 'saved' && (
           <div>
-            <h2 className="mb-[20px] text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">Your Saved Recipes</h2>
+            <h2 className="mb-6 text-2xl font-bold font-['Nostalgia',_serif] text-gray-800">Your Saved Recipes</h2>
             {savedRecipes.length === 0 ? (
-              <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
-                <p className="text-[16px] m-0">No saved recipes yet. Start exploring and save your favorites!</p>
+              <div className="text-center py-16 px-6 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <Save className="mx-auto mb-4 text-gray-400" size={48} />
+                <p className="text-base m-0 font-medium">No saved recipes yet. Start exploring and save your favorites!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                 {savedRecipes.map(recipe => renderRecipeCard(recipe, 'saved'))}
               </div>
             )}
@@ -411,13 +343,14 @@ const UserProfile = ({ user, onLogout }) => {
 
         {activeTab === 'liked' && (
           <div>
-            <h2 className="mb-[20px] text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">Your Liked Recipes</h2>
+            <h2 className="mb-6 text-2xl font-bold font-['Nostalgia',_serif] text-gray-800">Your Liked Recipes</h2>
             {likedRecipes.length === 0 ? (
-              <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
-                <p className="text-[16px] m-0">No liked recipes yet. Like recipes you enjoy!</p>
+              <div className="text-center py-16 px-6 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <Heart className="mx-auto mb-4 text-gray-400" size={48} />
+                <p className="text-base m-0 font-medium">No liked recipes yet. Like recipes you enjoy!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                 {likedRecipes.map(recipe => renderRecipeCard(recipe, 'liked'))}
               </div>
             )}
@@ -426,13 +359,14 @@ const UserProfile = ({ user, onLogout }) => {
 
         {activeTab === 'rated' && (
           <div>
-            <h2 className="mb-[20px] text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">Your Rated Recipes</h2>
+            <h2 className="mb-6 text-2xl font-bold font-['Nostalgia',_serif] text-gray-800">Your Rated Recipes</h2>
             {ratedRecipes.length === 0 ? (
-              <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
-                <p className="text-[16px] m-0">No rated recipes yet. Rate recipes to help improve recommendations!</p>
+              <div className="text-center py-16 px-6 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <Star className="mx-auto mb-4 text-gray-400" size={48} />
+                <p className="text-base m-0 font-medium">No rated recipes yet. Rate recipes to help improve recommendations!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                 {ratedRecipes.map(recipe => renderRecipeCard(recipe, 'rated'))}
               </div>
             )}
@@ -441,35 +375,28 @@ const UserProfile = ({ user, onLogout }) => {
 
         {activeTab === 'added' && (
           <div>
-            <h2 className="mb-[20px] text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">Your Added Recipes</h2>
+            <h2 className="mb-6 text-2xl font-bold font-['Nostalgia',_serif] text-gray-800">Your Added Recipes</h2>
             {addedRecipes.length === 0 ? (
-              <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
-                <p className="text-[16px] m-0">No recipes added yet. <a href="/addrecipe" className="text-[#ff6600] no-underline hover:underline">Create your first recipe!</a></p>
+              <div className="text-center py-16 px-6 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <ChefHat className="mx-auto mb-4 text-gray-400" size={48} />
+                <p className="text-base m-0 font-medium">No recipes added yet. <a href="/addrecipe" className="text-orange-500 no-underline hover:underline">Create your first recipe!</a></p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
                 {addedRecipes.map(recipe => renderAddedRecipeCard(recipe))}
               </div>
             )}
           </div>
         )}
 
-        {activeTab === 'journal' && (
+        {activeTab === 'insights' && (
           <div>
-            <div className="flex justify-between items-center mb-[20px]">
-              <h2 className="text-[24px] font-semibold font-['Nostalgia',_serif] bg-gradient-to-r from-[#d4af37] via-[#ffd700] to-[#b8860b] bg-clip-text text-transparent">
-                {user.user_type === 'chef' ? 'Your Chef Stories' : 'Your Cooking Journal'}
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold font-['Nostalgia',_serif] text-gray-800">
+                Chef Insights Dashboard
               </h2>
-              <button 
-                className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white px-[20px] py-[10px] border-none rounded-[30px] font-semibold text-[14px] shadow-[0_4px_12px_rgba(255,102,0,0.3)] transition-transform cursor-pointer hover:-translate-y-[2px]"
-                onClick={() => showNotification('Article publishing coming soon!', 'info')}
-              >
-                + Create New Entry
-              </button>
             </div>
-            <div className="text-center py-[60px] px-[20px] text-[#666] bg-[#f8f9fa] rounded-[15px] border-2 border-dashed border-[#ccc]">
-              <p className="text-[16px] m-0">No entries yet. Share your culinary journey and connect with others!</p>
-            </div>
+            <ChefInsightsPage user={user} />
           </div>
         )}
       </div>

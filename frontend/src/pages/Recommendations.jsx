@@ -237,20 +237,20 @@ const Recommendations = ({ user }) => {
           recommendations.map(recipe => (
             <div
               key={recipe.recipe_id}
-              className="rounded-[8px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] mb-[10px] overflow-hidden flex flex-col max-w-[400px] w-full mx-auto bg-gradient-to-br from-[#f9f1e7] to-[#f0d9b5] p-[15px] box-border cursor-pointer transition-transform duration-300 hover:-translate-y-1"
+                  className="rounded-[12px] shadow-[0_2px_12px_rgba(0,0,0,0.08)] mb-[10px] overflow-hidden flex flex-col max-w-full sm:max-w-[400px] w-full mx-auto bg-gradient-to-br from-[#f9f1e7] to-[#f0d9b5] p-[10px] md:p-[15px] box-border cursor-pointer transition-transform duration-300 hover:-translate-y-1"
               onClick={() => navigate(`/recipes/${recipe.recipe_id}`)}
             >
               {recipe.image_url && (
                 <img
                   src={recipe.image_url?.startsWith('http') ? recipe.image_url : `http://localhost:5000/images/${recipe.image_url}`}
                   alt={recipe.title}
-                  className="w-full h-[200px] object-cover rounded-t-[8px]"
+                      className="w-full h-[160px] md:h-[200px] object-cover rounded-t-[8px]"
                   onLoad={() => handleRecordInteraction(recipe.recipe_id, 'view')}
                 />
               )}
 
-              <div className="p-[15px] flex flex-col grow">
-                <h3 className="font-['TrovicalCalmFree',_serif] text-[1.3rem] font-semibold mb-[10px] tracking-[0.05em] text-[#333] truncate" title={recipe.title}>{recipe.title}</h3>
+                  <div className="p-[10px] md:p-[15px] flex flex-col grow">
+                    <h3 className="font-['TropicalCalm',_serif] text-[1.1rem] md:text-[1.3rem] font-semibold mb-[10px] tracking-[0.05em] text-[#333] truncate" title={recipe.title}>{recipe.title}</h3>
 
                 {/* ML Score and Reason */}
                 <div className="mt-[10px] text-[0.9rem] text-[#666] flex flex-col gap-[5px]">
