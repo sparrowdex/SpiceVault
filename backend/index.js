@@ -75,6 +75,9 @@ app.use(
   "/api/uploadthing",
   createRouteHandler({
     router: uploadRouter,
+    config: {
+      callbackUrl: "https://sparrowdex-spicevault-backend.hf.space/api/uploadthing"
+    }
   })
 );
 
