@@ -93,8 +93,8 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ff6600] to-[#ff8533] p-[10px] sm:p-5">
-      <div className="bg-white rounded-[15px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-[30px_20px] sm:p-10 w-full max-w-[500px]">
-        <h2 className="text-center text-[#333] mb-[30px] text-[24px] sm:text-[28px] font-semibold">Login to SpiceVault</h2>
+      <div className="bg-white rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-[30px_20px] sm:p-10 w-full max-w-[500px]">
+        <h2 className="text-center text-[#333] mb-[30px] text-[2rem] sm:text-[2.5rem] font-bold font-['Nostalgia',_serif]">Login to SpiceVault</h2>
         <form onSubmit={handleSubmit}>
           <div className={groupClasses}>
             <label htmlFor="email" className={labelClasses}>Email</label>

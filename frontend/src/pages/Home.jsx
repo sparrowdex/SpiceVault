@@ -348,7 +348,7 @@ const Home = ({ user }) => {
       <FeaturedArticles />
 
       <div className="p-[20px]">
-        <h2 className="font-bold text-[2.5rem] bg-gradient-to-r from-orange-500 to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center uppercase tracking-[2px]">Popular Recipes</h2>
+        <h2 className="font-['Nostalgia',_serif] font-bold text-[3rem] bg-gradient-to-r from-[#ff6600] to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center tracking-wide">Popular Recipes</h2>
         <div 
           className="flex items-center justify-center my-[30px] relative max-w-[1200px] mx-auto md:max-w-full md:my-[15px] sm:my-[10px]"
           onMouseEnter={() => setIsHoveringCarousel(true)}
@@ -407,7 +407,7 @@ const Home = ({ user }) => {
           </button>
         </div>
 
-        <h2 className="font-bold text-[2.5rem] bg-gradient-to-r from-orange-500 to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center uppercase tracking-[2px]">All Recipes</h2>
+        <h2 className="font-['Nostalgia',_serif] font-bold text-[3rem] bg-gradient-to-r from-[#ff6600] to-[#5C4033] bg-clip-text text-transparent mb-[1rem] text-center tracking-wide">All Recipes</h2>
 
         <div className="bg-transparent py-[30px] px-[20px] rounded-b-[20px] -mt-[20px]">
           <div className="flex flex-wrap gap-[10px] md:gap-[15px] mb-[30px] md:mb-[40px] max-w-[1200px] w-full mx-auto justify-center items-center">
@@ -415,7 +415,7 @@ const Home = ({ user }) => {
               type="text"
               placeholder="Search by title..."
               value={search}
-              className="p-[10px_16px] text-[14px] md:p-[12px_20px] md:text-[16px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 flex-[1_1_100%] md:flex-[1_1_250px] bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)] box-border w-full md:w-auto"
+              className="p-[10px_16px] text-[14px] md:p-[12px_20px] md:text-[16px] border-2 border-[#ddd] rounded-xl outline-none transition-all duration-300 flex-[1_1_100%] md:flex-[1_1_250px] bg-[#f9f9f9] focus:border-[#ff6600] focus:shadow-[0_0_15px_rgba(255,102,0,0.2)] box-border w-full md:w-auto"
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
@@ -430,7 +430,7 @@ const Home = ({ user }) => {
                     section.setValue(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full p-[10px_30px_10px_12px] text-[13px] md:p-[12px_40px_12px_20px] md:text-[15px] border-2 border-[#ddd] rounded-[30px] outline-none transition-all duration-300 bg-[#f9f9f9] focus:border-[#ff6600] cursor-pointer text-[#555] font-medium appearance-none shadow-sm hover:border-[#ff6600]/50"
+                  className="w-full p-[10px_30px_10px_12px] text-[13px] md:p-[12px_40px_12px_20px] md:text-[15px] border-2 border-[#ddd] rounded-xl outline-none transition-all duration-300 bg-[#f9f9f9] focus:border-[#ff6600] cursor-pointer text-[#555] font-medium appearance-none shadow-sm hover:border-[#ff6600]/50"
                 >
                   {section.options.map(opt => (
                     <option key={opt.value} value={opt.value}>
@@ -447,7 +447,7 @@ const Home = ({ user }) => {
             {(search || difficulty || foodCategory || dietType) && (
               <button
                 onClick={() => { setSearch(''); setDifficulty(''); setFoodCategory(''); setDietType(''); setPage(1); }}
-                className="shrink-0 bg-transparent text-[#e74c3c] border-2 border-[#e74c3c] rounded-[30px] p-[8px_15px] text-[13px] md:p-[10px_20px] md:text-[15px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e74c3c] hover:text-white shadow-sm"
+                className="shrink-0 bg-transparent text-[#e74c3c] border-2 border-[#e74c3c] rounded-xl p-[8px_15px] text-[13px] md:p-[10px_20px] md:text-[15px] font-semibold cursor-pointer transition-all duration-300 hover:bg-[#e74c3c] hover:text-white shadow-sm"
               >
                 Clear Filters
               </button>
@@ -525,7 +525,7 @@ const Home = ({ user }) => {
       {/* Story Upload Modal */}
       {showStoryModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-[20px]">
-          <div className="bg-white rounded-[20px] p-[30px] w-full max-w-[400px] shadow-2xl relative animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-2xl p-[30px] w-full max-w-[400px] shadow-2xl relative animate-[fadeIn_0.2s_ease-out]">
             <button className="absolute top-[15px] right-[15px] text-[#888] hover:text-red-500 cursor-pointer border-none bg-transparent text-[20px]" onClick={() => setShowStoryModal(false)}>✕</button>
             <h2 className="text-[1.5rem] font-bold text-[#5C4033] mb-[20px] font-['Nostalgia',_serif] m-0">Post an Update</h2>
             <div className="flex flex-col gap-[15px]">

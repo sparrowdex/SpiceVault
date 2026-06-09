@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, NavLink, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import AddRecipe from './pages/AddRecipe';
+import EditRecipe from './pages/EditRecipe';
 import Recommendations from './pages/Recommendations';
 import ChefCertifiedRecipesPage from './pages/ChefCertifiedRecipes';
 import GlobalRankingsPage from './pages/GlobalRankingsPage';
@@ -187,6 +188,7 @@ function App() {
           <Route path="/" element={<Home user={user} />} />
           <Route path="/feed" element={user ? <CulinaryFeed user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/addrecipe" element={user ? <AddRecipe /> : <Navigate to="/login" replace />} />
+          <Route path="/editrecipe/:id" element={user ? <EditRecipe /> : <Navigate to="/login" replace />} />
           <Route path="/recommendations" element={user ? <Recommendations user={user} /> : <Navigate to="/login" replace />} />
           <Route path="/chef-certified-recipes" element={<ChefCertifiedRecipesPage />} />
           <Route path="/global-rankings" element={user ? <GlobalRankingsPage user={user} /> : <Navigate to="/login" replace />} />

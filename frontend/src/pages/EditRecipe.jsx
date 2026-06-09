@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { UploadDropzone } from '../utils/uploadthing';
 import "@uploadthing/react/styles.css";
 
-const AddRecipe = () => {
+const EditRecipe = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -33,18 +36,57 @@ const AddRecipe = () => {
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
+    let parsedUser = null;
     if (userData) {
-      const parsedUser = JSON.parse(userData);
+      parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      setFormData(prev => ({
-        ...prev,
-        user_id: parsedUser.user_id,
-        chef_id: parsedUser.user_type === 'chef' ? parsedUser.user_id : null
-      }));
       setIsChef(parsedUser.user_type === 'chef');
     }
     fetchCategories();
-  }, []);
+    fetchRecipeData(parsedUser);
+  }, [id]);
+
+  const fetchRecipeData = async (currentUser) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/${id}`);
+      const data = await res.json();
+      if (res.ok) {
+        if (currentUser && data.user_id !== currentUser.user_id) {
+          alert("You are not authorized to edit this recipe.");
+          navigate(`/recipes/${id}`);
+          return;
+        }
+
+        setFormData({
+          title: data.title || '',
+          description: data.description || '',
+          difficulty: data.difficulty || '',
+          food_category: data.food_category || 'main_course',
+          diet_type: data.diet_type || 'vegetarian',
+          image_url: data.image_url || '',
+          preparation_time: data.preparation_time || '',
+          cooking_time: data.cooking_time || '',
+          calories: data.calories || '',
+          protein: data.protein || '',
+          carbs: data.carbs || '',
+          fat: data.fat || '',
+          fiber: data.fiber || '',
+          nutrition_info: data.nutrition_info || '',
+          user_id: data.user_id,
+          chef_id: data.chef_id
+        });
+
+        if (data.ingredients) {
+          setIngredientsList(data.ingredients.split('\n').filter(i => i.trim() !== ''));
+        }
+        if (data.instructions) {
+          setInstructionsList(data.instructions.split('\n').filter(i => i.trim() !== ''));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch recipe:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -83,7 +125,6 @@ const AddRecipe = () => {
     setFormData({ ...formData, food_category: val.toLowerCase().replace(/\s+/g, '_') });
   };
 
-  // Dynamic Handlers
   const handleIngredientChange = (index, value) => {
     const newList = [...ingredientsList];
     newList[index] = value;
@@ -106,11 +147,10 @@ const AddRecipe = () => {
     e.preventDefault();
 
     if (!isChef) {
-      alert('You need a chef account to add recipes. Please become a chef from your profile.');
+      alert('You need a chef account to edit recipes. Please become a chef from your profile.');
       return;
     }
 
-    // Filter empty lines and join with newline for backward compatibility
     const finalIngredients = ingredientsList.filter(i => i.trim() !== '').join('\n');
     const finalInstructions = instructionsList.filter(i => i.trim() !== '').join('\n');
 
@@ -134,8 +174,8 @@ const AddRecipe = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes`, {
-        method: 'POST',
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -145,27 +185,8 @@ const AddRecipe = () => {
 
       const data = await res.json();
       if (res.ok) {
-        alert('Recipe added successfully!');
-        setFormData({
-          title: '',
-          description: '',
-          difficulty: '',
-          food_category: 'main_course',
-          diet_type: 'vegetarian',
-          image_url: '',
-          preparation_time: '',
-          cooking_time: '',
-          calories: '',
-          protein: '',
-          carbs: '',
-          fat: '',
-          fiber: '',
-          nutrition_info: '',
-          user_id: user.user_id,
-          chef_id: user.user_type === 'chef' ? user.user_id : null
-        });
-        setIngredientsList(['']);
-        setInstructionsList(['']);
+        alert('Recipe updated successfully!');
+        navigate(`/recipes/${id}`);
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -175,7 +196,7 @@ const AddRecipe = () => {
   };
 
   if (!user) {
-    return <p className="text-center mt-10">Please log in to add a recipe.</p>;
+    return <p className="text-center mt-10">Please log in to edit this recipe.</p>;
   }
 
   const inputClasses = "px-[10px] py-[8px] md:px-[15px] md:py-[12px] border-2 border-[#e0e0e0] rounded-[8px] md:rounded-[10px] text-[13px] md:text-[15px] transition-all duration-300 bg-white font-['Poppins',_sans-serif] text-[#333] focus:outline-none focus:border-[#ff6600] focus:shadow-[0_0_0_3px_rgba(255,102,0,0.1)] focus:-translate-y-[1px]";
@@ -186,8 +207,8 @@ const AddRecipe = () => {
     return (
       <div className="flex justify-center items-center min-h-[70vh] md:min-h-[80vh] p-3 md:p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
         <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-6 px-4 md:py-10 md:px-12 rounded-xl shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
-          <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[2rem] md:text-[2.5rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['Nostalgia',_serif]">Add a New Recipe</h2>
-          <p>You need to have a chef account to add a recipe. You can become a chef from your profile page.</p>
+          <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[2rem] md:text-[2.5rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['Nostalgia',_serif]">Edit Recipe</h2>
+          <p>You need to have a chef account to edit a recipe. You can become a chef from your profile page.</p>
         </div>
       </div>
     );
@@ -196,7 +217,7 @@ const AddRecipe = () => {
   return (
     <div className="flex justify-center items-center min-h-[70vh] md:min-h-[80vh] p-3 md:p-5 bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99]">
       <div className="relative bg-gradient-to-br from-white to-[#f9f9f9] py-6 px-4 md:py-10 md:px-12 rounded-xl shadow-[0_15px_35px_rgba(255,102,0,0.1),0_5px_15px_rgba(0,0,0,0.05)] max-w-[800px] w-full border border-[rgba(255,102,0,0.1)] overflow-hidden before:absolute before:top-0 before:left-0 before:right-0 before:h-1 before:bg-gradient-to-r before:from-[#ff6600] before:to-[#ff8533]">
-        <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[2rem] md:text-[2.5rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['Nostalgia',_serif]">Add a New Recipe</h2>
+        <h2 className="text-center mb-[15px] md:mb-[30px] text-[#ff6600] text-[2rem] md:text-[2.5rem] font-bold drop-shadow-[0_2px_4px_rgba(255,102,0,0.1)] font-['Nostalgia',_serif]">Edit Recipe</h2>
         <form className="flex flex-col gap-[10px] md:gap-[15px]" onSubmit={handleSubmit}>
           <label className={labelClasses}>Recipe Title</label>
           <input className={inputClasses} type="text" name="title" value={formData.title} onChange={handleChange} required />
@@ -204,10 +225,9 @@ const AddRecipe = () => {
           <label className={labelClasses}>Description</label>
           <textarea className={textareaClasses} name="description" value={formData.description} onChange={handleChange} placeholder="Share the story behind your recipe! We recommend writing at least 50 words to give readers a great introduction."></textarea>
 
-          {/* Dynamic Ingredients Section */}
           <div className="mt-4 bg-white p-4 md:p-6 rounded-[12px] shadow-sm border border-orange-100">
             <label className={labelClasses}>Ingredients</label>
-            <p className="text-sm text-gray-500 mb-4">Add your ingredients one by one.</p>
+            <p className="text-sm text-gray-500 mb-4">Edit your ingredients.</p>
             <div className="space-y-3">
               {ingredientsList.map((ingredient, index) => (
                 <div key={`ing-${index}`} className="flex items-center gap-2">
@@ -240,10 +260,9 @@ const AddRecipe = () => {
             </button>
           </div>
 
-          {/* Dynamic Instructions Section */}
           <div className="mt-4 bg-white p-4 md:p-6 rounded-[12px] shadow-sm border border-orange-100">
             <label className={labelClasses}>Instructions</label>
-            <p className="text-sm text-gray-500 mb-4">Add the steps to cook your recipe.</p>
+            <p className="text-sm text-gray-500 mb-4">Edit the steps to cook your recipe.</p>
             <div className="space-y-3">
               {instructionsList.map((instruction, index) => (
                 <div key={`inst-${index}`} className="flex items-start gap-2">
@@ -307,9 +326,6 @@ const AddRecipe = () => {
                   Cancel
                 </button>
               </div>
-              {newCategory && dynamicCategories.find(c => c.value === formData.food_category || c.label.toLowerCase() === newCategory.toLowerCase()) && (
-                <span className="text-orange-500 text-sm mt-[-4px] ml-1">This category already exists in the list!</span>
-              )}
             </div>
           ) : (
             <select className={inputClasses} name="food_category" value={formData.food_category} onChange={handleCategoryChange}>
@@ -389,20 +405,20 @@ const AddRecipe = () => {
                 allowedContent: "Image up to 4MB (4:3 aspect ratio recommended)"
               }}
               appearance={{
-                    container: "border-2 border-dashed border-[#ff6600] bg-gradient-to-b from-[#fff5f0] to-white rounded-[12px] py-[15px] px-[10px] md:py-[20px] md:px-[15px] h-[180px] md:h-[220px] cursor-pointer transition-all duration-300 hover:border-[#e55a00] hover:bg-[#fff0e6]",
+                container: "border-2 border-dashed border-[#ff6600] bg-gradient-to-b from-[#fff5f0] to-white rounded-[12px] py-[15px] px-[10px] md:py-[20px] md:px-[15px] h-[180px] md:h-[220px] cursor-pointer transition-all duration-300 hover:border-[#e55a00] hover:bg-[#fff0e6]",
                 uploadIcon: "text-[#ff6600] w-[45px] h-[45px] mb-[10px]",
                 label: "text-[#333] font-semibold text-[1.1rem] hover:text-[#ff6600] transition-colors",
                 allowedContent: "text-[#888] text-[0.85rem] mt-[5px]",
-                    button: "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white text-[0.8rem] md:text-[0.9rem] font-semibold py-[6px] px-[12px] md:py-[8px] md:px-[16px] rounded-[8px] mt-[10px] md:mt-[15px] shadow-[0_2px_8px_rgba(255,102,0,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(255,102,0,0.4)]"
+                button: "bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white text-[0.8rem] md:text-[0.9rem] font-bold py-[6px] px-[12px] md:py-[8px] md:px-[16px] rounded-[8px] mt-[10px] md:mt-[15px] shadow-[0_2px_8px_rgba(255,102,0,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(255,102,0,0.4)]"
               }}
             />
           )}
 
-          <button className="mt-[20px] md:mt-[30px] bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white py-[12px] md:py-[15px] px-[30px] border-none rounded-xl cursor-pointer text-[16px] md:text-[18px] font-bold tracking-wide transition-all duration-300 shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:bg-gradient-to-br hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] active:translate-y-0" type="submit">Add Recipe</button>
+          <button className="mt-[20px] md:mt-[30px] bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white py-[12px] md:py-[15px] px-[30px] border-none rounded-xl cursor-pointer text-[16px] md:text-[18px] font-bold tracking-wide transition-all duration-300 shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:bg-gradient-to-br hover:from-[#e55a00] hover:to-[#ff6600] hover:-translate-y-[2px] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] active:translate-y-0" type="submit">Update Recipe</button>
         </form>
       </div>
     </div>
   );
 };
 
-export default AddRecipe;
+export default EditRecipe;

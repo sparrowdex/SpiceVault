@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 function ViewRecipe({ user }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const recipeCardRef = useRef(null);
+
   const [recipe, setRecipe] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [rating, setRating] = useState(0);
@@ -17,6 +19,7 @@ function ViewRecipe({ user }) {
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(0);
 
+
   // New state for reply box open and reply text
   const [replyBoxOpen, setReplyBoxOpen] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -24,6 +27,26 @@ function ViewRecipe({ user }) {
   // Pagination state for reviews
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 5;
+
+  // New state for intricate design features
+  const [checkedIngredients, setCheckedIngredients] = useState(new Set());
+  const [cookMode, setCookMode] = useState(false);
+  const [relatedRecipes, setRelatedRecipes] = useState([]);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  const toggleIngredient = (index) => {
+    const newChecked = new Set(checkedIngredients);
+    if (newChecked.has(index)) {
+      newChecked.delete(index);
+    } else {
+      newChecked.add(index);
+    }
+    setCheckedIngredients(newChecked);
+  };
+
+  const scrollToRecipe = () => {
+    recipeCardRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const toggleReplyBox = (reviewId) => {
     if (replyBoxOpen === reviewId) {
@@ -60,12 +83,11 @@ function ViewRecipe({ user }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        // Refresh reviews list, add to top since we sort by newest
         setReviews((prev) => [data.rating, ...prev]);
         setNewReviewText('');
         setNewReviewRating(0);
-        setRating(newReviewRating); // Update the rating state to persist the star rating
-        setCurrentPage(1); // Jump to first page to see the new review
+        setRating(newReviewRating); 
+        setCurrentPage(1); 
       } else {
         alert('Failed to submit review.');
       }
@@ -99,7 +121,6 @@ function ViewRecipe({ user }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        // Update the specific review with new reply
         setReviews((prevReviews) =>
           prevReviews.map((review) =>
             review.review_id === reviewId
@@ -121,76 +142,74 @@ function ViewRecipe({ user }) {
   useEffect(() => {
     const fetchRecipeAndRating = async () => {
       try {
-        // Fetch recipe details
         const resRecipe = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes/${id}`);
-      const dataRecipe = await resRecipe.json();
-      setRecipe(dataRecipe);
+        const dataRecipe = await resRecipe.json();
+        setRecipe(dataRecipe);
 
-      // Fetch user's existing rating for this recipe
-      if (user && user.user_id && user.token) { // Check if user and token are present
-    console.log('Fetching user rating with token:', user.token);
-    const resRating = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings/${user.user_id}?recipe_id=${id}`, {
-      headers: {
-        'Authorization': `Bearer ${user.token}`
+        if (user && user.user_id && user.token) {
+          const resRating = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings/${user.user_id}?recipe_id=${id}`, {
+            headers: {
+              'Authorization': `Bearer ${user.token}`
+            }
+          });
+          if (resRating.ok) {
+            const dataRating = await resRating.json();
+            if (dataRating.success && dataRating.ratings.length > 0) {
+              setRating(dataRating.ratings[0].rating);
+            } else {
+              setRating(0); 
+            }
+          }
+        } else {
+          setRating(0);
+        }
+
+        setLoadingReviews(true);
+        const headers = {};
+        if (user && user.token) {
+          headers['Authorization'] = `Bearer ${user.token}`;
+        }
+        const resReviews = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings?recipe_id=${id}`, { headers });
+        const dataReviews = await resReviews.json();
+        if (dataReviews.success) {
+          setReviews(dataReviews.ratings);
+        } else {
+          setErrorReviews('Failed to load reviews');
+        }
+
+        try {
+          const resHealth = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/recipe-health-score/${id}`, { headers });
+          const dataHealth = await resHealth.json();
+          if (dataHealth.success) {
+            setHealthScore(dataHealth.healthScore);
+            setHealthCategory(dataHealth.category);
+          }
+        } catch (healthError) {
+          console.warn('Failed to fetch health score:', healthError);
+        }
+
+        // Fetch related recipes
+        try {
+          const resRelated = await fetch(`${import.meta.env.VITE_API_URL}/api/recipes?limit=4`);
+          const dataRelated = await resRelated.json();
+          if (resRelated.ok && dataRelated.success) {
+            setRelatedRecipes(dataRelated.recipes.filter(r => r.recipe_id !== parseInt(id)).slice(0, 3));
+          }
+        } catch (err) {
+          console.warn('Failed to fetch related recipes');
+        }
+
+      } catch (error) {
+        console.error('Failed to fetch recipe or rating:', error);
+        setErrorReviews('Failed to load recipe data');
+      } finally {
+        setLoadingReviews(false);
       }
-    });
-    if (!resRating.ok) {
-      const errorText = await resRating.text();
-      console.error('Failed to fetch user rating:', resRating.status, errorText);
-      throw new Error(`Failed to fetch user rating: ${resRating.status}`);
-    }
-    const dataRating = await resRating.json();
-
-    if (dataRating.success && dataRating.ratings.length > 0) {
-      setRating(dataRating.ratings[0].rating);
-    } else {
-      setRating(0); // Reset rating if no rating found
-    }
-  } else {
-    console.warn('User or token missing, skipping user rating fetch', user);
-    setRating(0); // Reset rating if user or token missing
-  }
-
-      // Fetch reviews for this recipe
-    setLoadingReviews(true);
-    const headers = {};
-    if (user && user.token) {
-      headers['Authorization'] = `Bearer ${user.token}`;
-    }
-    const resReviews = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings?recipe_id=${id}`, {
-      headers
-    });
-    const dataReviews = await resReviews.json();
-    if (dataReviews.success) {
-      setReviews(dataReviews.ratings);
-    } else {
-      console.error('Failed to fetch reviews:', resReviews.status, dataReviews.error || 'Unknown error');
-      setErrorReviews('Failed to load reviews: ' + (dataReviews.error || 'Unknown error'));
-    }
-
-    // Fetch health score for this recipe
-    try {
-      const resHealth = await fetch(`${import.meta.env.VITE_API_URL}/api/ml/recipe-health-score/${id}`, {
-        headers
-      });
-      const dataHealth = await resHealth.json();
-      if (dataHealth.success) {
-        setHealthScore(dataHealth.healthScore);
-        setHealthCategory(dataHealth.category);
-      }
-    } catch (healthError) {
-      console.warn('Failed to fetch health score:', healthError);
-    }
-  } catch (error) {
-    console.error('Failed to fetch recipe or rating:', error);
-    setErrorReviews('Failed to load reviews');
-  } finally {
-    setLoadingReviews(false);
-  }
-};
+    };
 
     fetchRecipeAndRating();
-  }, [id, user]); // Add user to dependency array
+    window.scrollTo(0,0);
+  }, [id, user]);
 
   const handleDelete = async () => {
     if (!user || !user.token) {
@@ -206,7 +225,7 @@ function ViewRecipe({ user }) {
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        navigate('/'); // Redirect to homepage after delete
+        navigate('/');
       } else {
         alert(data.error || 'Failed to delete recipe');
       }
@@ -216,79 +235,52 @@ function ViewRecipe({ user }) {
     }
   };
 
-  const handleRating = async (newRating) => {
-    if (!user || !user.user_id) {
-      alert('Please log in to rate recipes.');
-      return;
-    }
-    setRating(newRating);
-    try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/ml/ratings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({ recipe_id: id, rating: newRating, user_id: user.user_id }),
-      });
-    } catch (error) {
-      console.error('Rating failed:', error);
-    }
-  };
-
-  const getDifficultyClass = (diff) => {
-    switch(diff?.toLowerCase()) {
-      case 'easy': return 'bg-[#e4f8e9] text-[#28a745]';
-      case 'medium': return 'bg-[#fff8e1] text-[#f57c00]';
-      case 'hard': return 'bg-[#fde2e4] text-[#d90429]';
-      default: return 'bg-[#f0f0f0] text-[#555]';
-    }
-  };
-
-  const getDietClass = (diet) => {
-    switch(diet?.toLowerCase()) {
-      case 'vegetarian': return 'bg-[#e8f5e8] text-[#2d5a2d]';
-      case 'non_vegetarian': return 'bg-[#ffe8e8] text-[#8b0000]';
-      case 'mixed': return 'bg-[#fff3cd] text-[#856404]';
-      default: return 'bg-[#f0f0f0] text-[#555]';
-    }
-  };
-
-  const getHealthClass = (health) => {
-    switch(health?.toLowerCase()) {
-      case 'excellent': return 'bg-[#d4edda] text-[#155724]';
-      case 'good': return 'bg-[#d1ecf1] text-[#0c5460]';
-      case 'fair': return 'bg-[#fff3cd] text-[#856404]';
-      case 'poor': return 'bg-[#f8d7da] text-[#721c24]';
-      default: return 'bg-[#f0f0f0] text-[#555]';
-    }
-  };
-
-  const renderListOrText = (text, listType = 'ul') => {
-    if (!text) return <p className="text-[#888] italic text-center">Not provided</p>;
-    
+  const renderIngredientChecklist = (text) => {
+    if (!text) return <p className="text-[#888] italic font-['Poppins',_sans-serif]">Not provided</p>;
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     
-    if (lines.length > 1) {
-      const ListTag = listType;
-      const listClasses = listType === 'ol' 
-        ? "text-left m-0 p-0 pl-[25px] list-decimal leading-[1.8] text-[1rem] max-w-[600px] w-full marker:text-[#ff6600] marker:font-bold"
-        : "text-left m-0 p-0 pl-[25px] list-disc leading-[1.8] text-[1rem] max-w-[600px] w-full marker:text-[#ff6600]";
-      return (
-        <ListTag className={listClasses}>
-          {lines.map((line, index) => {
-            // Only strip standard list markers (e.g. "- ", "* ", "1. ", "2) ") so we don't accidentally strip ingredient quantities like "1 cup"
-            const cleanedLine = line.replace(/^[-*•]\s+/, '').replace(/^\d+[\.\)]\s+/, '');
-            return (
-              <li key={index} className="pl-[5px] mb-[8px] text-[#444]">
+    return (
+      <ul className="list-none p-0 m-0 mt-4 space-y-3">
+        {lines.map((line, index) => {
+          const cleanedLine = line.replace(/^[-*•]\s+/, '').replace(/^\d+[\.\)]\s+/, '');
+          const isChecked = checkedIngredients.has(index);
+          return (
+            <li key={index} className="flex items-start cursor-pointer group" onClick={() => toggleIngredient(index)}>
+              <div className="mt-1 flex-shrink-0">
+                <input 
+                  type="checkbox" 
+                  checked={isChecked} 
+                  onChange={() => toggleIngredient(index)}
+                  className="w-5 h-5 accent-[#ff6600] cursor-pointer"
+                />
+              </div>
+              <span className={`ml-3 text-lg font-['Poppins',_sans-serif] transition-all duration-200 ${isChecked ? 'text-gray-400 line-through' : 'text-[#333] group-hover:text-[#ff6600]'}`}>
                 {cleanedLine}
-              </li>
-            );
-          })}
-        </ListTag>
-      );
-    }
-    return <p className={`leading-[1.8] text-[1rem] text-[#444] max-w-[600px] w-full mx-auto ${text.length > 100 ? 'text-justify' : 'text-center'}`}>{text}</p>;
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
+  const renderInstructions = (text) => {
+    if (!text) return <p className="text-[#888] italic font-['Poppins',_sans-serif]">Not provided</p>;
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    return (
+      <div className="mt-6 space-y-6">
+        {lines.map((line, index) => {
+          const cleanedLine = line.replace(/^[-*•]\s+/, '').replace(/^\d+[\.\)]\s+/, '');
+          return (
+            <div key={index} className="flex items-start">
+              <span className="font-['Nostalgia',_serif] font-bold text-2xl leading-none text-[#ff6600] w-10 flex-shrink-0 mt-1">{index + 1}.</span>
+              <p className="font-['Poppins',_sans-serif] text-[15px] text-[#444] leading-relaxed m-0">{cleanedLine}</p>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const indexOfLastReview = currentPage * reviewsPerPage;
@@ -296,249 +288,366 @@ function ViewRecipe({ user }) {
   const currentReviews = reviews.slice(indexOfFirstReview, indexOfLastReview);
   const totalPages = Math.ceil(reviews.length / reviewsPerPage);
 
-  if (!recipe) return <div className="font-['Poppins',_sans-serif] min-h-screen py-10 px-5 flex justify-center items-start">Loading...</div>;
+  // Overall average rating calculation
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(2)
+    : "0";
+
+  if (!recipe) return <div className="font-['Poppins',_sans-serif] min-h-screen py-10 px-5 flex justify-center items-start text-[#ff6600] bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99] font-bold text-xl">Loading delicious recipe...</div>;
 
   return (
-    <div className="font-['Poppins',_sans-serif] min-h-screen py-10 px-5 flex justify-center items-start">
-      <div className="w-[90%] md:w-[95%] max-w-[800px] my-5 bg-white p-6 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)] text-center">
-        <button 
-          className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white border-none py-[10px] px-[20px] rounded-lg cursor-pointer mb-5 text-[14px] font-semibold transition-transform hover:-translate-y-0.5" 
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-        <h2 className="text-[28px] mb-[15px] text-[#bc8f8e] text-center">{recipe.title}</h2>
-        <img
-          className="w-full rounded-lg mb-5 object-cover"
-          src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
-          alt={recipe.title}
-        />
-
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Description</h3>
-          <p className="text-center leading-[1.6]">{recipe.description}</p>
+    <div className={`min-h-screen bg-gradient-to-br from-[#FFE6CC] to-[#FFCC99] text-[#333] pb-20 ${cookMode ? 'bg-none bg-white' : ''} font-['Poppins',_sans-serif]`}>
+      {/* Top Banner Navigation */}
+      <div className="w-full bg-white/80 backdrop-blur-md border-b border-orange-200 py-3 px-6 hidden md:block">
+        <div className="max-w-screen-2xl mx-auto text-sm text-[#ff6600] font-semibold flex items-center space-x-2">
+          <Link to="/" className="hover:text-[#e55a00] transition-colors">Home</Link>
+          <span className="text-orange-300">»</span>
+          <span className="capitalize">{recipe.food_category?.replace('_', ' ') || 'Recipes'}</span>
+          <span className="text-orange-300">»</span>
+          <span className="font-['Nostalgia',_serif] text-[#5C4033] text-base">{recipe.title}</span>
         </div>
+      </div>
 
-        <div className="mt-5 flex flex-col items-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Ingredients</h3>
-          {renderListOrText(recipe.ingredients, 'ul')}
-        </div>
-
-        <div className="mt-5 flex flex-col items-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Instructions</h3>
-          {renderListOrText(recipe.instructions, 'ol')}
-        </div>
-
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Recipe Info</h3>
-          <div className="flex flex-wrap gap-5 mt-2.5 justify-center">
-            <div className="flex-[1_1_40%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Prep Time:</strong><br />{recipe.preparation_time}
-            </div>
-            <div className="flex-[1_1_40%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Cooking Time:</strong><br />{recipe.cooking_time}
-            </div>
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-8 pt-8 md:pt-12">
+        
+        {/* Main Header */}
+        <div className="text-center max-w-4xl mx-auto mb-10 bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-[0_10px_30px_rgba(255,102,0,0.1)] border border-white/50">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-['Nostalgia',_serif] text-[#ff6600] mb-6 leading-tight drop-shadow-sm">
+            {recipe.title}
+          </h1>
+          <div className="flex flex-wrap justify-center items-center gap-4 text-sm font-semibold tracking-wider uppercase text-[#5C4033]">
+            <span>By {recipe.user ? `${recipe.user.f_name} ${recipe.user.l_name}` : 'Unknown Author'}</span>
+            <span className="hidden sm:inline text-orange-300">•</span>
+            <span>{new Date(recipe.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+          
+          <div className="mt-8 flex justify-center gap-4">
+            <button onClick={scrollToRecipe} className="px-6 py-2.5 border-2 border-[#ff6600] text-[#ff6600] rounded-[8px] hover:bg-[#ff6600] hover:text-white transition-all font-bold tracking-wide shadow-sm">
+              Skip to Recipe
+            </button>
+            <button className="px-6 py-2.5 border-2 border-[#5C4033] text-[#5C4033] rounded-[8px] hover:bg-[#5C4033] hover:text-white transition-all font-bold tracking-wide shadow-sm">
+              Save Recipe
+            </button>
           </div>
         </div>
 
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Nutrition Info</h3>
-          <div className="flex flex-wrap gap-[10px] justify-center mt-2.5">
-            {recipe.nutrition_info ? recipe.nutrition_info.split(', ').map((item, index) => {
-              const parts = item.split(':');
-              if (parts.length >= 2) {
-                return (
-                  <span key={index} className="inline-block py-[6px] px-[12px] bg-[#f9f9f9] border border-[#ddd] rounded-lg text-[13px] shadow-sm whitespace-nowrap">
-                    <span className="font-bold text-[#ff6600] capitalize">{parts[0].trim()}:</span> <span className="text-[#444] font-medium">{parts[1].trim()}</span>
-                  </span>
-                );
-              }
-              return <span key={index} className="inline-block py-[6px] px-[12px] bg-[#f9f9f9] border border-[#ddd] rounded-lg text-[13px] shadow-sm">{item}</span>;
-            }) : <span className="text-[#777] text-[13px] italic">Not provided</span>}
-          </div>
+        {/* Hero Image */}
+        <div className="w-full h-[400px] md:h-[600px] rounded-2xl overflow-hidden shadow-[0_15px_35px_rgba(255,102,0,0.2)] mb-12 border-4 border-white">
+          <img
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+            src={recipe.image_url?.startsWith('http') ? recipe.image_url : `${import.meta.env.VITE_API_URL}/images/${recipe.image_url}`}
+            alt={recipe.title}
+          />
         </div>
 
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Recipe Details</h3>
-          <div className="flex flex-wrap gap-5 mt-2.5 justify-center">
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Difficulty:</strong><br />
-              <span className={`inline-block py-1.5 px-2.5 rounded-[15px] text-[11px] font-semibold tracking-[0.5px] uppercase ${getDifficultyClass(recipe.difficulty)}`}>
-                {recipe.difficulty}
-              </span>
+        {/* Content Layout (Grid) */}
+        <div className="lg:grid lg:grid-cols-12 lg:gap-10">
+          
+          {/* LEFT: Main Story & Recipe Card */}
+          <div className="col-span-12 lg:col-span-8">
+            <div className="bg-white/90 backdrop-blur-sm p-6 sm:p-10 rounded-2xl shadow-[0_10px_30px_rgba(255,102,0,0.1)] border border-white/50 mb-10">
+              <div className="prose prose-lg max-w-none text-[#444] font-['Poppins',_sans-serif] leading-relaxed text-justify sm:text-left text-[15px]">
+                {recipe.description && (
+                  <div>
+                    <p className="text-xl mb-2 font-['Nostalgia',_serif] text-[#5C4033] whitespace-pre-line">
+                      {isDescriptionExpanded || recipe.description.length <= 250 
+                        ? recipe.description 
+                        : `${recipe.description.substring(0, 250)}...`}
+                    </p>
+                    {recipe.description.length > 250 && (
+                      <button 
+                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                        className="text-[#ff6600] hover:underline font-semibold text-sm mb-6"
+                      >
+                        {isDescriptionExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Category:</strong><br />
-              <span className="inline-block py-1.5 px-3 bg-[#e6f3ff] rounded-[5px] font-bold text-[#0066cc] capitalize text-[11px]">
-                {recipe.food_category?.replace('_', ' ').toUpperCase() || 'Main Course'}
-              </span>
+
+            {/* RECIPE CARD */}
+            <div ref={recipeCardRef} className="bg-white rounded-[20px] p-6 sm:p-10 shadow-[0_15px_40px_rgba(255,102,0,0.15)] border-2 border-orange-100 relative">
+              
+              {/* Decorative top ribbon */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#ff6600] to-[#ff8533] rounded-t-[18px]"></div>
+
+              <h2 className="text-3xl md:text-4xl font-['Nostalgia',_serif] text-[#5C4033] mb-4 mt-2 text-center sm:text-left">{recipe.title}</h2>
+              
+              {/* Rating Summary */}
+              <div className="flex items-center justify-center sm:justify-start space-x-2 mb-6 border-b border-orange-100 pb-6">
+                <div className="text-[#ff6600] text-xl">{'★'.repeat(Math.round(averageRating))}{'☆'.repeat(5 - Math.round(averageRating))}</div>
+                <span className="text-[#888] font-medium text-sm ml-2">({reviews.length} Ratings)</span>
+              </div>
+
+              {/* Cook Mode & Meta Info */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 pb-6 border-b border-orange-100 gap-6">
+                <div className="flex items-center space-x-3 justify-center sm:justify-start">
+                  <button 
+                    onClick={() => setCookMode(!cookMode)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${cookMode ? 'bg-[#ff6600]' : 'bg-gray-300'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${cookMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                  <span className="font-bold text-[#5C4033]">Cook Mode</span>
+                  <span className="text-xs text-gray-500 hidden sm:inline">(Keep screen awake)</span>
+                </div>
+                
+                <div className="text-sm text-gray-600 text-center sm:text-right">
+                  <span className="font-bold uppercase tracking-wider text-[#ff6600]">Chef:</span> {recipe.user ? `${recipe.user.f_name} ${recipe.user.l_name}` : 'SpiceVault Chef'}
+                </div>
+              </div>
+
+              {/* Timing & Nutrition Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 text-center sm:text-left bg-orange-50/50 p-6 rounded-xl border border-orange-100/50">
+                <div>
+                  <p className="font-bold uppercase text-xs tracking-wider text-[#ff6600] mb-1">Prep Time</p>
+                  <p className="font-medium text-[#5C4033]">{recipe.preparation_time}</p>
+                </div>
+                <div>
+                  <p className="font-bold uppercase text-xs tracking-wider text-[#ff6600] mb-1">Cook Time</p>
+                  <p className="font-medium text-[#5C4033]">{recipe.cooking_time}</p>
+                </div>
+                <div>
+                  <p className="font-bold uppercase text-xs tracking-wider text-[#ff6600] mb-1">Diet Type</p>
+                  <p className="font-medium text-[#5C4033] capitalize">{recipe.diet_type?.replace('_', ' ') || 'Mixed'}</p>
+                </div>
+                <div>
+                  <p className="font-bold uppercase text-xs tracking-wider text-[#ff6600] mb-1">Difficulty</p>
+                  <p className="font-medium text-[#5C4033] capitalize">{recipe.difficulty || 'Medium'}</p>
+                </div>
+                {recipe.nutrition_info && (
+                  <div className="col-span-2 md:col-span-4 mt-2 bg-white p-3 rounded-lg shadow-sm text-sm text-[#555] text-left border border-orange-100">
+                    <span className="font-bold text-[#ff6600]">Nutrition Estimate: </span> 
+                    {recipe.nutrition_info}
+                  </div>
+                )}
+                {healthScore !== null && (
+                  <div className="col-span-2 md:col-span-4 bg-white p-3 rounded-lg shadow-sm text-sm text-[#555] text-left border border-orange-100 mt-2">
+                    <span className="font-bold text-[#ff6600]">Health Score: </span> 
+                    {healthScore}/100 ({healthCategory})
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 mb-10">
+                <button className="flex-1 bg-gradient-to-br from-[#ff6600] to-[#ff8533] hover:from-[#e55a00] hover:to-[#ff6600] text-white py-3 px-4 rounded-xl transition-all shadow-[0_4px_12px_rgba(255,102,0,0.3)] hover:-translate-y-1 text-[15px] font-bold tracking-wider uppercase">Save Recipe</button>
+                <button className="flex-1 bg-white border-2 border-[#ff6600] text-[#ff6600] hover:bg-[#fff5f0] py-3 px-4 rounded-xl transition-all shadow-sm hover:-translate-y-1 text-[15px] font-bold tracking-wider uppercase" onClick={() => window.print()}>Print</button>
+              </div>
+
+              {/* Instructions */}
+              <div className="mt-10">
+                <h3 className="text-2xl font-['Nostalgia',_serif] text-[#5C4033] mb-4 border-b border-orange-200 pb-2">Instructions</h3>
+                {renderInstructions(recipe.instructions)}
+              </div>
+
             </div>
-            <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-              <strong>Diet Type:</strong><br />
-              <span className={`inline-block py-1.5 px-3 rounded-[5px] font-bold capitalize text-[11px] ${getDietClass(recipe.diet_type)}`}>
-                {recipe.diet_type?.replace('_', ' ').toUpperCase() || 'Vegetarian'}
-              </span>
+
+            {/* REVIEWS SECTION */}
+            <div className="mt-12 bg-white rounded-[20px] p-6 sm:p-10 shadow-[0_15px_35px_rgba(255,102,0,0.1)] border border-orange-100">
+              <h3 className="text-3xl font-['Nostalgia',_serif] text-[#5C4033] mb-6">Comments & Reviews</h3>
+              <div className="flex items-center gap-3 mb-10 bg-orange-50 p-4 rounded-xl inline-flex border border-orange-100">
+                <div className="text-2xl text-[#ff6600]">{'★'.repeat(Math.round(averageRating))}{'☆'.repeat(5 - Math.round(averageRating))}</div>
+                <span className="font-bold text-lg text-[#5C4033]">{averageRating} from {reviews.length} votes</span>
+              </div>
+
+              {/* Add Comment Form */}
+              <div className="bg-gradient-to-br from-[#fff5f0] to-white border border-orange-200 p-6 sm:p-8 rounded-xl shadow-sm mb-12">
+                <h4 className="text-xl font-['Nostalgia',_serif] font-bold text-[#ff6600] mb-4">Add a Comment</h4>
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-[#5C4033] mb-2">Recipe Rating</label>
+                  <div className="text-3xl cursor-pointer text-[#ccc] flex gap-1 drop-shadow-sm">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`hover:text-[#ff6600] transition-colors ${star <= newReviewRating ? 'text-[#ff6600]' : 'text-[#ccc]'}`}
+                        onClick={() => setNewReviewRating(star)}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-[#5C4033] mb-2">Comment *</label>
+                  <textarea
+                    className="w-full min-h-[120px] resize-y p-4 border-2 border-orange-100 rounded-xl focus:border-[#ff6600] outline-none font-sans text-[#333] transition-colors"
+                    value={newReviewText}
+                    onChange={(e) => setNewReviewText(e.target.value)}
+                    placeholder="What did you think of the recipe?"
+                  />
+                </div>
+
+
+                <button 
+                  className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] hover:from-[#e55a00] hover:to-[#ff6600] text-white py-3 px-8 rounded-xl transition-all shadow-[0_4px_12px_rgba(255,102,0,0.3)] hover:-translate-y-1 font-bold tracking-wider" 
+                  onClick={submitReview}
+                >
+                  Post Comment
+                </button>
+              </div>
+
+              {/* Comments List */}
+              <div className="space-y-8">
+                {loadingReviews ? (
+                  <p className="italic text-gray-500 font-medium">Loading thoughtful reviews...</p>
+                ) : currentReviews.length > 0 ? (
+                  currentReviews.map((review) => (
+                    <div key={review.review_id} className="border-b border-gray-100 pb-8">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-bold text-lg text-[#5C4033]">{review.user ? `${review.user.f_name} ${review.user.l_name}` : 'Anonymous'}</div>
+                        <span className="text-xs text-gray-400 font-bold tracking-wider uppercase">
+                          {review.datestamp ? new Date(review.datestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                        </span>
+                      </div>
+                      <div className="text-[#ff6600] text-sm mb-3">
+                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                      </div>
+                      {review.review_text && (
+                        <p className="text-[#444] leading-relaxed mb-3 bg-gray-50 p-4 rounded-xl border border-gray-100">{review.review_text}</p>
+                      )}
+                      
+                      {/* Chef Reply logic */}
+                      {user && user.user_id === recipe.chef_id && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() => toggleReplyBox(review.review_id)}
+                            className="text-sm font-bold text-[#ff6600] hover:underline bg-transparent border-none cursor-pointer"
+                          >
+                            Reply
+                          </button>
+                          {replyBoxOpen === review.review_id && (
+                            <div className="mt-3">
+                              <textarea
+                                className="w-full min-h-[60px] resize-y p-3 border-2 border-orange-200 rounded-xl focus:border-[#ff6600] outline-none font-sans text-sm"
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Write your reply..."
+                              />
+                              <button className="mt-2 py-2 px-6 bg-gradient-to-br from-[#ff6600] to-[#ff8533] text-white rounded-[8px] font-bold shadow-md hover:shadow-lg transition-all" onClick={() => submitReply(review.review_id)}>Submit Reply</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Replies List */}
+                      {review.replies && review.replies.length > 0 && (
+                        <div className="ml-8 mt-4 pl-4 border-l-[3px] border-[#ff6600] space-y-4">
+                          {review.replies.map((reply) => (
+                            <div key={reply.reply_id} className="bg-orange-50 p-4 rounded-xl">
+                              <div className="font-bold text-sm text-[#5C4033]">
+                                {reply.user ? `${reply.user.f_name} ${reply.user.l_name}` : 'Anonymous'} 
+                                {reply.user && reply.user.user_type === 'chef' && <span className="bg-[#ff6600] text-white text-[10px] px-2 py-1 rounded-full ml-2 font-bold uppercase">Chef</span>}
+                              </div>
+                              <p className="text-sm text-[#444] mt-2 mb-0">{reply.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="italic text-gray-500 font-medium">No comments yet. Be the first to share your thoughts!</p>
+                )}
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-12">
+                    <button
+                      className="py-2 px-6 border-2 border-[#ff6600] rounded-xl bg-white text-[#ff6600] font-bold hover:bg-[#fff5f0] disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-white transition-colors"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="font-bold text-[#5C4033]">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      className="py-2 px-6 border-2 border-[#ff6600] rounded-xl bg-white text-[#ff6600] font-bold hover:bg-[#fff5f0] disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400 disabled:hover:bg-white transition-colors"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            {healthScore !== null && (
-              <div className="flex-[1_1_30%] bg-[#f9f9f9] py-2.5 px-[15px] rounded-lg text-[14px] shadow-sm">
-                <strong>Health Score:</strong><br />
-                <span className={`inline-block py-1.5 px-3 rounded-[5px] font-bold capitalize text-[11px] ${getHealthClass(healthCategory)}`}>
-                  {healthScore}/100 ({healthCategory})
-                </span>
+
+            {/* Chef Admin Actions */}
+            {user && user.user_id === recipe.user_id && (
+              <div className="mt-12 text-center flex justify-center gap-4">
+                <button className="bg-gradient-to-br from-[#ff6600] to-[#ff8533] hover:from-[#e55a00] hover:to-[#ff6600] text-white border-none py-3 px-8 rounded-xl font-bold tracking-wider transition-colors shadow-[0_4px_15px_rgba(255,102,0,0.3)] hover:shadow-[0_6px_20px_rgba(255,102,0,0.4)] cursor-pointer" onClick={() => navigate(`/editrecipe/${recipe.recipe_id}`)}>
+                  Edit Recipe
+                </button>
+                <button className="bg-white hover:bg-red-50 text-red-600 border-2 border-red-200 py-3 px-8 rounded-xl font-bold tracking-wider transition-colors shadow-sm cursor-pointer" onClick={() => setShowModal(true)}>
+                  Delete Recipe
+                </button>
               </div>
             )}
           </div>
-        </div>
 
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Rate this recipe</h3>
-          <div className="text-[24px] cursor-pointer text-[#ccc] mb-[10px]">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <span
-                key={star}
-                className={star <= rating ? 'text-[#f5a623]' : 'text-[#ccc]'}
-                onClick={() => handleRating(star)}
-              >
-                ★
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-5 text-center">
-          <h3 className="text-[22px] text-[#bc8f8e] mb-2.5 text-center">Reviews</h3>
-          {loadingReviews ? (
-            <p>Loading reviews...</p>
-          ) : errorReviews ? (
-            <p className="text-red-600 font-semibold">{errorReviews}</p>
-          ) : (
-            <div className="mt-2.5 text-left">
-              {currentReviews.length > 0 ? (
-                currentReviews.map((review) => (
-                  <div key={review.review_id} className="border-b border-[#ddd] py-2.5 px-0">
-                    <div className="flex justify-between font-bold mb-1">
-                      <span className="text-[#f5a623]">
-                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                      </span>
-                      <span className="text-[0.85em] text-[#999]">
-                        {review.datestamp ? new Date(review.datestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
-                      </span>
-                    </div>
-                    {review.review_text && (
-                      <p className="my-1 mx-0">{review.review_text}</p>
-                    )}
-                    <p className="italic text-[0.9em] text-[#555]">
-                      By: {review.user ? `${review.user.f_name} ${review.user.l_name}` : 'Anonymous'}
-                      {review.user && review.user.user_type === 'chef' && ' (Chef)'}
-                    </p>
-                    {/* Reply section for chef who owns the recipe */}
-                    {user && user.user_id === recipe.chef_id && (
-                      <div className="mt-1">
-                        <button
-                          onClick={() => toggleReplyBox(review.review_id)}
-                          className="bg-transparent border-none text-[#007bff] cursor-pointer text-[0.9em] p-0 hover:underline"
-                        >
-                          Reply
-                        </button>
-                        {replyBoxOpen === review.review_id && (
-                          <div className="mt-1 flex flex-col items-start">
-                            <textarea
-                              className="w-full min-h-[50px] resize-y p-2 border border-gray-300 rounded"
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              placeholder="Write your reply..."
-                            />
-                            <button className="mt-1 py-1 px-2.5 bg-[#007bff] border-none text-white rounded cursor-pointer hover:bg-blue-600" onClick={() => submitReply(review.review_id)}>Submit Reply</button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {/* Display replies */}
-                    {review.replies && review.replies.length > 0 && (
-                      <div className="ml-5 mt-1 border-l-2 border-[#eee] pl-2.5">
-                        {review.replies.map((reply) => (
-                          <div key={reply.reply_id} className="mb-2.5">
-                            <p className="m-0">{reply.text}</p>
-                            <p className="italic text-[0.85em] text-[#666]">
-                              By: {reply.user ? `${reply.user.f_name} ${reply.user.l_name}` : 'Anonymous'}
-                              {reply.user && reply.user.user_type === 'chef' && ' (Chef)'}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p>No reviews yet. Be the first to rate this recipe!</p>
-              )}
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-[15px] mt-[20px]">
-                  <button
-                    className="py-[6px] px-[12px] border border-[#ddd] rounded-[6px] bg-[#f9f9f9] text-[#555] cursor-pointer transition-colors duration-200 hover:bg-[#eee] disabled:opacity-50 disabled:cursor-not-allowed font-medium text-[0.9em]"
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </button>
-                  <span className="text-[0.9em] text-[#666] font-medium">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    className="py-[6px] px-[12px] border border-[#ddd] rounded-[6px] bg-[#f9f9f9] text-[#555] cursor-pointer transition-colors duration-200 hover:bg-[#eee] disabled:opacity-50 disabled:cursor-not-allowed font-medium text-[0.9em]"
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {/* Add new review comment section */}
-          {user && (
-            <div className="mt-5 text-left">
-              <h4 className="mb-1 font-bold">Add Your Review</h4>
-              <div className="text-2xl cursor-pointer text-[#ccc] mb-2.5">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span
-                    key={star}
-                    className={star <= newReviewRating ? 'text-[#f5a623]' : 'text-[#ccc]'}
-                    onClick={() => setNewReviewRating(star)}
-                  >
-                    ★
-                  </span>
-                ))}
+          {/* RIGHT: Sidebar */}
+          <div className="col-span-12 lg:col-span-4 space-y-8 mt-8 lg:mt-0">
+            {/* Meet the Author block */}
+            <div className="bg-white rounded-[20px] p-6 text-center shadow-[0_10px_30px_rgba(255,102,0,0.1)] border border-white/50">
+              <h3 className="text-2xl font-['Nostalgia',_serif] text-[#5C4033] mb-6 border-b border-orange-100 pb-4 mx-4">Meet {recipe.user ? recipe.user.f_name : 'the Author'}</h3>
+              <div className="w-48 h-48 mx-auto bg-gradient-to-br from-[#ff6600] to-[#ffcc80] rounded-full overflow-hidden mb-6 border-4 border-white shadow-[0_5px_15px_rgba(255,102,0,0.2)] p-1">
+                <img src={recipe.user?.profile_picture || 'https://via.placeholder.com/150'} alt="Author" className="w-full h-full object-cover rounded-full hover:scale-110 transition-transform duration-500" />
               </div>
-              <textarea
-                className="w-full min-h-[70px] resize-y mt-1 mb-2.5 p-2 text-[1em] border border-gray-300 rounded"
-                value={newReviewText}
-                onChange={(e) => setNewReviewText(e.target.value)}
-                placeholder="Write your review here..."
-              />
-              <button className="py-2 px-4 bg-[#28a745] border-none text-white rounded-md cursor-pointer hover:bg-green-600" onClick={submitReview}>Submit Review</button>
+              <p className="text-[#555] text-sm leading-relaxed px-4 font-medium">
+                {recipe.user?.bio 
+                  ? recipe.user.bio 
+                  : `Hi! I'm ${recipe.user ? `${recipe.user.f_name} ${recipe.user.l_name}` : 'the chef behind this recipe'}. I love creating simple, wholesome, and incredibly flavorful dishes.`}
+              </p>
+              <button className="mt-6 bg-[#5C4033] text-white py-2.5 px-8 font-bold text-sm hover:bg-[#3d2a21] transition-colors rounded-xl shadow-md hover:-translate-y-1">
+                Read More
+              </button>
             </div>
-          )}
-        </div>
 
-        {user && user.user_id === recipe.user_id && (
-          <div className="mt-5 text-center">
-            <button className="bg-[#d9534f] text-white border-none py-2.5 px-4 rounded-md font-bold cursor-pointer mt-5 hover:bg-[#c9302c]" onClick={() => setShowModal(true)}>
-              Delete Recipe
-            </button>
+            {/* Related Recipes block */}
+            {relatedRecipes.length > 0 && (
+              <div className="bg-white rounded-[20px] p-6 shadow-[0_10px_30px_rgba(255,102,0,0.1)] border border-white/50">
+                <h3 className="text-xl font-['Nostalgia',_serif] text-[#ff6600] mb-6 border-b border-orange-100 pb-3">Looking for other recipes?</h3>
+                <div className="space-y-4">
+                  {relatedRecipes.map(rel => (
+                    <Link key={rel.recipe_id} to={`/recipe/${rel.recipe_id}`} className="block group bg-orange-50/50 p-2 rounded-xl border border-transparent hover:border-orange-200 transition-colors">
+                      <div className="flex gap-4 items-center">
+                        <img src={rel.image_url?.startsWith('http') ? rel.image_url : `${import.meta.env.VITE_API_URL}/images/${rel.image_url}`} alt={rel.title} className="w-16 h-16 object-cover rounded-lg shadow-sm group-hover:scale-105 transition-transform" />
+                        <span className="font-bold text-[#5C4033] group-hover:text-[#ff6600] transition-colors leading-tight text-sm">
+                          {rel.title}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ingredients block (Sticky) */}
+            <div className="bg-[#fcfbf9] rounded-[20px] p-6 shadow-[0_10px_30px_rgba(255,102,0,0.1)] border border-orange-100/50 sticky top-24">
+              <h3 className="text-2xl font-['Nostalgia',_serif] text-[#5C4033] mb-4 border-b border-orange-200 pb-2">Ingredients</h3>
+              {renderIngredientChecklist(recipe.ingredients)}
+            </div>
+
           </div>
-        )}
+          
+        </div>
       </div>
 
+      {/* Delete Confirmation Modal */}
       {showModal && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/40 flex items-center justify-center z-[999]">
-          <div className="bg-white py-6 px-8 rounded-xl text-center max-w-[400px] shadow-lg">
-            <p className="mb-4">Are you sure you want to delete this recipe?</p>
-            <div className="mt-5 flex justify-around">
-              <button className="bg-[#d9534f] text-white py-2 px-4 border-none rounded-md cursor-pointer hover:bg-[#c9302c]" onClick={handleDelete}>Yes, Delete</button>
-              <button className="bg-[#ccc] text-[#333] py-2 px-4 border-none rounded-md cursor-pointer hover:bg-[#bbb]" onClick={() => setShowModal(false)}>Cancel</button>
+        <div className="fixed top-0 left-0 w-full h-full bg-black/60 flex items-center justify-center z-[999] backdrop-blur-sm">
+          <div className="bg-white py-8 px-10 rounded-2xl text-center max-w-md shadow-2xl border border-white/20">
+            <h3 className="text-3xl font-['Nostalgia',_serif] text-[#5C4033] mb-4">Delete Recipe</h3>
+            <p className="mb-8 font-medium text-gray-600">Are you sure you want to permanently delete this recipe? This action cannot be undone.</p>
+            <div className="flex justify-center gap-4">
+              <button className="bg-red-500 text-white py-3 px-8 rounded-xl font-bold hover:bg-red-600 shadow-md hover:-translate-y-1 transition-all" onClick={handleDelete}>Yes, Delete</button>
+              <button className="bg-gray-200 text-gray-800 py-3 px-8 rounded-xl font-bold hover:bg-gray-300 shadow-md hover:-translate-y-1 transition-all" onClick={() => setShowModal(false)}>Cancel</button>
             </div>
           </div>
         </div>
